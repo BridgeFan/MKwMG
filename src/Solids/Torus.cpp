@@ -10,13 +10,10 @@
 #include "../ImGuiUtil.h"
 #include <numbers>
 
-int Torus::index = 1;
+int bf::Torus::index = 1;
 constexpr float PI = std::numbers::pi_v<float>;
-#ifndef M_PI
-#define M_PI 3.14159265f
-#endif
 
-void Torus::updateTorus() {
+void bf::Torus::updateTorus() {
 	//generate vertices and indices
 	vertices.clear();
 	indices.clear();
@@ -38,25 +35,25 @@ void Torus::updateTorus() {
 	setBuffers();
 }
 
-void Torus::ObjectGui() {
-	Solid::ObjectGui();
+void bf::Torus::ObjectGui() {
+	bf::Solid::ObjectGui();
 	bool isCalculationNeeded=false;
-	if(checkChanged("R",bigRadius)) {
+	if(bf::imgui::checkChanged("R",bigRadius)) {
 		if(bigRadius<1e-6f)
 			bigRadius=1e-6f;
 		isCalculationNeeded=true;
 	}
-	if(checkChanged("r",smallRadius)) {
+	if(bf::imgui::checkChanged("r",smallRadius)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(checkSliderChanged("R fragments",bigFragments, 3, 60)) {
+	if(bf::imgui::checkSliderChanged("R fragments",bigFragments, 3, 60)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(checkSliderChanged("r fragments",smallFragments, 3, 60)) {
+	if(bf::imgui::checkSliderChanged("r fragments",smallFragments, 3, 60)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
@@ -65,3 +62,13 @@ void Torus::ObjectGui() {
 		updateTorus();
 	}
 }
+
+bf::Torus::Torus(const bf::Transform &t) : Torus(t, "Torus " + std::to_string(
+		index)) {
+	index++;
+	updateTorus();
+}
+
+bf::Torus::Torus(const std::string &torusName) : Torus(bf::Transform::Default, torusName) { updateTorus(); }
+
+bf::Torus::Torus(const bf::Transform &t, const std::string &torusName) : bf::Solid(t, torusName) { updateTorus(); }

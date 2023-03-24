@@ -28,40 +28,34 @@
 const std::string SHADER_PATH = "../shaders/";
 
 int main() {
-    Settings settings;
-	GLFWwindow* window=initGlfw(settings);
+    bf::Settings settings;
+	GLFWwindow* window=bf::glfw::init(settings);
 	if(!window) {
-
         fprintf(stderr, "Fatal error creating GLFW window\n");
 		return EXIT_FAILURE;
 	}
 	//init ImGUI
     //structures
-	ImGuiIO& io = initImGui(window);
-    std::vector<std::unique_ptr<Object> > objects;
-    Cursor cursor;
-    MultiCursor multiCursor;
-    Transform& multiTransform=multiCursor.transform;
+	ImGuiIO& io = bf::imgui::init(window);
+    std::vector<std::unique_ptr<bf::Object> > objects;
+    bf::Cursor cursor;
+    bf::MultiCursor multiCursor;
+    bf::Transform& multiTransform=multiCursor.transform;
     glm::vec3 multiCentre;
-    Camera camera(glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
+    bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
     std::vector<bool> selection;
     float deltaTime = 0.0f;
-    GlfwStruct glfwStruct(settings,camera,selection,objects,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
+    bf::GlfwStruct glfwStruct(settings,camera,selection,objects,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
     glfwSetWindowUserPointer(window,&glfwStruct);
-
-
 	//bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.25f, 0.25f, 0.20f, 1.00f);
+	bf::Shader shader(SHADER_PATH+"shader.vert", SHADER_PATH+"shader.frag");
 
-	Shader shader(SHADER_PATH+"shader.vert", SHADER_PATH+"shader.frag");
-
-	objects.emplace_back(new Torus());
-
-    Transform myTransform{{1.f,-1.f,2.f},{30.f,45.f,55.f},{.8f,1.15f,1.2f}};
+	objects.emplace_back(new bf::Torus());
 
 
-    settings.Projection = getProjectionMatrix(camera.Zoom,settings.aspect, 0.1f, 100.f);
-    settings.InverseProjection = getInverseProjectionMatrix(camera.Zoom,settings.aspect, 0.1f, 100.f);
+    settings.Projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
+    settings.InverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
     settings.View = camera.GetViewMatrix();
     settings.InverseView = camera.GetInverseViewMatrix();
 
@@ -77,7 +71,7 @@ int main() {
 		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 		glfwPollEvents();
-		processInput(window, camera, io);
+		bf::glfw::processInput(window);
 
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -89,13 +83,13 @@ int main() {
 		ImGui::Begin("Create object");
 		//ImGui::
 		if(ImGui::Button("Torus")) {
-			objects.emplace_back(new Torus(cursor.transform));
+			objects.emplace_back(new bf::Torus(cursor.transform));
 			clearSelection(selection,-1,settings);
 			settings.activeIndex = selection.size();
 			selection.emplace_back(true);
 		}
 		if(ImGui::Button("Point")) {
-			objects.emplace_back(new Point(cursor.transform));
+			objects.emplace_back(new bf::Point(cursor.transform));
 			clearSelection(selection,-1,settings);
 			settings.activeIndex = selection.size();
 			selection.emplace_back(true);
@@ -137,9 +131,9 @@ int main() {
 				ImGui::Text("Empty unique pointer");
 				continue;
 			}
-			if (checkSelectableChanged(objects[n]->name.c_str(), selection, n))
+			if (bf::imgui::checkSelectableChanged(objects[n]->name.c_str(), selection, n))
 			{
-                multiTransform = Transform::Default;
+                multiTransform = bf::Transform::Default;
 				if (!settings.isMultiState) { // Clear selection when CTRL is not held
 					clearSelection(selection, n, settings);
 				}
@@ -148,7 +142,7 @@ int main() {
 					settings.activeIndex = n;
 				else
 					settings.activeIndex = -1;
-				multiCentre = getCentre(selection, objects);
+				multiCentre = bf::getCentre(selection, objects);
 			}
 		}
 		ImGui::End();
@@ -168,10 +162,10 @@ int main() {
 				}
 				if(isAny) {
 					ImGui::Text("Multiple objects");
-					Transform oldTransform = multiTransform;
-					bool tmp = checkChanged("Object position", multiTransform.position);
-					tmp = checkChanged("Object rotation", multiTransform.rotation) || tmp;
-					tmp = checkChanged("Object scale", multiTransform.scale, true) || tmp;
+					bf::Transform oldTransform = multiTransform;
+					bool tmp = bf::imgui::checkChanged("Object position", multiTransform.position);
+					tmp = bf::imgui::checkChanged("Object rotation", multiTransform.rotation) || tmp;
+					tmp = bf::imgui::checkChanged("Object scale", multiTransform.scale, true) || tmp;
 					//multiCentre = getCentre(selection, objects);
 					if (tmp) {
 						for (int i = 0; i < (int)objects.size(); i++) {
@@ -202,12 +196,12 @@ int main() {
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader.use();
 		// pass projection matrix to shader (note that in this case it could change every frame)
-        settings.Projection = getProjectionMatrix(camera.Zoom,settings.aspect, 0.1f, 100.f);
-        settings.InverseProjection = getInverseProjectionMatrix(camera.Zoom,settings.aspect, 0.1f, 100.f);
+		settings.Projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
+		settings.InverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
 		shader.setMat4("projection", settings.Projection);
 		// camera/view transformation
 		settings.View = camera.GetViewMatrix();
-        settings.InverseView = camera.GetInverseViewMatrix();
+		settings.InverseView = camera.GetInverseViewMatrix();
 		shader.setMat4("view", settings.View);
 		//draw objects
 		for(int i=0;i<(int)objects.size();i++) {
@@ -226,7 +220,7 @@ int main() {
 		}
         else if(!settings.isMultiState && settings.activeIndex>=0 && settings.activeIndex < (int)selection.size() &&
             objects[settings.activeIndex]) {
-            Transform oldTransform = multiCursor.transform;
+            bf::Transform oldTransform = multiCursor.transform;
             multiCursor.transform=objects[settings.activeIndex]->getTransform();
             multiCursor.draw(shader, settings);
             multiCursor.transform=std::move(oldTransform);
@@ -238,7 +232,7 @@ int main() {
 		glfwSwapBuffers(window);
 
 	}
-	destroyImGui();
-	destroyGlfw(window);
+	bf::imgui::destroy();
+	bf::glfw::destroy(window);
 	return 0;
 }

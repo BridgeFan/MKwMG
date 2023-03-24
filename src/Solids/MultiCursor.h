@@ -8,16 +8,18 @@
 #include "Solid.h"
 #include "Transform.h"
 
-
-class MultiCursor {
-    Solid lines[3];
-    void initLines();
-public:
-    Transform transform;
-    explicit MultiCursor(const Transform& transform=Transform::Default);
-    void draw(const Shader& shader, const Settings& settings);
-    void ObjectGui();
-};
-
+namespace bf {
+	class Shader;
+	struct Settings;
+    class MultiCursor {
+        bf::Solid lines[3];
+        void initLines();
+    public:
+        Transform transform;
+        explicit MultiCursor(const bf::Transform &t = bf::Transform::Default);
+        void draw(const bf::Shader &shader, const bf::Settings &settings);
+        void ObjectGui();
+    };
+}
 
 #endif //MG1_ZAD2_MULTICURSOR_H

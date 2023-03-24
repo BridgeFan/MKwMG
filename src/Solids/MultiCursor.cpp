@@ -10,7 +10,7 @@
 
 constexpr glm::vec3 multiColor[3] = {{1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f}};
 
-void MultiCursor::draw(const Shader &shader, const Settings& settings) {
+void bf::MultiCursor::draw(const bf::Shader &shader, const bf::Settings& settings) {
     for(int i=0;i<3;i++) {
         auto& line = lines[i];
         if((settings.isAxesLocked>>i)%2)
@@ -25,12 +25,12 @@ void MultiCursor::draw(const Shader &shader, const Settings& settings) {
     shader.setVec3("color",1.f,1.f,1.f);
 }
 
-MultiCursor::MultiCursor(const Transform &transform) : lines{Solid(""),Solid(""),Solid("")},
-                                                           transform(transform) {
+bf::MultiCursor::MultiCursor(const bf::Transform &t) : lines{Solid(""),Solid(""),Solid("")},
+                                                           transform(t) {
     initLines();
 }
 
-void MultiCursor::initLines() {
+void bf::MultiCursor::initLines() {
     //set buffers
     for(int i=0;i<3;i++) {
         std::vector vec = {.0f,.0f,.0f, .0f, .0f, .0f};
@@ -41,9 +41,9 @@ void MultiCursor::initLines() {
     }
 }
 
-void MultiCursor::ObjectGui() {
+void bf::MultiCursor::ObjectGui() {
     ImGui::Text("Cursor");
-    checkChanged("Cursor position", transform.position);
-    checkChanged("Cursor rotation", transform.rotation);
-    checkChanged("Cursor scale", transform.scale, true);
+	bf::imgui::checkChanged("Cursor position", transform.position);
+	bf::imgui::checkChanged("Cursor rotation", transform.rotation);
+	bf::imgui::checkChanged("Cursor scale", transform.scale, true);
 }

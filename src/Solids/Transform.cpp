@@ -5,9 +5,8 @@
 #include "Transform.h"
 #include <vector>
 #include <glm/gtx/euler_angles.hpp>
-#include <cstdio>
 
-const Transform Transform::Default=Transform();
+const bf::Transform bf::Transform::Default=bf::Transform();
 
 std::vector<float> debugMat(const glm::mat4& m) {
     std::vector<float> array;
@@ -19,21 +18,21 @@ std::vector<float> debugMat(const glm::mat4& m) {
     return array;
 }
 
-glm::mat4 getTranslateMatrix(const glm::vec3& pos) {
+glm::mat4 bf::getTranslateMatrix(const glm::vec3& pos) {
     glm::mat4 ret = {{1,0,0,0},
                      {0,1,0,0},
                      {0,0,1,0},
                      {pos.x,pos.y,pos.z,1}};
     return ret;
 }
-glm::mat4 getScalingMatrix(const glm::vec3& scale) {
+glm::mat4 bf::getScalingMatrix(const glm::vec3& scale) {
     glm::mat4 ret = {{scale.x,0,0,0},
                      {0,scale.y,0,0},
                      {0,0,scale.z,0},
                      {0,0,0,1}};
     return ret;
 }
-glm::mat4 getRotateXMatrix(float degrees) {
+glm::mat4 bf::getRotateXMatrix(float degrees) {
     float c = std::cos(glm::radians(degrees));
     float s = std::sin(glm::radians(degrees));
     glm::mat4 ret = {{1,0,0,0},
@@ -42,7 +41,7 @@ glm::mat4 getRotateXMatrix(float degrees) {
                      {0,0,0,1}};
     return ret;
 }
-glm::mat4 getRotateYMatrix(float degrees) {
+glm::mat4 bf::getRotateYMatrix(float degrees) {
     float c = std::cos(glm::radians(degrees));
     float s = std::sin(glm::radians(degrees));
     glm::mat4 ret = {{c,0,-s,0},
@@ -51,7 +50,7 @@ glm::mat4 getRotateYMatrix(float degrees) {
                      {0,0,0,1}};
     return ret;
 }
-glm::mat4 getRotateZMatrix(float degrees) {
+glm::mat4 bf::getRotateZMatrix(float degrees) {
     float c = std::cos(glm::radians(degrees));
     float s = std::sin(glm::radians(degrees));
     glm::mat4 ret = {{c,s,0,0},
@@ -60,47 +59,22 @@ glm::mat4 getRotateZMatrix(float degrees) {
                      {0,0,0,1}};
     return ret;
 }
-glm::mat4 getRotateMatrix(const glm::vec3& rot) {
-    glm::mat4 ret = getRotateXMatrix(rot.x);
-    ret *= getRotateYMatrix(rot.y);
-    ret *= getRotateZMatrix(rot.z);
+glm::mat4 bf::getRotateMatrix(const glm::vec3& rot) {
+    glm::mat4 ret = bf::getRotateXMatrix(rot.x);
+    ret *= bf::getRotateYMatrix(rot.y);
+    ret *= bf::getRotateZMatrix(rot.z);
     return ret;
 }
 
-glm::mat4 getInverseRotateMatrix(const glm::vec3& rot) {
-    glm::mat4 ret = getRotateZMatrix(-rot.z);
-    ret *= getRotateYMatrix(-rot.y);
-    ret *= getRotateXMatrix(-rot.x);
+glm::mat4 bf::getInverseRotateMatrix(const glm::vec3& rot) {
+    glm::mat4 ret = bf::getRotateZMatrix(-rot.z);
+    ret *= bf::getRotateYMatrix(-rot.y);
+    ret *= bf::getRotateXMatrix(-rot.x);
     return ret;
 }
 
-/*glm::vec3 solve3(const glm::mat4x3& matrix) {
-    //column, row
-    glm::mat4x3 mat = matrix;
-    constexpr int n = 3;
-    int results[n];
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = i + 1; j < n; j++) {
-            float f = mat[i][j] / mat[i][i];
-            for (int k = 0; k < n + 1; k++) {
-                mat[k][j] = mat[k][j] - f * mat[k][i];
-            }
-        }
-    }
-    for (int i = n - 1; i >= 0; i--) {
-        results[i] = mat[n][i];
-        for (int j = i + 1; j < n; j++) {
-            if (i != j) {
-                results[i] = results[i] - mat[j][i] * results[j];
-            }
-        }
-        results[i]=results[i]/mat[i][i];
-    }
-    return {results[0],results[1],results[2]};
-}*/
-
-Transform decomposeModelMatrix(const glm::mat4& matrix) {
-    Transform t;
+bf::Transform bf::decomposeModelMatrix(const glm::mat4& matrix) {
+    bf::Transform t;
     //position
     t.position = {matrix[3][0],matrix[3][1],matrix[3][2]};
     //scale
@@ -118,28 +92,28 @@ Transform decomposeModelMatrix(const glm::mat4& matrix) {
 }
 
 
-Transform::Transform(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& sc): position(pos), rotation(rot), scale(sc) {}
+bf::Transform::Transform(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& sc): position(pos), rotation(rot), scale(sc) {}
 
-glm::mat4 Transform::CalculateMatrix(const Transform &relativeTo) const {
+glm::mat4 bf::Transform::CalculateMatrix(const Transform &relativeTo) const {
     glm::mat4 ret;
     if(relativeTo.rotation==Default.rotation && relativeTo.position==Default.position && relativeTo.scale == Default.scale)
         ret = glm::mat4(1.f);
     else
         ret = CalculateMatrix(relativeTo);
-    ret = ret * getTranslateMatrix(position) * getRotateMatrix(rotation) * getScalingMatrix(scale);
+    ret = ret * bf::getTranslateMatrix(position) * bf::getRotateMatrix(rotation) * bf::getScalingMatrix(scale);
     return ret;
 }
-glm::mat4 Transform::CalculateInverseMatrix(const Transform &relativeTo) const {
+glm::mat4 bf::Transform::CalculateInverseMatrix(const Transform &relativeTo) const {
     glm::mat4 ret;
     if(relativeTo.rotation==Default.rotation && relativeTo.position==Default.position && relativeTo.scale == Default.scale)
         ret = glm::mat4(1.f);
     else
         ret = CalculateInverseMatrix(relativeTo);
-    ret = getScalingMatrix(1.f/scale) * getInverseRotateMatrix(rotation) * getTranslateMatrix(-position) * ret;
+    ret = bf::getScalingMatrix(1.f/scale) * bf::getInverseRotateMatrix(rotation) * bf::getTranslateMatrix(-position) * ret;
     return ret;
 }
 
-glm::vec3 Transform::CalculateRelativePosition(const glm::vec3 &pos) const
+glm::vec3 bf::Transform::CalculateRelativePosition(const glm::vec3 &pos) const
 {
 	float C=std::cos(glm::radians(rotation.z));
 	float S=std::sin(glm::radians(rotation.z));
@@ -149,7 +123,7 @@ glm::vec3 Transform::CalculateRelativePosition(const glm::vec3 &pos) const
 	ret.z=position.z+(-pos.x*S+pos.z*C);
 	return ret;
 }
-glm::vec3 Transform::CalculateRelativeFront(const glm::vec3 &pos) const
+glm::vec3 bf::Transform::CalculateRelativeFront(const glm::vec3 &pos) const
 {
 	float C=std::cos(glm::radians(rotation.z));
 	float S=std::sin(glm::radians(rotation.z));
@@ -160,34 +134,34 @@ glm::vec3 Transform::CalculateRelativeFront(const glm::vec3 &pos) const
 	return ret;
 }
 
-bool operator==(const Transform &t1, const Transform &t2) {
+bool bf::operator==(const bf::Transform &t1, const bf::Transform &t2) {
     return t1.position==t2.position && t1.rotation==t2.rotation && t1.scale==t2.scale;
 }
 
-glm::vec3 rotate(const glm::vec3 &pos, const glm::vec3 &rot) {
-    auto rotMatrix = getRotateMatrix(rot);
+glm::vec3 bf::rotate(const glm::vec3 &pos, const glm::vec3 &rot) {
+    auto rotMatrix = bf::getRotateMatrix(rot);
     auto vec = rotMatrix * glm::vec4(pos.x,pos.y,pos.z,1);
     return {vec.x,vec.y,vec.z};
 	//return glm::rotateZ(glm::rotateY(glm::rotateX(pos, glm::radians(rot.x)), glm::radians(rot.y)), glm::radians(rot.z));
 }
 
-glm::vec3 combineRotations(const glm::vec3& r1, const glm::vec3& r2) {
-    auto mat = getRotateMatrix(r2)*getRotateMatrix(r1);
+glm::vec3 bf::combineRotations(const glm::vec3& r1, const glm::vec3& r2) {
+    auto mat = bf::getRotateMatrix(r2)*bf::getRotateMatrix(r1);
     glm::vec3 ret;
     glm::extractEulerAngleXYZ(mat,ret.x,ret.y,ret.z);
     return ret;
 }
 
-Transform rotateAboutPoint(const Transform& transform, const glm::vec3& centre, const glm::vec3& rot) {
-    Transform ret=transform;
+bf::Transform bf::rotateAboutPoint(const bf::Transform& transform, const glm::vec3& centre, const glm::vec3& rot) {
+    bf::Transform ret=transform;
     ret.position -= centre;
     ret.position = rotate(ret.position,rot);
-    ret.rotation = glm::degrees(combineRotations(transform.rotation,rot));
+    ret.rotation = glm::degrees(bf::combineRotations(transform.rotation,rot));
     ret.position += centre;
     return ret;
 }
 
-glm::mat4 getProjectionMatrix(float fov, float aspect, float near, float far) {
+glm::mat4 bf::getProjectionMatrix(float fov, float aspect, float near, float far) {
     float t = std::tan(glm::radians(fov*.5f));
     glm::mat4 ret = {{1.0f/(t*aspect),0,0,0},
                      {0,1/t,0,0},
@@ -195,7 +169,7 @@ glm::mat4 getProjectionMatrix(float fov, float aspect, float near, float far) {
                      {0,0,-2*far*near/(far-near),0}};
     return ret;
 }
-glm::mat4 getInverseProjectionMatrix(float fov, float aspect, float near, float far) {
+glm::mat4 bf::getInverseProjectionMatrix(float fov, float aspect, float near, float far) {
     float t = std::tan(glm::radians(fov*.5f));
     glm::mat4 ret = {{t*aspect,0,0,0},
                      {0,t,0,0},
@@ -204,10 +178,10 @@ glm::mat4 getInverseProjectionMatrix(float fov, float aspect, float near, float 
     return ret;
 }
 
-glm::mat4 getRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) {
-    return getTranslateMatrix(-c)*getRotateMatrix(rot)*getTranslateMatrix(c);
+glm::mat4 bf::getRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) {
+    return bf::getTranslateMatrix(-c)*bf::getRotateMatrix(rot)*bf::getTranslateMatrix(c);
 }
-glm::mat4 getInverseRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) {
-    return getTranslateMatrix(-c)*getInverseRotateMatrix(rot)*getTranslateMatrix(c);
+glm::mat4 bf::getInverseRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) {
+    return bf::getTranslateMatrix(-c)*bf::getInverseRotateMatrix(rot)*bf::getTranslateMatrix(c);
 }
 

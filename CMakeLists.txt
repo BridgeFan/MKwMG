@@ -5,8 +5,9 @@ project(MG1_zad2)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -Wall -Wextra -Wunused \
 -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel \
 -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override \
--Wformat-overflow -Wformat-security -Wformat-signedness -Wextra-semi -Wredundant-decls -Wnull-dereference")
-#-Wdouble-promotion -Wfloat-equal -Wuseless-cast
+-Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference \
+-Woverloaded-virtual -Wcast-align -Wshadow -fno-common -Wfloat-equal")
+#-Wdouble-promotion -Wuseless-cast -Wformat-signedness -Wcast-qual
 include_directories(Riku ${PROJECT_SOURCE_DIR} "imgui-master")
 include_directories(Riku ${PROJECT_SOURCE_DIR} "imgui-master/backends")
 include_directories(Riku ${PROJECT_SOURCE_DIR} "src")

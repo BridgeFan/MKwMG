@@ -6,15 +6,15 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include "../Shader.h"
-int Solid::index = 1;
+int bf::Solid::index = 1;
 
-Solid::~Solid() {
+bf::Solid::~Solid() {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &IBO);
 }
 
-void Solid::setBuffers() {
+void bf::Solid::setBuffers() {
 	//remove old ones
 	if(VAO<UINT_MAX)
 		glDeleteVertexArrays(1, &VAO);
@@ -38,11 +38,11 @@ void Solid::setBuffers() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
 }
 
-void Solid::draw(const Shader& shader) const {
+void bf::Solid::draw(const bf::Shader& shader) const {
     draw(shader, Transform::Default);
 }
 
-void Solid::draw(const Shader& shader, const Transform& relativeTo) const {
+void bf::Solid::draw(const bf::Shader& shader, const bf::Transform& relativeTo) const {
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);
     /*glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
@@ -55,6 +55,6 @@ void Solid::draw(const Shader& shader, const Transform& relativeTo) const {
     );
 }
 
-void Solid::ObjectGui() {
+void bf::Solid::ObjectGui() {
 	Object::ObjectGui();
 }

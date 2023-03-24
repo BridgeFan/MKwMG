@@ -7,18 +7,21 @@
 
 #include "Object.h"
 
-class Point: public Object {
-private:
-	static int index;
-	static void Init();
-	static unsigned int VBO, VAO;
-	static bool isInited;
-public:
-	Point(const Transform& transform, const std::string& name);
-	explicit Point(const std::string& name): Point(Transform::Default, name) {}
-	explicit Point(const Transform& transform=Transform::Default): Point(transform, "Point "+std::to_string(index)) {index++;}
-	void draw(const Shader& shader) const override;
-};
+namespace bf {
+	class Point : public bf::Object {
+	private:
+		static int index;
+		static void Init();
+		static unsigned int VBO, VAO;
+		static bool isInited;
+	public:
+		Point(const bf::Transform &transform, const std::string &pointName);
+		explicit Point(const std::string &pointName) : Point(bf::Transform::Default, pointName) {}
+		explicit Point(const bf::Transform &t = bf::Transform::Default) : Point(t, "Point " + std::to_string(
+				index)) { index++; }
+		void draw(const bf::Shader &shader) const override;
+	};
+}
 
 
 #endif //MG1_ZAD2_POINT_H

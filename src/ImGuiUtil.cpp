@@ -9,12 +9,14 @@
 #include <string>
 #include <algorithm>
 #include "misc/cpp/imgui_stdlib.h"
+#include "Util.h"
+
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
 
 
-ImGuiIO& initImGui(GLFWwindow* window) {
+ImGuiIO& bf::imgui::init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -24,37 +26,37 @@ ImGuiIO& initImGui(GLFWwindow* window) {
 	return io;
 }
 
-void destroyImGui() {
+void bf::imgui::destroy() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
 
-bool checkChanged(const char* name, float& value) {
+bool bf::imgui::checkChanged(const char* name, float& value) {
 	float oldVal = value;
 	ImGui::InputFloat(name,&value);
-	return oldVal!=value;
+	return !almostEqual(oldVal,value);
 }
-bool checkChanged(const char* name, float& value, float min, float max, float step, float stepGreat) {
+bool bf::imgui::checkChanged(const char* name, float& value, float min, float max, float step, float stepGreat) {
     float oldVal = value;
     ImGui::InputFloat(name,&value,step,stepGreat);
     value = std::clamp(value,min,max);
-    return oldVal!=value;
+	return !almostEqual(oldVal,value);
 }
 
-bool checkChanged(const char* name, int& value) {
+bool bf::imgui::checkChanged(const char* name, int& value) {
 	int oldVal = value;
 	ImGui::InputInt(name,&value);
 	return oldVal!=value;
 }
-bool checkChanged(const char* name, int& value, int min, int max, int stepGreat) {
+bool bf::imgui::checkChanged(const char* name, int& value, int min, int max, int stepGreat) {
     int oldVal = value;
     ImGui::InputInt(name,&value,1,stepGreat);
     value = std::clamp(value,min,max);
     return oldVal!=value;
 }
 
-bool checkChanged(const char* name, std::string& value) {
+bool bf::imgui::checkChanged(const char* name, std::string& value) {
 	std::string oldVal = value;
 	ImGui::InputText(name,&value);
     if(value.empty()) {
@@ -63,49 +65,49 @@ bool checkChanged(const char* name, std::string& value) {
 	return oldVal!=value;
 }
 
-bool checkChanged(const char* name, glm::vec3& values, bool isZeroInsurance) {
+bool bf::imgui::checkChanged(const char* name, glm::vec3& values, bool isZeroInsurance) {
 	float array[] = {values.x, values.y, values.z};
 	ImGui::InputFloat3(name, array);
-	bool ret = array[0]!=values.x || array[1]!=values.y || array[2]==values.z;
+	bool ret = !almostEqual(array[0],values.x) || !almostEqual(array[1],values.y) || !almostEqual(array[2],values.z);
 	values.x = isZeroInsurance && std::abs(array[0]) < 0.001f ? 0.001f * (array[0] >= 0.0f ? 1.f : -1.f) : array[0];
 	values.y = isZeroInsurance && std::abs(array[1]) < 0.001f ? 0.001f * (array[1] >= 0.0f ? 1.f : -1.f) : array[1];
     values.z = isZeroInsurance && std::abs(array[2]) < 0.001f ? 0.001f * (array[2] >= 0.0f ? 1.f : -1.f) : array[2];
 	return ret;
 }
 
-bool checkChanged(const char* name, glm::vec2& values) {
+bool bf::imgui::checkChanged(const char* name, glm::vec2& values) {
     float array[] = {values.x, values.y};
     ImGui::InputFloat2(name, array);
-    bool ret = array[0]!=values.x || array[1]!=values.y;
+    bool ret = !almostEqual(array[0],values.x) || !almostEqual(array[1],values.y);
     values.x = array[0];
     values.y = array[1];
     return ret;
 }
 
-bool checkSliderChanged(const char* name, int& value, int min, int max) {
+bool bf::imgui::checkSliderChanged(const char* name, int& value, int min, int max) {
 	int oldVal = value;
 	ImGui::SliderInt(name,&value, min, max);
     value=std::clamp(value,min,max);
 	return oldVal!=value;
 }
 
-bool checkSliderChanged(const char* name, float& value, float min, float max) {
+bool bf::imgui::checkSliderChanged(const char* name, float& value, float min, float max) {
 	float oldVal = value;
 	ImGui::SliderFloat(name,&value, min, max);
     value=std::clamp(value,min,max);
-	return oldVal!=value;
+	return !almostEqual(oldVal,value);
 }
 
-bool checkSelectableChanged(const char* name, bool& selectable) {
+bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
     bool wasChanged = ImGui::Selectable(name, selectable);
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;
 }
 
-bool checkSelectableChanged(const char *name, std::vector<bool> &selectable, int n) {
+bool bf::imgui::checkSelectableChanged(const char *name, std::vector<bool> &selectable, int n) {
     bool val = selectable[n];
-    bool ret = checkSelectableChanged(name,val);
+    bool ret = bf::imgui::checkSelectableChanged(name,val);
     if(ret)
         selectable[n]=!selectable[n];
     return ret;

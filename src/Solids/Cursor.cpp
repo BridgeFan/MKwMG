@@ -1,16 +1,15 @@
 //
 // Created by kamil-hp on 21.03.2022.
 //
-
+#include "imgui.h"
 #include "Cursor.h"
 #include "Shader.h"
 #include "ImGuiUtil.h"
-#include "imgui.h"
 #include "Settings.h"
 #include "GlfwUtil.h"
 #include "Util.h"
 
-void Cursor::draw(const Shader &shader, const Settings&) {
+void bf::Cursor::draw(const bf::Shader &shader, const bf::Settings&) {
 	for(auto & line : lines) {
 			shader.setVec3("color",{1.0f,1.0f,.0f});
 		line.setPosition(transform.position);
@@ -21,14 +20,14 @@ void Cursor::draw(const Shader &shader, const Settings&) {
 	shader.setVec3("color",1.f,1.f,1.f);
 }
 
-Cursor::Cursor(const Transform &transform) : lines{Solid(""),Solid(""),Solid("")},
-transform(transform) {
+bf::Cursor::Cursor(const Transform &t) : lines{Solid(""),Solid(""),Solid("")},
+transform(t) {
     initLines();
 }
 
-void Cursor::initLines() {
+void bf::Cursor::initLines() {
 	//set buffers
-	for(int i=0;i<3;i++) {
+	for(unsigned i=0u;i<3u;i++) {
 		std::vector vec = {.0f,.0f,.0f, .0f, .0f, .0f};
         vec[i]=-.2f;
         vec[(i+1)%3]=-.2f;
@@ -40,18 +39,18 @@ void Cursor::initLines() {
 	}
 }
 
-void Cursor::ObjectGui(GLFWwindow* window, const glm::mat4& view, const glm::mat4& inverseView, const glm::mat4& projection, const glm::mat4& inverseProjection) {
+void bf::Cursor::ObjectGui(GLFWwindow* window, const glm::mat4& view, const glm::mat4& inverseView, const glm::mat4& projection, const glm::mat4& inverseProjection) {
 	ImGui::Text("Cursor");
-	checkChanged("Cursor position", transform.position);
+	bf::imgui::checkChanged("Cursor position", transform.position);
     if(window!=nullptr){
-        glm::vec3 screenPos = toScreenPos(window, transform.position, view, projection);
+        glm::vec3 screenPos = bf::glfw::toScreenPos(window, transform.position, view, projection);
         auto screenPos2 = glm::vec2(screenPos);
-        if(checkChanged("Screen position", screenPos2)) {
+        if(bf::imgui::checkChanged("Screen position", screenPos2)) {
             if(isnan(screenPos)) {
                 screenPos2={.0f,.0f};
                 screenPos.z=0.f;
             }
-            transform.position = toGlobalPos(window, glm::vec3(screenPos2, screenPos.z), inverseView, inverseProjection);
+            transform.position = bf::glfw::toGlobalPos(window, glm::vec3(screenPos2, screenPos.z), inverseView, inverseProjection);
         }
     }
 }

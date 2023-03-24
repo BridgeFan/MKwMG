@@ -5,12 +5,12 @@
 #include "Point.h"
 #include <GL/glew.h>
 #include "../Shader.h"
-int Point::index = 1;
-bool Point::isInited = false;
-unsigned Point::VBO = UINT_MAX;
-unsigned Point::VAO = UINT_MAX;
+int bf::Point::index = 1;
+bool bf::Point::isInited = false;
+unsigned bf::Point::VBO = UINT_MAX;
+unsigned bf::Point::VAO = UINT_MAX;
 
-void Point::draw(const Shader &shader) const {
+void bf::Point::draw(const Shader &shader) const {
 	//function assumes set projection and view matrices
 	glBindVertexArray(VAO);
 	/*glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
@@ -24,7 +24,7 @@ void Point::draw(const Shader &shader) const {
 	);*/
 }
 
-void Point::Init() {
+void bf::Point::Init() {
 	//remove old ones
 	if(VAO<UINT_MAX)
 		glDeleteVertexArrays(1, &VAO);
@@ -44,7 +44,7 @@ void Point::Init() {
 	glEnableVertexAttribArray(0);
 }
 
-Point::Point(const Transform &transform, const std::string &name) : Object(transform, name) {
+bf::Point::Point(const bf::Transform &t, const std::string &pointName) : bf::Object(t, pointName) {
 	if(!isInited) {
 		Init();
 		isInited=true;

@@ -9,35 +9,39 @@
 #include <vector>
 #include "Transform.h"
 
-class Shader;
-struct Settings;
+namespace bf {
+	class Shader;
+	struct Settings;
+	class Object {
+	private:
+		static int index;
+		bf::Transform transform;
+	public:
+		std::string name;
+		Object(const bf::Transform &t, const std::string &objName) : transform(t), name(objName) {}
+		explicit Object(const bf::Transform &t = bf::Transform::Default) : Object(t, "Object " + std::to_string(
+				index)) { index++; }
+		explicit Object(const std::string &objName) : bf::Object(Transform::Default, objName) {}
+		virtual ~Object() = default;
+		virtual void draw(const bf::Shader &shader) const = 0;
+		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }
+		void setPosition(const glm::vec3 &pos) { transform.position = pos; }
+		[[nodiscard]] [[maybe_unused]] const glm::vec3 &getRotation() const { return transform.rotation; }
+		void setRotation(const glm::vec3 &rot) { transform.rotation = rot; }
+		[[nodiscard]] const glm::vec3 &getScale() const { return transform.scale; }
+		void setScale(const glm::vec3 &scale) { transform.scale = scale; }
+		[[nodiscard]] glm::mat4 getModelMatrix(const bf::Transform &relativeTo = bf::Transform::Default) const;
+		void setTransform(const bf::Transform &t) { transform = t; }
+		void setTransform(bf::Transform &&t) { transform = t; }
+		[[nodiscard]] const bf::Transform &getTransform() const { return transform; }
+		void setNewTransform(const glm::vec3 &centre, const bf::Transform &oldTransform, const bf::Transform &newTransform);
+		void setRelativeScale(const glm::vec3 &pos, float multiplier);
+		virtual void ObjectGui();
+		friend glm::vec3 getMiddle(const std::vector<Object> &objects);
+	};
 
-class Object {
-private:
-	static int index;
-    Transform transform;
-public:
-	std::string name;
-	Object(const Transform& transform, const std::string& name): transform(transform), name(name) {}
-	explicit Object(const Transform& transform=Transform::Default): Object(transform, "Object "+std::to_string(index)) {index++;}
-	explicit Object(const std::string& name): Object(Transform::Default, name) {}
-	virtual ~Object()=default;
-	virtual void draw(const Shader& shader) const = 0;
-	[[nodiscard]] const glm::vec3& getPosition() const {return transform.position;}
-	void setPosition(const glm::vec3& pos) {transform.position=pos;}
-	[[nodiscard]] [[maybe_unused]] const glm::vec3& getRotation() const {return transform.rotation;}
-	void setRotation(const glm::vec3& rot) {transform.rotation=rot;}
-	[[nodiscard]] const glm::vec3& getScale() const {return transform.scale;}
-	void setScale(const glm::vec3& scale) {transform.scale=scale;}
-	[[nodiscard]] glm::mat4 getModelMatrix(const Transform &relativeTo=Transform::Default) const {return transform.CalculateMatrix(relativeTo);}
-	void setTransform(const Transform& t) {transform=t;}
-    void setTransform(Transform&& t) {transform=t;}
-	[[nodiscard]] const Transform& getTransform() const {return transform;}
-	void setNewTransform(const glm::vec3& centre, const Transform& oldTransform, const Transform& newTransform);
-	void setRelativeScale(const glm::vec3& pos, float multiplier);
-	virtual void ObjectGui();
-	friend glm::vec3 getMiddle(const std::vector<Object>& objects);
-};
+	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);
+}
 
 
 #endif //MG1_ZAD2_OBJECT_H

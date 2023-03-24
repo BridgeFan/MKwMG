@@ -5,25 +5,25 @@
 #include "camera.h"
 #include "ImGuiUtil.h"
 
-void Camera::ObjectGui() {
-	checkChanged("Position", position);
-	checkChanged("Rotation", rotation);
-    checkChanged("fov", Zoom, 5.f, 120.f);
+void bf::Camera::ObjectGui() {
+	bf::imgui::checkChanged("Position", position);
+	bf::imgui::checkChanged("Rotation", rotation);
+	bf::imgui::checkChanged("fov", Zoom, 5.f, 120.f);
 }
 
-const glm::vec3 &Camera::getFront() const {
+const glm::vec3 &bf::Camera::getFront() const {
     return front;
 }
 
-const glm::vec3 &Camera::getUp() const {
+const glm::vec3 &bf::Camera::getUp() const {
     return up;
 }
 
-const glm::vec3 &Camera::getRight() const {
+const glm::vec3 &bf::Camera::getRight() const {
     return right;
 }
 
-glm::mat4 Camera::GetViewMatrix() {
+glm::mat4 bf::Camera::GetViewMatrix() {
     right = rotate({1.0f, 0.0f, 0.0f}, rotation);
     up = rotate({0.0f, 1.0f, 0.0f}, rotation);
     front = rotate({0.0f, 0.0f, 1.0f}, rotation);
@@ -36,11 +36,11 @@ glm::mat4 Camera::GetViewMatrix() {
     return ret;
 }
 
-glm::mat4 Camera::GetInverseViewMatrix() {
+glm::mat4 bf::Camera::GetInverseViewMatrix() {
     glm::mat4 ret =
                     glm::mat4({1.f,0.f,0.f,0.f},
                               {0.f,1.f,0.f,0.f},
                               {0.f,0.f,-1.f,0.f},
-                              {-position.x,-position.y,position.z,1.f})*getInverseRotateMatrix(rotation);
+                              {-position.x,-position.y,position.z,1.f})*bf::getInverseRotateMatrix(rotation);
     return ret;
 }

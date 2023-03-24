@@ -5,8 +5,9 @@
 #include "Shader.h"
 #include "Util.h"
 #include <GL/glew.h>
+//file based on https://learnopengl.com tutorials for OpenGL
 
-Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath) {
+bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath) {
     bool isGeometryShaderUsed = !geometryPath.empty();
     // 1. retrieve the vertex/fragment source code from filePath
 	std::string vertexCode = readWholeFile(vertexPath.c_str());
@@ -17,7 +18,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, c
     if(fragmentCode.empty())
         fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", fragmentPath.c_str());
     if(!geometryPath.empty() && geometryCode.empty()) {
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", geometryPath.c_str());
+        fprintf(stderr, "ERROR::bf::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", geometryPath.c_str());
     }
 	const char* vShaderCode = vertexCode.c_str();
 	const char * fShaderCode = fragmentCode.c_str();
@@ -57,23 +58,23 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, c
 	if(isGeometryShaderUsed)
 		glDeleteShader(geometry);
 }
-void Shader::use() const
+void bf::Shader::use() const
 {
 	glUseProgram(ID);
 }
-void Shader::setBool(const std::string &name, bool value) const
+void bf::Shader::setBool(const std::string &name, bool value) const
 {
 	glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }
-void Shader::setInt(const std::string &name, int value) const
+void bf::Shader::setInt(const std::string &name, int value) const
 {
 	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 }
-void Shader::setFloat(const std::string &name, float value) const
+void bf::Shader::setFloat(const std::string &name, float value) const
 {
 	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
-void Shader::checkCompileErrors(unsigned int shader, const std::string& type) const
+void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type) const
 {
 	int success;
 	char infoLog[1024];
@@ -99,7 +100,7 @@ void Shader::checkCompileErrors(unsigned int shader, const std::string& type) co
 	}
 }
 
-Shader::~Shader()
+bf::Shader::~Shader()
 {
 	glDeleteProgram(ID);
 }
