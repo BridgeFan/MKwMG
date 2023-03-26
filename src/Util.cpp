@@ -85,7 +85,7 @@ bool isnan(const glm::vec4 &v) {
 
 bool almostEqual(float a1, float a2) {
 	constexpr auto epsilon = (float)1e-7;
-	return std::abs(a1-a2)<epsilon*std::max(a1,a2);
+	return std::abs(a1-a2)<epsilon*std::max(std::abs(a1),std::abs(a2));
 }
 
 bf::GlfwStruct::GlfwStruct(bf::Settings &settings1, bf::Camera &camera1, std::vector<bool> &selection1, std::vector<std::unique_ptr<bf::Object> >& objects1,
