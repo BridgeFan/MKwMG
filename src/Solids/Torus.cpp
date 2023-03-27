@@ -17,9 +17,9 @@ void bf::Torus::updateTorus() {
 	//generate vertices and indices
 	vertices.clear();
 	indices.clear();
-	for(unsigned i=0u;i<(unsigned)smallFragments;i++) {
+	for(unsigned i=0u;i<static_cast<unsigned>(smallFragments);i++) {
 		float alpha = PI * 2.f * i / smallFragments;
-		for(unsigned j=0u;j<(unsigned)bigFragments;j++) {
+		for(unsigned j=0u;j<static_cast<unsigned>(bigFragments);j++) {
 			float beta = PI * 2.f * j / bigFragments;
 			//x, y, z
 			vertices.push_back((bigRadius+smallRadius*std::cos(alpha))*std::cos(beta));

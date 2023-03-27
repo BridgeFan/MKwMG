@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "misc/cpp/imgui_stdlib.h"
 #include "Util.h"
+#include "Solids/ObjectArray.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -105,10 +106,20 @@ bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
     return wasChanged;
 }
 
-bool bf::imgui::checkSelectableChanged(const char *name, std::vector<bool> &selectable, int n) {
+bool bf::imgui::checkSelectableChanged(const char *name, std::vector<bool> &selectable, std::size_t n) {
     bool val = selectable[n];
     bool ret = bf::imgui::checkSelectableChanged(name,val);
     if(ret)
         selectable[n]=!selectable[n];
     return ret;
+}
+
+bool bf::imgui::checkObjectArrayChanged(const char *name, bf::ObjectArray &objectArray, std::size_t n) {
+	if(!objectArray.isCorrect(n))
+		ImGui::Text("_");
+	bool val = objectArray.isActive(n);
+	bool ret = bf::imgui::checkSelectableChanged(name,val);
+	if(ret)
+		objectArray.toggleActive(n);
+	return ret;
 }

@@ -10,8 +10,8 @@
 
 class ImGuiIO;
 struct GLFWwindow;
-
 namespace bf {
+	class ObjectArray;
 	namespace imgui {
 		ImGuiIO &init(GLFWwindow *window);
 		void destroy();
@@ -25,7 +25,8 @@ namespace bf {
 		bool checkSliderChanged(const char *name, int &value, int min, int max);
 		bool checkSliderChanged(const char *name, float &value, float min, float max);
 		bool checkSelectableChanged(const char *name, bool &selectable);
-		bool checkSelectableChanged(const char *name, std::vector<bool> &selectable, int n);
+		bool checkSelectableChanged(const char *name, std::vector<bool> &selectable, std::size_t n);
+		bool checkObjectArrayChanged(const char *name, bf::ObjectArray& objectArray, std::size_t n);
 	}
 }
 

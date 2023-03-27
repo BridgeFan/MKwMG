@@ -13,7 +13,7 @@ namespace bf {
 	class Solid : public bf::Object {
 		static int index;
 	public:
-		~Solid() override;
+		virtual ~Solid() override;
 		Solid(const bf::Transform &t, const std::string &solidName) : bf::Object(t, solidName) {}
 		explicit Solid(const bf::Transform &t = bf::Transform::Default) : bf::Solid(t, "Solid " + std::to_string(
 				index)) { index++; }

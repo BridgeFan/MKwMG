@@ -12,7 +12,7 @@
 class ImGuiIO;
 namespace bf {
     struct Settings;
-    class Object;
+	class ObjectArray;
     class Camera;
     class Cursor;
     class MultiCursor;
@@ -20,8 +20,8 @@ namespace bf {
     struct GlfwStruct {
         bf::Settings &settings;
         bf::Camera &camera;
-        std::vector<bool> &selection;
-        std::vector<std::unique_ptr<bf::Object> > &objects;
+        //std::vector<bool> &selection;
+		ObjectArray& objectArray;
         const float &deltaTime;
         ImGuiIO &io;
         bf::Cursor &cursor;
@@ -29,14 +29,10 @@ namespace bf {
         bf::Transform &multiTransform;
         glm::vec3 &multiCentre;
 
-        GlfwStruct(bf::Settings &settings1, bf::Camera &camera1, std::vector<bool> &selection1,
-                   std::vector<std::unique_ptr<bf::Object> > &objects1,
+        GlfwStruct(bf::Settings &settings1, bf::Camera &camera1, ObjectArray& objectArray1,
                    const float &deltaTime1, ImGuiIO &io1, bf::Cursor &cursor1, bf::MultiCursor &multiCursor1,
                    bf::Transform &multiTransform1, glm::vec3 &multiCentre1);
     };
-    void clearSelection(std::vector<bool>& vec, int index, bf::Settings& settings);
-    glm::vec3 getCentre(std::vector<bool>& selection, const std::vector<std::unique_ptr<bf::Object> >& objects);
-    void deleteObjects(std::vector<bool>& selection, std::vector<std::unique_ptr<bf::Object> >& objects);
 }
 
 std::string readWholeFile(const char* path);

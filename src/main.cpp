@@ -24,6 +24,7 @@
 #include "Solids/MultiCursor.h"
 #include <memory>
 #include <algorithm>
+#include "Solids/ObjectArray.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -37,21 +38,23 @@ int main() {
 	//init ImGUI
     //structures
 	ImGuiIO& io = bf::imgui::init(window);
-    std::vector<std::unique_ptr<bf::Object> > objects;
+	bf::ObjectArray objectArray;
+    //std::vector<std::unique_ptr<bf::Object> > objects;
     bf::Cursor cursor;
     bf::MultiCursor multiCursor;
     bf::Transform& multiTransform=multiCursor.transform;
     glm::vec3 multiCentre;
     bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
-    std::vector<bool> selection;
+    //std::vector<bool> selection;
     float deltaTime = 0.0f;
-    bf::GlfwStruct glfwStruct(settings,camera,selection,objects,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
+    bf::GlfwStruct glfwStruct(settings,camera,/*selection,*/objectArray,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
     glfwSetWindowUserPointer(window,&glfwStruct);
 	//bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.25f, 0.25f, 0.20f, 1.00f);
 	bf::Shader shader(SHADER_PATH+"shader.vert", SHADER_PATH+"shader.frag");
 
-	objects.emplace_back(new bf::Torus());
+	objectArray.add<bf::Torus>();
+	//objects.emplace_back(new bf::Torus());
 
 
     settings.Projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
@@ -62,7 +65,7 @@ int main() {
 	while (!glfwWindowShouldClose(window))
 	{
 		static float lastFrame;
-		auto currentFrame = (float)glfwGetTime();
+		auto currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		// Poll and handle events (inputs, window resize, etc.)
@@ -83,32 +86,38 @@ int main() {
 		ImGui::Begin("Create object");
 		//ImGui::
 		if(ImGui::Button("Torus")) {
-			objects.emplace_back(new bf::Torus(cursor.transform));
-			clearSelection(selection,-1,settings);
-			settings.activeIndex = selection.size();
-			selection.emplace_back(true);
+			objectArray.add<bf::Torus>(cursor.transform);
+			//objects.emplace_back(new bf::Torus(cursor.transform));
+			objectArray.clearSelection(objectArray.size()-1, settings);
+			//clearSelection(selection,-1,settings);
+
+			//settings.activeIndex = selection.size();
+			//selection.emplace_back(true);
 		}
 		if(ImGui::Button("Point")) {
-			objects.emplace_back(new bf::Point(cursor.transform));
-			clearSelection(selection,-1,settings);
+			objectArray.add<bf::Point>(cursor.transform);
+			objectArray.clearSelection(objectArray.size()-1, settings);
+			//objects.emplace_back(new bf::Point(cursor.transform));
+			/*clearSelection(selection,-1,settings);
 			settings.activeIndex = selection.size();
-			selection.emplace_back(true);
+			selection.emplace_back(true);*/
 		}
 		ImGui::End();
 		//ImGui
 		///LIST OF OBJECTS PANEL
 		ImGui::Begin("List of objects");
-		if(selection.size()!=objects.size()) { //resize selection if needed
+		/*if(selection.size()!=objectArray.size()) { //resize selection if needed
 			selection.resize(objects.size(),false);
-		}
+		}*/
 		ImGui::Text("Hold CTRL and click to select multiple items.");
 		if(ImGui::Button("Delete")) {
-			deleteObjects(selection, objects);
+			objectArray.removeActive();
+			//deleteObjects(selection, objects);
 		}
 		if(ImGui::Button(settings.isMultiState ? "To single" : "To multi")) {
 			settings.isMultiState = !settings.isMultiState;
 			if(!settings.isMultiState)
-				clearSelection(selection, -1, settings);
+				objectArray.clearSelection(settings);
 		}
         if(ImGui::Button(settings.isUniformScaling ? "To non-uniform scaling" : "To uniform scaling")) {
             settings.isUniformScaling = !settings.isUniformScaling;
@@ -124,38 +133,40 @@ int main() {
 		}
 
 		if(ImGui::Button("Clear selection"))
-			clearSelection(selection, -1, settings);
-		for (int n = 0; n < (int)selection.size(); n++)
+			objectArray.clearSelection(-1, settings);
+		for (std::size_t n = 0u; n < objectArray.size(); n++)
 		{
-			if(!objects[n]) {
+			if(!objectArray.isCorrect(n)) {
 				ImGui::Text("Empty unique pointer");
 				continue;
 			}
-			if (bf::imgui::checkSelectableChanged(objects[n]->name.c_str(), selection, n))
+			if (bf::imgui::checkObjectArrayChanged(objectArray[n].name.c_str(), objectArray, n))
 			{
                 multiTransform = bf::Transform::Default;
 				if (!settings.isMultiState) { // Clear selection when CTRL is not held
-					clearSelection(selection, n, settings);
+					objectArray.clearSelection(n, settings);
+					//clearSelection(selection, n, settings);
 				}
 				//selection[n] = !selection[n];
-				if(selection[n])
-					settings.activeIndex = n;
+				if(objectArray.isActive(n))
+					settings.activeIndex = static_cast<int>(n);
 				else
 					settings.activeIndex = -1;
-				multiCentre = bf::getCentre(selection, objects);
+				multiCentre = objectArray.getCentre();
+				//multiCentre = bf::getCentre(selection, objects);
 			}
 		}
 		ImGui::End();
 		/// MODIFY OBJECT PANEL
 		ImGui::Begin("Modify object");
 		//active object settings
-		if(settings.activeIndex>=0 && settings.activeIndex<(int)objects.size() && !settings.isMultiState)
-			objects[settings.activeIndex]->ObjectGui();
+		if(settings.activeIndex>=0 && settings.activeIndex<static_cast<int>(objectArray.size()) && !settings.isMultiState)
+			objectArray[settings.activeIndex].ObjectGui();
 		else {
 			bool isAny = false;
 			if (settings.isMultiState) {
-				for (int i = 0; i < (int)objects.size(); i++) {
-					if (objects[i] && selection[i]) {
+				for (std::size_t i = 0u; i < objectArray.size(); i++) {
+					if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
 						isAny=true;
 						break;
 					}
@@ -168,9 +179,9 @@ int main() {
 					tmp = bf::imgui::checkChanged("Object scale", multiTransform.scale, true) || tmp;
 					//multiCentre = getCentre(selection, objects);
 					if (tmp) {
-						for (int i = 0; i < (int)objects.size(); i++) {
-							if (objects[i] && selection[i]) {
-								objects[i]->setNewTransform(multiCentre, oldTransform, multiTransform);
+						for (std::size_t i = 0; i < objectArray.size(); i++) {
+							if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
+								objectArray[i].setNewTransform(multiCentre, oldTransform, multiTransform);
 							}
 						}
 					}
@@ -204,24 +215,24 @@ int main() {
 		settings.InverseView = camera.GetInverseViewMatrix();
 		shader.setMat4("view", settings.View);
 		//draw objects
-		for(int i=0;i<(int)objects.size();i++) {
-			if(objects[i]) {
-				if(selection[i])
+		for(std::size_t i=0;i<objectArray.size();i++) {
+			if(objectArray.isCorrect(i)) {
+				if(objectArray.isActive(i))
 					shader.setVec3("color",1.f,.5f,.0f);
 				else
 					shader.setVec3("color",1.f,1.f,1.f);
-				objects[i]->draw(shader);
+				objectArray[i].draw(shader);
 			}
 		}
-		if(settings.isMultiState && std::find(selection.begin(),selection.end(),true)!=selection.end()) {
+		if(settings.isMultiState && objectArray.isAnyActive()) {
             multiCursor.transform.position+=multiCentre;
             multiCursor.draw(shader, settings);
             multiCursor.transform.position-=multiCentre;
 		}
-        else if(!settings.isMultiState && settings.activeIndex>=0 && settings.activeIndex < (int)selection.size() &&
-            objects[settings.activeIndex]) {
+        else if(!settings.isMultiState && settings.activeIndex>=0 && settings.activeIndex < static_cast<int>(objectArray.size()) &&
+            objectArray.isCorrect(settings.activeIndex)) {
             bf::Transform oldTransform = multiCursor.transform;
-            multiCursor.transform=objects[settings.activeIndex]->getTransform();
+            multiCursor.transform=objectArray[settings.activeIndex].getTransform();
             multiCursor.draw(shader, settings);
             multiCursor.transform=std::move(oldTransform);
         }
