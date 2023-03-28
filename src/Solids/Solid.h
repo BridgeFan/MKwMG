@@ -6,7 +6,7 @@
 #define MG1_ZAD2_SOLID_H
 #include <vector>
 #include <climits>
-#include "Object.h"
+#include "src/Object/Object.h"
 namespace bf {
 	class Shader;
 	struct Settings;

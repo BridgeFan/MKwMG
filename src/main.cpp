@@ -24,7 +24,8 @@
 #include "Solids/MultiCursor.h"
 #include <memory>
 #include <algorithm>
-#include "Solids/ObjectArray.h"
+#include "src/Object/ObjectArray.h"
+#include "Solids/BezierCurve.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -45,7 +46,6 @@ int main() {
     bf::Transform& multiTransform=multiCursor.transform;
     glm::vec3 multiCentre;
     bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
-    //std::vector<bool> selection;
     float deltaTime = 0.0f;
     bf::GlfwStruct glfwStruct(settings,camera,/*selection,*/objectArray,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
     glfwSetWindowUserPointer(window,&glfwStruct);
@@ -87,20 +87,15 @@ int main() {
 		//ImGui::
 		if(ImGui::Button("Torus")) {
 			objectArray.add<bf::Torus>(cursor.transform);
-			//objects.emplace_back(new bf::Torus(cursor.transform));
-			objectArray.clearSelection(objectArray.size()-1, settings);
-			//clearSelection(selection,-1,settings);
-
-			//settings.activeIndex = selection.size();
-			//selection.emplace_back(true);
+			//objectArray.clearSelection(objectArray.size()-1, settings);
 		}
 		if(ImGui::Button("Point")) {
 			objectArray.add<bf::Point>(cursor.transform);
-			objectArray.clearSelection(objectArray.size()-1, settings);
-			//objects.emplace_back(new bf::Point(cursor.transform));
-			/*clearSelection(selection,-1,settings);
-			settings.activeIndex = selection.size();
-			selection.emplace_back(true);*/
+			//objectArray.clearSelection(objectArray.size()-1, settings);
+		}
+		if(ImGui::Button("Bézier curve 0")) {
+			objectArray.addRef<bf::BezierCurve>(camera, settings);
+			//objectArray.clearSelection(objectArray.size()-1, settings);
 		}
 		ImGui::End();
 		//ImGui
@@ -145,15 +140,12 @@ int main() {
                 multiTransform = bf::Transform::Default;
 				if (!settings.isMultiState) { // Clear selection when CTRL is not held
 					objectArray.clearSelection(n, settings);
-					//clearSelection(selection, n, settings);
 				}
-				//selection[n] = !selection[n];
 				if(objectArray.isActive(n))
 					settings.activeIndex = static_cast<int>(n);
 				else
 					settings.activeIndex = -1;
 				multiCentre = objectArray.getCentre();
-				//multiCentre = bf::getCentre(selection, objects);
 			}
 		}
 		ImGui::End();
@@ -177,7 +169,6 @@ int main() {
 					bool tmp = bf::imgui::checkChanged("Object position", multiTransform.position);
 					tmp = bf::imgui::checkChanged("Object rotation", multiTransform.rotation) || tmp;
 					tmp = bf::imgui::checkChanged("Object scale", multiTransform.scale, true) || tmp;
-					//multiCentre = getCentre(selection, objects);
 					if (tmp) {
 						for (std::size_t i = 0; i < objectArray.size(); i++) {
 							if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
@@ -229,8 +220,7 @@ int main() {
             multiCursor.draw(shader, settings);
             multiCursor.transform.position-=multiCentre;
 		}
-        else if(!settings.isMultiState && settings.activeIndex>=0 && settings.activeIndex < static_cast<int>(objectArray.size()) &&
-            objectArray.isCorrect(settings.activeIndex)) {
+        else if(!settings.isMultiState && objectArray.isMovable(settings.activeIndex)) {
             bf::Transform oldTransform = multiCursor.transform;
             multiCursor.transform=objectArray[settings.activeIndex].getTransform();
             multiCursor.draw(shader, settings);

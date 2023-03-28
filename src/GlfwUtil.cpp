@@ -7,11 +7,13 @@
 #include "Settings.h"
 #include "camera.h"
 #include <array>
-#include "Solids/Object.h"
+#include "src/Object/Object.h"
 #include "imgui.h"
 #include "Util.h"
 #include "Solids/Cursor.h"
-#include "Solids/ObjectArray.h"
+#include "src/Object/ObjectArray.h"
+#include "Solids/Point.h"
+#include "Solids/Torus.h"
 
 constexpr int SRC_WIDTH=1024;
 constexpr int SRC_HEIGHT=768;
@@ -167,52 +169,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	float rotSpeed = camera.RotationSpeed * deltaTime;
 	float scaleSpeed = .5f * deltaTime;
 
-	/*if(settings.state == MiddleClick) {
-		//move right or up
-		camera.Position += speed * (camera.getRight() * xoffset + camera.getUp() * yoffset);
-	}
-	else if(settings.state == RightClick) {
-		//rotate
-		camera.ProcessMouseMovement(xoffset, yoffset);
-	}*/
-	//uint8_t axis1, axis2;
-	//uint8_t axis3 = UINT8_MAX;
-	/*switch(settings.isAxesLocked) {
-		case 0:
-			axis1 = 0;
-			axis2 = 1;
-			axis3 = 2;
-			isRotationInverted=true;
-			break;
-		case 1: //X locked
-			axis1 = 1;
-			axis2 = 2;
-			break;
-		case 2: //Y locked
-			axis1 = 2;
-			axis2 = 0;
-			break;
-		case 3: //X and Y locked
-			axis1 = 2;
-			axis2 = 2;
-			break;
-		case 4: //Z locked
-			axis1 = 0;
-			axis2 = 1;
-			isRotationInverted=true;
-			break;
-		case 5: //X and Z locked
-			axis1 = 1;
-			axis2 = 1;
-			break;
-		case 6: //Y and Z locked
-			axis1 = 0;
-			axis2 = 0;
-			break;
-		case 7: //X, Y and Z locked
-			axis1 = UINT8_MAX; //ignore moving and rotating
-			break;
-	}*/
 	if(settings.state != bf::None) {
 		float myVec[] = {.0f,.0f,.0f};
 		if(settings.isAltPressed)
@@ -233,7 +189,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
                 glm::vec3 centre;
                 if(settings.isMultiState)
                     centre = multiTransform.position;
-                else if(settings.activeIndex>=0 && objectArray.isCorrect(settings.activeIndex))
+                else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex))
                     centre = objectArray[settings.activeIndex].getPosition();
                 else
                     centre = cursor.transform.position;
@@ -277,7 +233,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
             bf::Transform t;
             if(settings.isMultiState)
                 t = multiTransform;
-            else if(settings.activeIndex>=0 && objectArray.isCorrect(settings.activeIndex))
+            else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex))
                 t = objectArray[settings.activeIndex].getTransform();
             else
                 t = cursor.transform;
@@ -293,7 +249,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
                 multiTransform = std::move(t);
 				//multiCentre = getCentre(selection, objects);
 			}
-			else if(settings.activeIndex>=0 && objectArray.isCorrect(settings.activeIndex)) {
+			else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex)) {
                 objectArray[settings.activeIndex].setTransform(std::move(t));
 			}
 			else {
@@ -315,6 +271,7 @@ void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
 void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/) {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
+	bf::Cursor& cursor = ptr->cursor;
     auto& objectArray = ptr->objectArray;
 	if(ptr->io.WantCaptureKeyboard)
 		return;
@@ -357,6 +314,12 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 				objectArray.clearSelection(settings);
                 ptr->multiCentre = objectArray.getCentre();
 				break;
+			case GLFW_KEY_P:
+				objectArray.add<bf::Point>(cursor.transform);
+				break;
+			case GLFW_KEY_T:
+				objectArray.add<bf::Torus>(cursor.transform);
+				break;
             case GLFW_KEY_U:
                 settings.isUniformScaling = !settings.isUniformScaling;
                 break;
@@ -370,7 +333,7 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 	}
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
 {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
@@ -409,8 +372,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 			}
 		}
         if(selectionIndex >= 0) {
-            if(!(mods&GLFW_MOD_CONTROL))
+            if(!settings.isCtrlPressed)
 				objectArray.clearSelection(selectionIndex, settings);
+			objectArray.setActive(selectionIndex);
             settings.activeIndex = selectionIndex;
 			ptr->multiCentre = objectArray.getCentre();
         }

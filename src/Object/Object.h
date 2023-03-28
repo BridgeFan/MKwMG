@@ -14,13 +14,14 @@ namespace bf {
 	struct Settings;
 	class Object {
 	private:
-		static int index;
+		static int _objIndex;
+	protected:
 		bf::Transform transform;
 	public:
 		std::string name;
 		Object(const bf::Transform &t, const std::string &objName) : transform(t), name(objName) {}
 		explicit Object(const bf::Transform &t = bf::Transform::Default) : Object(t, "Object " + std::to_string(
-				index)) { index++; }
+				_objIndex)) { _objIndex++; }
 		explicit Object(const std::string &objName) : bf::Object(Transform::Default, objName) {}
 		virtual ~Object() = default;
 		virtual void draw(const bf::Shader &shader) const = 0;
@@ -38,6 +39,8 @@ namespace bf {
 		void setRelativeScale(const glm::vec3 &pos, float multiplier);
 		virtual void ObjectGui();
 		friend glm::vec3 getMiddle(const std::vector<Object> &objects);
+		//utility functions
+		[[nodiscard]] virtual bool isMovable() const {return true;}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

@@ -30,7 +30,7 @@ void bf::Solid::setBuffers() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float) * 3, vertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(0);
 
 	glGenBuffers(1, &IBO);
@@ -51,7 +51,7 @@ void bf::Solid::draw(const bf::Shader& shader, const bf::Transform& relativeTo) 
 
     //glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
     glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
-                   (void*)0           // element array buffer offset
+                   reinterpret_cast<void*>(0)           // element array buffer offset
     );
 }
 

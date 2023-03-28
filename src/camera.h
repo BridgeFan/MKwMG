@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
-#include "Solids/Transform.h"
+#include "src/Object/Transform.h"
 //source based on learnopengl.com
 
 // Default camera values

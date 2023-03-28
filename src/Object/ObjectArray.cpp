@@ -6,18 +6,6 @@
 #include "Settings.h"
 #include "Object.h"
 
-bf::Object *bf::ObjectArray::getObjectPtr(std::size_t index) {
-	if(index >= objects.size())
-		return nullptr;
-	return objects[index].first.get();
-}
-
-const bf::Object *bf::ObjectArray::getObjectPtr(std::size_t index) const {
-	if(index >= objects.size())
-		return nullptr;
-	return objects[index].first.get();
-}
-
 bf::Object &bf::ObjectArray::operator[](std::size_t index) {
 	if(index >= objects.size())
 		throw std::out_of_range("Index too large");
@@ -45,7 +33,9 @@ void bf::ObjectArray::add(bf::Object* object) {
 bool bf::ObjectArray::remove(std::size_t index) {
 	if(index>=objects.size())
 		return false;
-	//TODO - pass info to Bézier curves
+	for(auto a: listeners)
+		if(a)
+			a->onRemoveObject(index);
 	for(std::size_t i=index+1;i<objects.size();i++)
 		std::swap(objects[i],objects[i+1]);
 	objects.pop_back();
@@ -66,7 +56,6 @@ bool bf::ObjectArray::isActive(std::size_t index) {
 }
 
 void bf::ObjectArray::removeActive() {
-	//TODO - pass info to Bézier curves
 	for(std::size_t i=0u;i<size();i++)
 		if(objects[i].second)
 			remove(i);
@@ -79,7 +68,7 @@ void bf::ObjectArray::clearSelection(std::size_t index, Settings& settings) {
 	if(isCorrect(index))
 		objects[index].second=true;
 	//if(settings.isMultiState)
-		settings.activeIndex=static_cast<int>(index);
+	settings.activeIndex=static_cast<int>(index);
 	/*else
 		settings.activeIndex=-1;*/
 }
@@ -109,4 +98,28 @@ bool bf::ObjectArray::isAnyActive() {
 
 void bf::ObjectArray::clearSelection(bf::Settings &settings) {
 	clearSelection(-1, settings);
+}
+
+bool bf::ObjectArray::setActive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+	objects[index].second=true;
+	return true;
+}
+bool bf::ObjectArray::setUnactive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+	objects[index].second=false;
+	return true;
+}
+
+void bf::ObjectArray::addListener(bf::ObjectArrayListener &listener) {
+	listeners.insert(&listener);
+}
+void bf::ObjectArray::removeListener(bf::ObjectArrayListener &listener) {
+	listeners.erase(&listener);
+}
+
+bool bf::ObjectArray::isMovable(std::size_t index) {
+	return isCorrect(index) && objects[index].first->isMovable();
 }

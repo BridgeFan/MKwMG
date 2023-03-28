@@ -4,7 +4,7 @@
 
 #ifndef MG1_ZAD2_CURSOR_H
 #define MG1_ZAD2_CURSOR_H
-#include "Object.h"
+#include "src/Object/Object.h"
 #include "Solid.h"
 
 struct GLFWwindow;

@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXra
 -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override \
 -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference \
 -Woverloaded-virtual -Wcast-align -Wshadow -fno-common -Wfloat-equal -Wcast-qual \
--Wold-style-cast -Wuseless-cast -Wformat-signedness -Wdouble-promotion")
+-Wold-style-cast -Wuseless-cast -Wformat-signedness")
 #include(${CMAKE_CURRENT_SOURCE_DIR}/imgui-master/CMakeLists.txt)
 #include(imgui-master/cmake_install.cmake)
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "imgui-master")
@@ -27,15 +27,15 @@ add_executable(MG1_zad2
         src/Util.cpp
         src/main.cpp
         src/Solids/Cursor.cpp
-        src/Solids/Object.cpp
+        src/Object/Object.cpp
         src/Solids/Point.cpp
         src/Solids/Solid.cpp
         src/Solids/Torus.cpp
-        src/Solids/Transform.cpp
+        src/Object/Transform.cpp
         src/Solids/MultiCursor.cpp
         src/Solids/MultiCursor.h
-        src/Solids/ObjectArray.cpp
-        src/Solids/ObjectArray.h)
+        src/Object/ObjectArray.cpp
+        src/Object/ObjectArray.h src/Object/ObjectArrayListener.cpp src/Object/ObjectArrayListener.h src/Solids/BezierCurve.cpp src/Solids/BezierCurve.h)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

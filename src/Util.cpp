@@ -4,7 +4,7 @@
 #include <memory>
 #include "Util.h"
 #include "Settings.h"
-#include "Solids/Object.h"
+#include "src/Object/Object.h"
 
 std::string toString(const glm::vec3& v) {
 	return "("+std::to_string(v.x)+","+std::to_string(v.y)+", "+std::to_string(v.z)+")";

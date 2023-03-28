@@ -10,7 +10,7 @@
 #include <algorithm>
 #include "misc/cpp/imgui_stdlib.h"
 #include "Util.h"
-#include "Solids/ObjectArray.h"
+#include "src/Object/ObjectArray.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>

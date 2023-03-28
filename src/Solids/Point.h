@@ -5,7 +5,7 @@
 #ifndef MG1_ZAD2_POINT_H
 #define MG1_ZAD2_POINT_H
 
-#include "Object.h"
+#include "src/Object/Object.h"
 
 namespace bf {
 	class Point : public bf::Object {

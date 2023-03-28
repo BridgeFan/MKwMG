@@ -20,7 +20,7 @@ void bf::Point::draw(const Shader &shader) const {
 	//glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
 	glDrawArrays(GL_POINTS, 0, 1);
 	/*glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT,   // type
-	               (void*)0           // element array buffer offset
+	               reinterpret_cast<void*>(0)           // element array buffer offset
 	);*/
 }
 
@@ -40,7 +40,7 @@ void bf::Point::Init() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, vert, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(0);
 }
 
