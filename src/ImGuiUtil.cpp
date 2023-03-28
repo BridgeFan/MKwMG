@@ -5,12 +5,10 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-#include <glm/glm.hpp>
 #include <string>
 #include <algorithm>
 #include "misc/cpp/imgui_stdlib.h"
 #include "Util.h"
-#include "src/Object/ObjectArray.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -76,10 +74,13 @@ bool bf::imgui::checkChanged(const char* name, glm::vec3& values, bool isZeroIns
 	return ret;
 }
 
-bool bf::imgui::checkChanged(const char* name, glm::vec2& values) {
+bool bf::imgui::checkChanged(const char* name, glm::vec2& values, const char* format) {
     float array[] = {values.x, values.y};
-    ImGui::InputFloat2(name, array);
-    bool ret = !almostEqual(array[0],values.x) || !almostEqual(array[1],values.y);
+	if(format)
+    	ImGui::InputFloat2(name, array, format);
+	else
+		ImGui::InputFloat2(name, array);
+    bool ret = !almostEqual(array[0],values.x, 1e-4) || !almostEqual(array[1],values.y, 1e-4);
     values.x = array[0];
     values.y = array[1];
     return ret;
@@ -104,22 +105,4 @@ bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;
-}
-
-bool bf::imgui::checkSelectableChanged(const char *name, std::vector<bool> &selectable, std::size_t n) {
-    bool val = selectable[n];
-    bool ret = bf::imgui::checkSelectableChanged(name,val);
-    if(ret)
-        selectable[n]=!selectable[n];
-    return ret;
-}
-
-bool bf::imgui::checkObjectArrayChanged(const char *name, bf::ObjectArray &objectArray, std::size_t n) {
-	if(!objectArray.isCorrect(n))
-		ImGui::Text("_");
-	bool val = objectArray.isActive(n);
-	bool ret = bf::imgui::checkSelectableChanged(name,val);
-	if(ret)
-		objectArray.toggleActive(n);
-	return ret;
 }

@@ -35,7 +35,7 @@ add_executable(MG1_zad2
         src/Solids/MultiCursor.cpp
         src/Solids/MultiCursor.h
         src/Object/ObjectArray.cpp
-        src/Object/ObjectArray.h src/Object/ObjectArrayListener.cpp src/Object/ObjectArrayListener.h src/Solids/BezierCurve.cpp src/Solids/BezierCurve.h)
+        src/Object/ObjectArray.h src/Object/ObjectArrayListener.cpp src/Object/ObjectArrayListener.h src/Solids/BezierCurve.cpp src/Solids/BezierCurve.h src/Scene.cpp src/Scene.h)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

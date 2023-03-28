@@ -18,8 +18,11 @@ concept Derived = std::is_base_of<U, T>::value;
 namespace bf {
 	class Object;
 	class Settings;
+	class Shader;
 	class ObjectArray {
 	private:
+		int activeIndex = -1;
+		int countActive = 0;
 		std::vector<std::pair<std::unique_ptr<bf::Object>, bool> > objects;
 		std::unordered_set<bf::ObjectArrayListener*> listeners;
 	public:
@@ -58,10 +61,13 @@ namespace bf {
 		bool setActive(std::size_t index);
 		bool setUnactive(std::size_t index);
 		bool isAnyActive();
-		void clearSelection(std::size_t index, Settings& settings);
-		void clearSelection(Settings& settings);
+		bool isMultipleActive();
+		void clearSelection(std::size_t index=-1);
 		glm::vec3 getCentre();
 		bool isMovable(std::size_t index);
+		bool imGuiCheckChanged(std::size_t index);
+		[[nodiscard]] int getActiveIndex() const;
+		void draw(bf::Shader& shader);
 	};
 }
 

@@ -63,7 +63,8 @@ void bf::BezierCurve::onRemoveObject(std::size_t index) {
 }
 
 bf::BezierCurve::BezierCurve(bf::ObjectArray &array, const bf::Camera &camera1, const bf::Settings &settings1):
-	Object("Bézier curve0 " + std::to_string(_index)), ObjectArrayListener(array), camera(camera1), settings(settings1) {
+	Object("Bézier curve0 " + std::to_string(_index)), ObjectArrayListener(array),
+	isPolygonVisible(false), isCurveVisible(true), camera(camera1), settings(settings1) {
 		_index++;
 	for(std::size_t i=0;i<objectArray.size();i++) {
 		if(objectArray.isCorrect(i) && typeid(objectArray[i])==typeid(bf::Point)) {
@@ -81,6 +82,10 @@ void bf::BezierCurve::ObjectGui() {
 	bf::imgui::checkChanged("Curve name", name);
 	if(ImGui::Button("Delete point"))
 		removePoint(activeIndex);
+	if(ImGui::Button("Add point"))
+		;
+	ImGui::Checkbox("Polygon visible", &isPolygonVisible);
+	ImGui::Checkbox("Curve visible", &isCurveVisible);
 	ImGui::Text("List of points");
 	for(std::size_t i=0;i<indices.size();i++) {
 		if(!objectArray.isCorrect(indices[i]))
@@ -95,4 +100,11 @@ void bf::BezierCurve::ObjectGui() {
 
 void bf::BezierCurve::recalculate() {
 	//TODO
+}
+void bf::BezierCurve::recalculatePart(std::size_t index) {
+	//TODO
+}
+
+void bf::BezierCurve::onMoveObject(std::size_t index) {
+	recalculatePart(index);
 }

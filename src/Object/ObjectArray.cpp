@@ -5,6 +5,12 @@
 #include "ObjectArray.h"
 #include "Settings.h"
 #include "Object.h"
+#include "imgui.h"
+#include "ImGuiUtil.h"
+#include <algorithm>
+#include "Shader.h"
+
+auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 
 bf::Object &bf::ObjectArray::operator[](std::size_t index) {
 	if(index >= objects.size())
@@ -37,17 +43,17 @@ bool bf::ObjectArray::remove(std::size_t index) {
 		if(a)
 			a->onRemoveObject(index);
 	for(std::size_t i=index+1;i<objects.size();i++)
-		std::swap(objects[i],objects[i+1]);
+		std::swap(objects[i-1],objects[i]);
+	if(objects.back().second)
+		countActive--;
 	objects.pop_back();
+	if(countActive==0)
+		activeIndex = -1;
+	else if(countActive==1)
+		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
 	return true;
 }
 
-bool bf::ObjectArray::toggleActive(std::size_t index) {
-	if(!isCorrect(index))
-		return false;
-	objects[index].second=!objects[index].second;
-	return true;
-}
 
 bool bf::ObjectArray::isActive(std::size_t index) {
 	if(index >= objects.size())
@@ -57,20 +63,25 @@ bool bf::ObjectArray::isActive(std::size_t index) {
 
 void bf::ObjectArray::removeActive() {
 	for(std::size_t i=0u;i<size();i++)
-		if(objects[i].second)
+		if(objects[i].second) {
 			remove(i);
+			i--;
+		}
 }
 
-void bf::ObjectArray::clearSelection(std::size_t index, Settings& settings) {
+void bf::ObjectArray::clearSelection(std::size_t index) {
 	for(std::size_t i=0;i<objects.size();i++)
 		if(i!=index)
 			objects[i].second=false;
-	if(isCorrect(index))
+	if(isCorrect(index)) {
 		objects[index].second=true;
-	//if(settings.isMultiState)
-	settings.activeIndex=static_cast<int>(index);
-	/*else
-		settings.activeIndex=-1;*/
+		activeIndex = static_cast<int>(index);
+		countActive = 1;
+	}
+	else {
+		activeIndex = -1;
+		countActive = 0;
+	}
 }
 
 glm::vec3 bf::ObjectArray::getCentre() {
@@ -90,26 +101,37 @@ glm::vec3 bf::ObjectArray::getCentre() {
 }
 
 bool bf::ObjectArray::isAnyActive() {
-	for(std::size_t i=0;i<size();i++)
-		if(objects[i].second)
-			return true;
-	return false;
+	return countActive>0;
 }
-
-void bf::ObjectArray::clearSelection(bf::Settings &settings) {
-	clearSelection(-1, settings);
+bool bf::ObjectArray::isMultipleActive() {
+	return countActive>1;
 }
 
 bool bf::ObjectArray::setActive(std::size_t index) {
 	if(!isCorrect(index))
 		return false;
+	if(!objects[index].second)
+		countActive++;
+	if(countActive==1)
+		activeIndex=index;
 	objects[index].second=true;
 	return true;
 }
 bool bf::ObjectArray::setUnactive(std::size_t index) {
 	if(!isCorrect(index))
 		return false;
+	if(objects[index].second)
+		countActive--;
+	if(countActive==1)
+		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
 	objects[index].second=false;
+	return true;
+}
+
+bool bf::ObjectArray::toggleActive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+	objects[index].second ? setUnactive(index) : setActive(index);
 	return true;
 }
 
@@ -122,4 +144,35 @@ void bf::ObjectArray::removeListener(bf::ObjectArrayListener &listener) {
 
 bool bf::ObjectArray::isMovable(std::size_t index) {
 	return isCorrect(index) && objects[index].first->isMovable();
+}
+
+int bf::ObjectArray::getActiveIndex() const
+{
+	if(isCorrect(activeIndex))
+		return activeIndex;
+    return -1;
+}
+
+bool bf::ObjectArray::imGuiCheckChanged(std::size_t index) {
+	if(!isCorrect(index)) {
+		ImGui::Text("_");
+		return false;
+	}
+	bool val = isActive(index);
+	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(),val);
+	if(ret)
+		toggleActive(index);
+	return ret;
+}
+
+void bf::ObjectArray::draw(bf::Shader& shader) {
+	for(std::size_t i=0;i<objects.size();i++) {
+		if(isCorrect(i)) {
+			if(isActive(i))
+				shader.setVec3("color",1.f,.5f,.0f);
+			else
+				shader.setVec3("color",1.f,1.f,1.f);
+			objects[i].first->draw(shader);
+		}
+	}
 }

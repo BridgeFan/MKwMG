@@ -15,6 +15,7 @@ namespace bf {
 		virtual ~ObjectArrayListener();
 		explicit ObjectArrayListener(ObjectArray& array);
 		virtual void onRemoveObject(std::size_t index)=0;
+		virtual void onMoveObject(std::size_t index)=0;
 	};
 }
 

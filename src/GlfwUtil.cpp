@@ -14,6 +14,7 @@
 #include "src/Object/ObjectArray.h"
 #include "Solids/Point.h"
 #include "Solids/Torus.h"
+#include "Scene.h"
 
 constexpr int SRC_WIDTH=1024;
 constexpr int SRC_HEIGHT=768;
@@ -138,13 +139,13 @@ void blockAxes(glm::vec3& v, uint8_t axisLock) {
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-    bf::Camera& camera = ptr->camera;
+    bf::Camera& camera = ptr->scene.camera;
     const float& deltaTime = ptr->deltaTime;
     const bf::Settings& settings = ptr->settings;
-    bf::Transform& multiTransform = ptr->multiTransform;
-    glm::vec3& multiCentre = ptr->multiCentre;
-    bf::Cursor& cursor = ptr->cursor;
-	auto& objectArray = ptr->objectArray;
+    bf::Transform& multiTransform = ptr->scene.multiCursor.transform;
+    bf::Cursor& cursor = ptr->scene.cursor;
+	auto& scene = ptr->scene;
+	auto& objectArray = ptr->scene.objectArray;
 
 	auto xpos = static_cast<float>(xposIn);
 	auto ypos = static_cast<float>(yposIn);
@@ -189,8 +190,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
                 glm::vec3 centre;
                 if(settings.isMultiState)
                     centre = multiTransform.position;
-                else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex))
-                    centre = objectArray[settings.activeIndex].getPosition();
+                else if(objectArray.isMovable(objectArray.getActiveIndex()))
+                    centre = objectArray[objectArray.getActiveIndex()].getPosition();
                 else
                     centre = cursor.transform.position;
                 bf::Transform rotated = rotateAboutPoint(camera, centre, rotSpeed * glmVec);
@@ -233,8 +234,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
             bf::Transform t;
             if(settings.isMultiState)
                 t = multiTransform;
-            else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex))
-                t = objectArray[settings.activeIndex].getTransform();
+            else if(objectArray.isMovable(objectArray.getActiveIndex()))
+                t = objectArray[objectArray.getActiveIndex()].getTransform();
             else
                 t = cursor.transform;
             t.position += deltaTransform.position;
@@ -243,20 +244,19 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 			if(settings.isMultiState) {
 				for (std::size_t i = 0; i < objectArray.size(); i++) {
 					if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
-						objectArray[i].setNewTransform(multiCentre, multiTransform, t);
+						objectArray[i].setNewTransform(scene.objectArray.getCentre(), multiTransform, t);
 					}
 				}
                 multiTransform = std::move(t);
-				//multiCentre = getCentre(selection, objects);
 			}
-			else if(settings.activeIndex>=0 && objectArray.isMovable(settings.activeIndex)) {
-                objectArray[settings.activeIndex].setTransform(std::move(t));
+			else if(objectArray.isMovable(objectArray.getActiveIndex())) {
+                objectArray[objectArray.getActiveIndex()].setTransform(std::move(t));
 			}
 			else {
-                glm::vec3 screenPos = bf::glfw::toScreenPos(window,cursor.transform.position,settings.View,settings.Projection);
+                glm::vec3 screenPos = bf::glfw::toScreenPos(window,cursor.transform.position,scene.getView(),scene.getProjection());
                 screenPos.x = xpos;
                 screenPos.y = ypos;
-                cursor.transform.position = bf::glfw::toGlobalPos(window,screenPos, settings.InverseView, settings.InverseProjection);
+                cursor.transform.position = bf::glfw::toGlobalPos(window,screenPos, scene.getInverseView(), scene.getInverseProjection());
 			}
 		}
 	}
@@ -265,14 +265,14 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
 {
     auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-	ptr->camera.ProcessMouseScroll(static_cast<float>(yoffset));
+	ptr->scene.camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/) {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
-	bf::Cursor& cursor = ptr->cursor;
-    auto& objectArray = ptr->objectArray;
+	bf::Cursor& cursor = ptr->scene.cursor;
+    auto& objectArray = ptr->scene.objectArray;
 	if(ptr->io.WantCaptureKeyboard)
 		return;
 	if(key==GLFW_KEY_LEFT_CONTROL || key==GLFW_KEY_RIGHT_CONTROL) {
@@ -311,8 +311,7 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 					settings.isAxesLocked += 0x4;
 				break;
 			case GLFW_KEY_C:
-				objectArray.clearSelection(settings);
-                ptr->multiCentre = objectArray.getCentre();
+				objectArray.clearSelection();
 				break;
 			case GLFW_KEY_P:
 				objectArray.add<bf::Point>(cursor.transform);
@@ -325,7 +324,6 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
                 break;
 			case GLFW_KEY_DELETE:
 				objectArray.removeActive();
-				ptr->multiCentre = objectArray.getCentre();
 				break;
 			default:
 				;
@@ -337,7 +335,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mod
 {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
-	auto& objectArray = ptr->objectArray;
+	auto& objectArray = ptr->scene.objectArray;
+	auto& scene = ptr->scene;
 	if(ptr->io.WantCaptureMouse)
 		return;
 	if(action == GLFW_RELEASE && ((button == GLFW_MOUSE_BUTTON_RIGHT && settings.state == bf::RightClick) ||
@@ -358,25 +357,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mod
 		for(unsigned i=0u;i<objectArray.size();i++) {
 			if(!objectArray.isCorrect(i)/* || typeid(*objects[i])!=typeid(Point)*/)
 				continue;
-            auto screenPos = bf::glfw::toScreenPos(window, objectArray[i].getTransform().position, settings.View, settings.Projection);
+            auto screenPos = bf::glfw::toScreenPos(window, objectArray[i].getTransform().position, scene.getView(), scene.getProjection());
+			if(screenPos==bf::outOfWindow)
+				continue;
             float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
             //float d = glm::length2(glm::cross(objects[i]->getPosition()-camera.position, ray))/glm::length2(ray);
 			if(d<=sqrDist && actualZ>screenPos.z) {
                 selectionIndex=static_cast<int>(i);
                 actualZ=screenPos.z;
-				/*if(!(mods&GLFW_MOD_CONTROL))
-					clearSelection(selection, i, settings);
-				selection[i] = true;
-                ptr->multiCentre = getCentre(selection, objects);
-				break;*/
 			}
 		}
         if(selectionIndex >= 0) {
             if(!settings.isCtrlPressed)
-				objectArray.clearSelection(selectionIndex, settings);
+				objectArray.clearSelection(selectionIndex);
 			objectArray.setActive(selectionIndex);
-            settings.activeIndex = selectionIndex;
-			ptr->multiCentre = objectArray.getCentre();
         }
 	}
 }

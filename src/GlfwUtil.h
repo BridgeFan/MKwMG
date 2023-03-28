@@ -12,6 +12,7 @@ namespace bf {
 	class Settings;
 	class Camera;
 	class Transform;
+	const glm::vec3 outOfWindow={-1.f,-1.f,-1.f};
 	namespace glfw {
 		GLFWwindow* init(bf::Settings& settings);
 		void destroy(GLFWwindow* window);

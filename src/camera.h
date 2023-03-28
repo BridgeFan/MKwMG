@@ -16,21 +16,23 @@ constexpr float ZOOM        = 45.0f;
 namespace bf {
     class Camera : public Transform {
     protected:
-        glm::vec3 front, up, right;
+        glm::vec3 front={.0f,.0f,1.f};
+		glm::vec3 up={.0f,.1f,0.f};
+		glm::vec3 right={1.f,.0f,.0f};
     public:
         [[nodiscard]] const glm::vec3 &getFront() const;
         [[nodiscard]] const glm::vec3 &getUp() const;
         [[nodiscard]] const glm::vec3 &getRight() const;
+		float zNear, zFar;
     public:
         //constants
-        const float MovementSpeed;
-        const float RotationSpeed;
-		const float zNear, zFar;
+        float MovementSpeed;
+        float RotationSpeed;
         //editable directly
         float Zoom;
         // constructor with vectors
         Camera(float near, float far, glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f))
-                : Transform(pos, rot), MovementSpeed(SPEED), RotationSpeed(ROT_SPEED), zNear(near), zFar(far), Zoom(ZOOM) {}
+                : Transform(pos, rot), zNear(near), zFar(far), MovementSpeed(SPEED), RotationSpeed(ROT_SPEED), Zoom(ZOOM) {}
         //functions
         glm::mat4 GetViewMatrix();
         glm::mat4 GetInverseViewMatrix();
