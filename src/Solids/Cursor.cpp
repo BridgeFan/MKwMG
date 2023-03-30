@@ -28,12 +28,11 @@ transform(t) {
 void bf::Cursor::initLines() {
 	//set buffers
 	for(unsigned i=0u;i<3u;i++) {
-		std::vector vec = {.0f,.0f,.0f, .0f, .0f, .0f};
-        vec[i]=-.2f;
-        vec[(i+1)%3]=-.2f;
-		vec[3+i]=.2f;
-        vec[3+(i+1)%3]=.2f;
-		lines[i].vertices = std::move(vec);
+		std::vector vec = {.0f,.0f,.0f};
+        vec[i]=.2f;
+        vec[(i+1)%3]=.2f;
+		lines[i].vertices.emplace_back(-vec[0],-vec[1],-vec[2]);
+        lines[i].vertices.emplace_back(vec[0],vec[1],vec[2]);
 		lines[i].indices = {0u,1u};
 		lines[i].setBuffers();
 	}

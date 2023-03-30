@@ -23,7 +23,7 @@ int getIndex(unsigned lod) {
 	//begin
 	return fastPow(2,lod+1u)-2;
 }
-inline unsigned countParts(unsigned i) {return (i+2)/3;}
+inline unsigned countParts(unsigned i) {return (i+1)/3;}
 
 template<typename T>
 std::size_t binSearch(const std::vector<T>& sorted, std::size_t value, std::size_t begin, std::size_t end) {
@@ -42,7 +42,7 @@ std::size_t binSearch(const std::vector<T>& sorted, std::size_t value) {
 	return binSearch(sorted,value,sorted.begin(),sorted.end()-1);
 }
 
-bool bf::BezierCurve::addPoint(std::size_t index) {
+bool bf::BezierCurve::addPoint(unsigned index) {
 	if(!objectArray.isCorrect(index))
 		return false;
 	pointIndices.push_back(index);
@@ -50,7 +50,7 @@ bool bf::BezierCurve::addPoint(std::size_t index) {
 	return true;
 }
 
-bool bf::BezierCurve::removePoint(std::size_t index) {
+bool bf::BezierCurve::removePoint(unsigned index) {
 	if(!objectArray.isCorrect(index) || pointIndices.empty())
 		return false;
 	for(std::size_t i=index+1u;i<objectArray.size();i++)
@@ -61,7 +61,7 @@ bool bf::BezierCurve::removePoint(std::size_t index) {
 	return true;
 }
 
-void bf::BezierCurve::onRemoveObject(std::size_t index) {
+void bf::BezierCurve::onRemoveObject(unsigned index) {
 	unsigned oldN = pointIndices.size();
 	//remove object from list if it is removed by ObjectArray
 	for(unsigned i=0u; i < pointIndices.size(); i++) {
@@ -74,7 +74,7 @@ void bf::BezierCurve::onRemoveObject(std::size_t index) {
 		}
 	}
 	//recalculate whole curve
-	if(pointIndices.size()<oldN) {
+	if(pointIndices.size()<oldN && !pointIndices.empty()) {
 		recalculate();
 	}
 	//rearrange indices
@@ -96,7 +96,9 @@ bf::BezierCurve::BezierCurve(bf::ObjectArray &array):
 }
 
 void bf::BezierCurve::draw(const bf::Shader &shader) const {
-	//TODO
+    if(pointIndices.empty() || indices.empty() || vertices.empty()) {
+        return;
+    }
 	//function assumes set projection and view matrices
 	shader.setMat4("model", glm::mat4(1.f)); //transform is ignored
 
@@ -107,9 +109,11 @@ void bf::BezierCurve::draw(const bf::Shader &shader) const {
 					   reinterpret_cast<void *>(0)           // element array buffer offset
 		);
 	}
-	int LOD;
+    if(fovIndices.empty() || fovVertices.empty()) {
+        return;
+    }
 	if(isCurveVisible) {
-		//FOV=4
+        int LOD;
 		glBindVertexArray(FVAO);
 		for(unsigned i=0u;i<countParts(pointIndices.size());i++) {
 			if(!scene || !window || !settings)
@@ -162,7 +166,7 @@ void bf::BezierCurve::ObjectGui() {
 	ImGui::Checkbox("Polygon visible", &isPolygonVisible);
 	ImGui::Checkbox("Curve visible", &isCurveVisible);
 	ImGui::Text("List of points");
-	for(std::size_t i=0; i < pointIndices.size(); i++) {
+	for(unsigned i=0u; i < pointIndices.size(); i++) {
 		if(!objectArray.isCorrect(pointIndices[i]))
 			ImGui::Text("_");
 		bool val = (i==activeIndex);
@@ -205,8 +209,8 @@ void bf::BezierCurve::recalculate() {
 	fovIndices.reserve(2*getIndex(MAX_FOV_LOG_PARTS+1)*countParts(pointIndices.size()));
 	//update curve
 	//vertices
-	for(unsigned i=0u;i<pointIndices.size()-2;i+=3) {
-		int I = (static_cast<int>(i) / 3) * MAX_FOV_PARTS;
+    printf("Size: %zu, parts: %u\n", pointIndices.size(), countParts(pointIndices.size()));
+	for(int i=0;i<static_cast<int>(pointIndices.size())-1;i+=3) {
 		//set basic points for de Casteljau
 		std::vector<glm::vec3> pos = {objectArray[pointIndices[i]].getPosition(),
 									  objectArray[pointIndices[i + 1]].getPosition()};
@@ -216,9 +220,7 @@ void bf::BezierCurve::recalculate() {
 			pos.push_back(objectArray[pointIndices[i + 3]].getPosition());
 		for (int k = 0; k <= MAX_FOV_PARTS; k++) {
 			auto dcPos = deCasteljau(static_cast<float>(k) / MAX_FOV_PARTS, pos);
-			fovVertices.push_back(dcPos.x);
-			fovVertices.push_back(dcPos.y);
-			fovVertices.push_back(dcPos.z);
+			fovVertices.emplace_back(dcPos);
 		}
 	}
 	//indices
@@ -239,14 +241,36 @@ void bf::BezierCurve::recalculate() {
 	}
 	setFovBuffers();
 }
-void bf::BezierCurve::recalculatePart(std::size_t index) {
-	//TODO
+void bf::BezierCurve::recalculatePart(int /*index*/) {
+    //assumes correctness of index
+    //set basic points for de Casteljau
+    /*std::vector<glm::vec3> pos = {objectArray[pointIndices[3*index]].getPosition(),
+                                  objectArray[pointIndices[3*index + 1]].getPosition()};
+    if (pointIndices.size() - index*3 >= 3)
+        pos.push_back(objectArray[pointIndices[index + 2]].getPosition());
+    if (pointIndices.size() - index*3 >= 4)
+        pos.push_back(objectArray[pointIndices[index + 3]].getPosition());
+    for (int k = 0; k <= MAX_FOV_PARTS; k++) {
+        auto dcPos = deCasteljau(static_cast<float>(k) / MAX_FOV_PARTS, pos);
+        fovVertices[(index*MAX_FOV_PARTS+k)*3]=dcPos.x;
+        fovVertices[(index*MAX_FOV_PARTS+k)*3+1]=dcPos.y;
+        fovVertices[(index*MAX_FOV_PARTS+k)*3+2]=dcPos.z;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, FVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, MAX_FOV_PARTS * sizeof(float) * 3, sizeof(float) * 3,&fovVertices[index*MAX_FOV_PARTS*3]);*/
 	recalculate();
 }
 
-void bf::BezierCurve::onMoveObject(std::size_t index) {
-	if(std::find(pointIndices.begin(),pointIndices.end(),index)!=pointIndices.end())
-		recalculatePart(index);
+void bf::BezierCurve::onMoveObject(unsigned index) {
+    auto f = std::find(pointIndices.begin(),pointIndices.end(),index);
+	if(f !=pointIndices.end()) {
+        auto piIndex = static_cast<int>(f-pointIndices.begin());
+        if(piIndex%3==0) {
+            recalculatePart(piIndex/3-1);
+        }
+        if(piIndex%3!=0 || piIndex<static_cast<int>(pointIndices.size())-1)
+            recalculatePart(piIndex/3);
+    }
 }
 
 void bf::BezierCurve::setFovBuffers() {
@@ -258,6 +282,9 @@ void bf::BezierCurve::setFovBuffers() {
 	if(FIBO<UINT_MAX)
 		glDeleteBuffers(1, &FIBO);
 	//set buffers
+    if(fovIndices.empty() || fovVertices.empty()) {
+        return;
+    }
 	glGenVertexArrays(1, &FVAO);
 	glGenBuffers(1, &FVBO);
 	glGenBuffers(1, &FIBO);
@@ -265,7 +292,7 @@ void bf::BezierCurve::setFovBuffers() {
 	glBindVertexArray(FVAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, FVBO);
-	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(fovVertices.size()) * sizeof(float) * 3, fovVertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(fovVertices.size()) * sizeof(Vertex), fovVertices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIBO);
@@ -276,4 +303,8 @@ void bf::BezierCurve::initData(const bf::Scene &sc, const bf::Settings &s, GLFWw
 	scene=&sc;
 	settings=&s;
 	window=w;
+}
+
+std::vector<unsigned int> bf::BezierCurve::usedVectors() const {
+    return pointIndices;
 }

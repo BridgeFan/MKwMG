@@ -21,7 +21,8 @@ namespace bf {
 	class Shader;
 	class ObjectArray {
 	private:
-		int activeIndex = -1;
+        int addToIndex = -1;
+        int activeIndex = -1;
 		int countActive = 0;
 		std::vector<std::pair<std::unique_ptr<bf::Object>, bool> > objects;
 		std::unordered_set<bf::ObjectArrayListener*> listeners;
@@ -67,6 +68,8 @@ namespace bf {
 		glm::vec3 getCentre();
 		void onMove(std::size_t index);
 		bool isMovable(std::size_t index);
+        int getAddToIndex() const;
+        void setAddToIndex(int addToIndex);
 		bool imGuiCheckChanged(std::size_t index);
 		[[nodiscard]] int getActiveIndex() const;
 		void draw(bf::Shader& shader);

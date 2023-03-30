@@ -39,6 +39,7 @@ namespace bf {
 		void setRelativeScale(const glm::vec3 &pos, float multiplier);
 		virtual void ObjectGui();
 		friend glm::vec3 getMiddle(const std::vector<Object> &objects);
+        [[nodiscard]] virtual std::vector<unsigned> usedVectors() const {return {};}
 		//utility functions
 		[[nodiscard]] virtual bool isMovable() const {return true;}
 	};

@@ -33,9 +33,10 @@ bf::MultiCursor::MultiCursor(const bf::Transform &t) : lines{Solid(""),Solid("")
 void bf::MultiCursor::initLines() {
     //set buffers
     for(int i=0;i<3;i++) {
-        std::vector vec = {.0f,.0f,.0f, .0f, .0f, .0f};
-        vec[3+i]=1.f;
-        lines[i].vertices = std::move(vec);
+        std::vector vec = {.0f, .0f, .0f};
+        vec[i]=1.f;
+        lines[i].vertices.emplace_back(.0f,.0f,.0f);
+        lines[i].vertices.emplace_back(vec[0],vec[1],vec[2]);
         lines[i].indices = {0u,1u};
         lines[i].setBuffers();
     }

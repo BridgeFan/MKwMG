@@ -182,3 +182,11 @@ void bf::ObjectArray::onMove(std::size_t index) {
 		if(a)
 			a->onMoveObject(index);
 }
+
+int bf::ObjectArray::getAddToIndex() const {
+    return addToIndex;
+}
+
+void bf::ObjectArray::setAddToIndex(int adt) {
+    ObjectArray::addToIndex = adt;
+}

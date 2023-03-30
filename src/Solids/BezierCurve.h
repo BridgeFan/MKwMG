@@ -21,22 +21,23 @@ namespace bf {
 		static int _index;
 		bool isPolygonVisible, isCurveVisible;
 		std::size_t activeIndex;
-		std::vector<std::size_t> pointIndices;
+		std::vector<unsigned> pointIndices;
 		std::vector<int> fovIndices;
-		std::vector<float> fovVertices;
+		std::vector<Vertex> fovVertices;
 		static const Scene* scene;
 		static const Settings* settings;
 		void recalculate();
-		void recalculatePart(std::size_t index);
+		void recalculatePart(int index); //index of part
 		void setFovBuffers();
 	public:
-		BezierCurve(bf::ObjectArray& array);
-		void onRemoveObject(std::size_t index) override;
+		explicit BezierCurve(bf::ObjectArray& array);
+		void onRemoveObject(unsigned index) override;
+		void onMoveObject(unsigned index) override;
 
-		void onMoveObject(std::size_t index) override;
+        [[nodiscard]] std::vector<unsigned int> usedVectors() const override;
 
-		bool addPoint(std::size_t index);
-		bool removePoint(std::size_t index);
+        bool addPoint(unsigned index);
+		bool removePoint(unsigned index);
 		void draw(const Shader &shader) const override;
 		static void initData(const Scene& scene, const Settings& settings, GLFWwindow* window);
 		void ObjectGui() override;

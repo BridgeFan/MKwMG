@@ -8,6 +8,13 @@
 #include <climits>
 #include "src/Object/Object.h"
 namespace bf {
+    struct Vertex {
+        float x;
+        float y;
+        float z;
+        Vertex(float x, float y, float z);
+        Vertex(const glm::vec3& p);
+    };
 	class Shader;
 	struct Settings;
 	class Solid : public bf::Object {
@@ -21,7 +28,7 @@ namespace bf {
 				sindex)) { sindex++; }
 		explicit Solid(const std::string &solidName) : Solid(Transform::Default, solidName) {}
 		unsigned int VBO = UINT_MAX, VAO = UINT_MAX, IBO = UINT_MAX;
-		std::vector<float> vertices;
+		std::vector<Vertex> vertices;
 		std::vector<unsigned> indices;
 		void setBuffers();
 	public:
