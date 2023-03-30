@@ -26,14 +26,14 @@ namespace bf {
 		virtual ~Object() = default;
 		virtual void draw(const bf::Shader &shader) const = 0;
 		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }
-		void setPosition(const glm::vec3 &pos) { transform.position = pos; }
+		virtual void setPosition(const glm::vec3 &pos) { transform.position = pos; }
 		[[nodiscard]] [[maybe_unused]] const glm::vec3 &getRotation() const { return transform.rotation; }
 		void setRotation(const glm::vec3 &rot) { transform.rotation = rot; }
 		[[nodiscard]] const glm::vec3 &getScale() const { return transform.scale; }
 		void setScale(const glm::vec3 &scale) { transform.scale = scale; }
 		[[nodiscard]] glm::mat4 getModelMatrix(const bf::Transform &relativeTo = bf::Transform::Default) const;
-		void setTransform(const bf::Transform &t) { transform = t; }
-		void setTransform(bf::Transform &&t) { transform = t; }
+		virtual void setTransform(const bf::Transform &t) { transform = t; }
+		virtual void setTransform(bf::Transform &&t) { transform = t; }
 		[[nodiscard]] const bf::Transform &getTransform() const { return transform; }
 		void setNewTransform(const glm::vec3 &centre, const bf::Transform &oldTransform, const bf::Transform &newTransform);
 		void setRelativeScale(const glm::vec3 &pos, float multiplier);

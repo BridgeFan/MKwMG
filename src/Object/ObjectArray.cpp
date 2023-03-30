@@ -5,7 +5,7 @@
 #include "ObjectArray.h"
 #include "Settings.h"
 #include "Object.h"
-#include "imgui.h"
+#include "imgui-master/imgui.h"
 #include "ImGuiUtil.h"
 #include <algorithm>
 #include "Shader.h"
@@ -175,4 +175,10 @@ void bf::ObjectArray::draw(bf::Shader& shader) {
 			objects[i].first->draw(shader);
 		}
 	}
+}
+
+void bf::ObjectArray::onMove(std::size_t index) {
+	for(auto a: listeners)
+		if(a)
+			a->onMoveObject(index);
 }

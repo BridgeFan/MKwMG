@@ -8,7 +8,8 @@
 #include "camera.h"
 #include <array>
 #include "src/Object/Object.h"
-#include "imgui.h"
+#include "imgui-master/imgui.h"
+//#include "imgui.h"
 #include "Util.h"
 #include "Solids/Cursor.h"
 #include "src/Object/ObjectArray.h"
@@ -118,6 +119,22 @@ void bf::glfw::processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 	/*if(io.WantCaptureKeyboard)
 		return;*/
+}
+
+bool bf::glfw::isInBounds(GLFWwindow *window, const glm::vec2 &screenPos) {
+	return isInBounds(window,{screenPos.x,screenPos.y,0.f});
+}
+
+bool bf::glfw::isInBounds(GLFWwindow *window, const glm::vec3 &mousePos) {
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	if(std::abs(mousePos.z)>1.f)
+		return false;
+	if(mousePos.x<0 || mousePos.x>width)
+		return false;
+	if(mousePos.y<0 || mousePos.y>height)
+		return false;
+	return true;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

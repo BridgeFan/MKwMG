@@ -1,7 +1,7 @@
 #include <GL/glew.h>
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
+#include "imgui-master/imgui.h"
+#include "imgui-master/backends/imgui_impl_glfw.h"
+#include "imgui-master/backends/imgui_impl_opengl3.h"
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
@@ -19,12 +19,8 @@
 #include "camera.h"
 #include "Solids/Torus.h"
 #include "Solids/Point.h"
-#include "Solids/Cursor.h"
 #include "Util.h"
-#include "Solids/MultiCursor.h"
 #include <memory>
-#include <algorithm>
-#include "src/Object/ObjectArray.h"
 #include "Solids/BezierCurve.h"
 #include "Scene.h"
 
@@ -51,6 +47,8 @@ int main() {
 	//bool show_another_window = false;
 
 	scene.objectArray.add<bf::Torus>();
+	bf::Point::initObjArrayRef(scene.objectArray);
+	bf::BezierCurve::initData(scene, settings, window);
 	//objects.emplace_back(new bf::Torus());
 
 	while (!glfwWindowShouldClose(window))
@@ -72,7 +70,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
 		///CREATE OBJECT PANEL
 		ImGui::Begin("Create object");
 		//ImGui::
@@ -83,7 +81,7 @@ int main() {
 			scene.objectArray.add<bf::Point>(scene.cursor.transform);
 		}
 		if(ImGui::Button("Bézier curve 0")) {
-			scene.objectArray.addRef<bf::BezierCurve>(scene.camera, settings);
+			scene.objectArray.addRef<bf::BezierCurve>();
 		}
 		ImGui::End();
 		//ImGui

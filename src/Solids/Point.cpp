@@ -5,10 +5,12 @@
 #include "Point.h"
 #include <GL/glew.h>
 #include "../Shader.h"
+#include "../Object/ObjectArray.h"
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
 unsigned bf::Point::VBO = UINT_MAX;
 unsigned bf::Point::VAO = UINT_MAX;
+bf::ObjectArray* bf::Point::objectArray = nullptr;
 
 void bf::Point::draw(const Shader &shader) const {
 	//function assumes set projection and view matrices
@@ -44,9 +46,45 @@ void bf::Point::Init() {
 	glEnableVertexAttribArray(0);
 }
 
+void bf::Point::initObjArrayRef(bf::ObjectArray &objArray) {
+	objectArray=&objArray;
+}
+
 bf::Point::Point(const bf::Transform &t, const std::string &pointName) : bf::Object(t, pointName) {
 	if(!isInited) {
 		Init();
 		isInited=true;
 	}
+}
+
+void notify(bf::ObjectArray* objectArray, bf::Point* tis) {
+	if(objectArray) {
+		unsigned i;
+		for(i=0;i<objectArray->size();i++) {
+			auto ptr = objectArray->getPtr(i);
+			if (ptr == tis)
+				break;
+		}
+		if(i<objectArray->size())
+			objectArray->onMove(i);
+	}
+}
+
+void bf::Point::setPosition(const glm::vec3 &pos) {
+	Object::setPosition(pos);
+	notify(objectArray, this);
+}
+
+void bf::Point::setTransform(const bf::Transform &t) {
+	if(getTransform().position==t.position)
+		return;
+	Object::setTransform(t);
+	notify(objectArray, this);
+}
+
+void bf::Point::setTransform(bf::Transform &&t) {
+	if(getTransform().position==t.position)
+		return;
+	Object::setTransform(t);
+	notify(objectArray, this);
 }

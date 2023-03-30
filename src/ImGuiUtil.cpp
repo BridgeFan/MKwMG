@@ -2,12 +2,12 @@
 // Created by kamil-hp on 13.03.2022.
 //
 #include "ImGuiUtil.h"
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
+#include "imgui-master/imgui.h"
+#include "imgui-master/backends/imgui_impl_glfw.h"
+#include "imgui-master/backends/imgui_impl_opengl3.h"
 #include <string>
 #include <algorithm>
-#include "misc/cpp/imgui_stdlib.h"
+#include "imgui-master/misc/cpp/imgui_stdlib.h"
 #include "Util.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)

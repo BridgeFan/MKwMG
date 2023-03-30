@@ -29,6 +29,7 @@ namespace bf {
 		[[nodiscard]] std::size_t size() const {return objects.size();}
 		bf::Object& operator[](std::size_t index);
 		const bf::Object& operator[](std::size_t index) const;
+		bf::Object* getPtr(std::size_t index) {return objects[index].first.get();}
 		[[nodiscard]] bool isCorrect(std::size_t index) const;
 		void add(bf::Object* object);
 		bool remove(std::size_t index);
@@ -64,6 +65,7 @@ namespace bf {
 		bool isMultipleActive();
 		void clearSelection(std::size_t index=-1);
 		glm::vec3 getCentre();
+		void onMove(std::size_t index);
 		bool isMovable(std::size_t index);
 		bool imGuiCheckChanged(std::size_t index);
 		[[nodiscard]] int getActiveIndex() const;

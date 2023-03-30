@@ -5,8 +5,9 @@
 #include "Solid.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <err.h>
 #include "../Shader.h"
-int bf::Solid::index = 1;
+int bf::Solid::sindex = 1;
 
 bf::Solid::~Solid() {
 	glDeleteVertexArrays(1, &VAO);
@@ -29,7 +30,7 @@ void bf::Solid::setBuffers() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float) * 3, vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float) * 3, vertices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(0);
 
@@ -57,4 +58,10 @@ void bf::Solid::draw(const bf::Shader& shader, const bf::Transform& relativeTo) 
 
 void bf::Solid::ObjectGui() {
 	Object::ObjectGui();
+}
+
+void bf::Solid::addVertex(const glm::vec3 &p) {
+	vertices.push_back(p.x);
+	vertices.push_back(p.y);
+	vertices.push_back(p.z);
 }
