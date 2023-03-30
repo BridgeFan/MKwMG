@@ -9,6 +9,7 @@
 #include "ImGuiUtil.h"
 #include <algorithm>
 #include "Shader.h"
+#include "Solids/BezierCurve.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 
@@ -37,6 +38,7 @@ void bf::ObjectArray::add(bf::Object* object) {
 }
 
 bool bf::ObjectArray::remove(std::size_t index) {
+    activeRedirector=-1;
 	if(index>=objects.size())
 		return false;
 	for(auto a: listeners)
@@ -70,6 +72,15 @@ void bf::ObjectArray::removeActive() {
 }
 
 void bf::ObjectArray::clearSelection(std::size_t index) {
+    if(isCorrect(activeRedirector)) {
+        if(activeRedirector==static_cast<int>(index)) {
+            activeRedirector = -1;
+        }
+        else {
+            operator[](activeRedirector).addPoint(index);
+            return;
+        }
+    }
 	for(std::size_t i=0;i<objects.size();i++)
 		if(i!=index)
 			objects[i].second=false;
@@ -110,6 +121,10 @@ bool bf::ObjectArray::isMultipleActive() {
 bool bf::ObjectArray::setActive(std::size_t index) {
 	if(!isCorrect(index))
 		return false;
+    if(isCorrect(activeRedirector)) {
+        if(operator[](activeRedirector).addPoint(index))
+            return true;
+    }
 	if(!objects[index].second)
 		countActive++;
 	if(countActive==1)
@@ -120,6 +135,8 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 bool bf::ObjectArray::setUnactive(std::size_t index) {
 	if(!isCorrect(index))
 		return false;
+    if(static_cast<int>(index)==activeRedirector)
+        activeRedirector=-1;
 	if(objects[index].second)
 		countActive--;
 	if(countActive==1)
@@ -166,8 +183,12 @@ bool bf::ObjectArray::imGuiCheckChanged(std::size_t index) {
 }
 
 void bf::ObjectArray::draw(bf::Shader& shader) {
+    std::vector<unsigned> usedIndices;
+    if(isCorrect(activeIndex)) {
+        usedIndices = objects[activeIndex].first->usedVectors();
+    }
 	for(std::size_t i=0;i<objects.size();i++) {
-		if(isCorrect(i)) {
+		if(isCorrect(i) && std::find(usedIndices.begin(),usedIndices.end(),i)==usedIndices.end()) {
 			if(isActive(i))
 				shader.setVec3("color",1.f,.5f,.0f);
 			else
@@ -189,4 +210,14 @@ int bf::ObjectArray::getAddToIndex() const {
 
 void bf::ObjectArray::setAddToIndex(int adt) {
     ObjectArray::addToIndex = adt;
+}
+
+void bf::ObjectArray::setActiveRedirector(const bf::Object *redirector) {
+    activeRedirector=-1;
+    for(unsigned i=0u;i<objects.size();i++) {
+        if(objects[i].first.get()==redirector) {
+            activeRedirector = i;
+            return;
+        }
+    }
 }

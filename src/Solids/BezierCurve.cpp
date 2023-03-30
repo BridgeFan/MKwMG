@@ -43,8 +43,12 @@ std::size_t binSearch(const std::vector<T>& sorted, std::size_t value) {
 }
 
 bool bf::BezierCurve::addPoint(unsigned index) {
-	if(!objectArray.isCorrect(index))
-		return false;
+	if(!objectArray.isCorrect(index) || typeid(objectArray[index])!=typeid(bf::Point)) {
+        return false;
+    }
+    else if(std::find(pointIndices.begin(), pointIndices.end(),index)!=pointIndices.end()) {
+        return false;
+    }
 	pointIndices.push_back(index);
 	recalculate();
 	return true;
@@ -88,7 +92,7 @@ bf::BezierCurve::BezierCurve(bf::ObjectArray &array):
 	isPolygonVisible(false), isCurveVisible(true) {
 		_index++;
 	for(std::size_t i=0;i<objectArray.size();i++) {
-		if(objectArray.isCorrect(i) && typeid(objectArray[i])==typeid(bf::Point)) {
+		if(objectArray.isActive(i) && typeid(objectArray[i])==typeid(bf::Point)) {
 			pointIndices.push_back(i);
 		}
 	}
@@ -96,6 +100,17 @@ bf::BezierCurve::BezierCurve(bf::ObjectArray &array):
 }
 
 void bf::BezierCurve::draw(const bf::Shader &shader) const {
+    //draw points if active
+    if(objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this) {
+        for(int i=0;i<static_cast<int>(pointIndices.size());i++) {
+            if(i==activeIndex)
+                shader.setVec3("color", 1.f,0.f,0.f);
+            else
+                shader.setVec3("color", 0.f,1.f,0.f);
+            objectArray[pointIndices[i]].draw(shader);
+        }
+    }
+    shader.setVec3("color", 1.f,0.5f,0.f);
     if(pointIndices.empty() || indices.empty() || vertices.empty()) {
         return;
     }
@@ -158,11 +173,41 @@ void bf::BezierCurve::draw(const bf::Shader &shader) const {
 }
 
 void bf::BezierCurve::ObjectGui() {
-	bf::imgui::checkChanged("Curve name", name);
-	if(ImGui::Button("Delete point"))
-		removePoint(activeIndex);
-	if(ImGui::Button("Add point"))
-		;//TODO
+    bf::imgui::checkChanged("Curve name", name);
+    if (ImGui::Button("Delete point"))
+        removePoint(activeIndex);
+    int ari = objectArray.getActiveRedirector();
+    bool isRedirected = objectArray.isCorrect(ari);
+    if (isRedirected) {
+        if (ImGui::Button("End adding"))
+            objectArray.setActiveRedirector(nullptr);
+    } else {
+        if (ImGui::Button("Add points"))
+            objectArray.setActiveRedirector(this);
+    }
+    if (ImGui::BeginTable("split", 2)) {
+        ImGui::TableNextColumn();
+        if (!isRedirected && activeIndex > 0) {
+            if (ImGui::Button("Up")) {
+                std::swap(pointIndices[activeIndex - 1], pointIndices[activeIndex]);
+                activeIndex--;
+                recalculatePart(activeIndex);
+            }
+        } else {
+            ImGui::Text("Up");
+        }
+        ImGui::TableNextColumn();
+        if (!isRedirected && activeIndex < pointIndices.size() - 1) {
+            if (ImGui::Button("Down")) {
+                std::swap(pointIndices[activeIndex], pointIndices[activeIndex + 1]);
+                activeIndex++;
+                recalculatePart(activeIndex);
+            }
+        } else {
+            ImGui::Text("Down");
+        }
+        ImGui::EndTable();
+    }
 	ImGui::Checkbox("Polygon visible", &isPolygonVisible);
 	ImGui::Checkbox("Curve visible", &isCurveVisible);
 	ImGui::Text("List of points");
@@ -209,7 +254,6 @@ void bf::BezierCurve::recalculate() {
 	fovIndices.reserve(2*getIndex(MAX_FOV_LOG_PARTS+1)*countParts(pointIndices.size()));
 	//update curve
 	//vertices
-    printf("Size: %zu, parts: %u\n", pointIndices.size(), countParts(pointIndices.size()));
 	for(int i=0;i<static_cast<int>(pointIndices.size())-1;i+=3) {
 		//set basic points for de Casteljau
 		std::vector<glm::vec3> pos = {objectArray[pointIndices[i]].getPosition(),

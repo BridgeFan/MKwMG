@@ -26,6 +26,7 @@ void bf::Scene::draw(bf::Shader &shader, const Settings& settings, int width, in
 	inverseView = camera.GetInverseViewMatrix();
 	shader.setMat4("view", view);
 	//draw objects
+    std::vector<unsigned> indices;
 	objectArray.draw(shader);
 	if(settings.isMultiState && objectArray.isAnyActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();

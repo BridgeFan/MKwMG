@@ -387,7 +387,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mod
         if(selectionIndex >= 0) {
             if(!settings.isCtrlPressed)
 				objectArray.clearSelection(selectionIndex);
-			objectArray.setActive(selectionIndex);
+			else
+                objectArray.setActive(selectionIndex);
         }
 	}
 }

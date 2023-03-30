@@ -36,7 +36,7 @@ namespace bf {
 
         [[nodiscard]] std::vector<unsigned int> usedVectors() const override;
 
-        bool addPoint(unsigned index);
+        bool addPoint(unsigned index) override;
 		bool removePoint(unsigned index);
 		void draw(const Shader &shader) const override;
 		static void initData(const Scene& scene, const Settings& settings, GLFWwindow* window);

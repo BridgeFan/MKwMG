@@ -24,6 +24,7 @@ namespace bf {
         int addToIndex = -1;
         int activeIndex = -1;
 		int countActive = 0;
+        int activeRedirector = -1;
 		std::vector<std::pair<std::unique_ptr<bf::Object>, bool> > objects;
 		std::unordered_set<bf::ObjectArrayListener*> listeners;
 	public:
@@ -58,6 +59,8 @@ namespace bf {
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
 			objects.emplace_back(std::move(ptr), false);
 		}
+        void setActiveRedirector(bf::Object const* redirector=nullptr);
+        int getActiveRedirector() const {return activeRedirector;}
 		bool toggleActive(std::size_t index);
 		bool isActive(std::size_t index);
 		bool setActive(std::size_t index);
