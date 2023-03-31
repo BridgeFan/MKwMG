@@ -44,12 +44,18 @@ void bf::Cursor::ObjectGui(GLFWwindow* window, const glm::mat4& view, const glm:
     if(window!=nullptr){
         glm::vec3 screenPos = bf::glfw::toScreenPos(window, transform.position, view, projection);
         auto screenPos2 = glm::vec2(screenPos);
-        if(bf::imgui::checkChanged("Screen position", screenPos2)) {
-            if(isnan(screenPos)) {
-                screenPos2={.0f,.0f};
-                screenPos.z=0.f;
+        if(bf::glfw::isInBounds(window, screenPos2)) {
+            if (bf::imgui::checkChanged("Screen position", screenPos2)) {
+                if (isnan(screenPos)) {
+                    screenPos2 = {.0f, .0f};
+                    screenPos.z = 0.f;
+                }
+                transform.position = bf::glfw::toGlobalPos(window, glm::vec3(screenPos2, screenPos.z), inverseView,
+                                                           inverseProjection);
             }
-            transform.position = bf::glfw::toGlobalPos(window, glm::vec3(screenPos2, screenPos.z), inverseView, inverseProjection);
+        }
+        else {
+            ImGui::Text("Screen position");
         }
     }
 }

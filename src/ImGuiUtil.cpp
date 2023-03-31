@@ -81,9 +81,11 @@ bool bf::imgui::checkChanged(const char* name, glm::vec2& values, const char* fo
 	else
 		ImGui::InputFloat2(name, array);
     bool ret = !almostEqual(array[0],values.x, 1e-4) || !almostEqual(array[1],values.y, 1e-4);
+    if(!ret)
+        return false;
     values.x = array[0];
     values.y = array[1];
-    return ret;
+    return true;
 }
 
 bool bf::imgui::checkSliderChanged(const char* name, int& value, int min, int max) {
