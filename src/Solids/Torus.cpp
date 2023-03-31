@@ -48,12 +48,12 @@ void bf::Torus::ObjectGui() {
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(bf::imgui::checkSliderChanged("R fragments",bigFragments, 3, 60)) {
+	if(bf::imgui::checkSliderChanged("R fragments",bigFragments, 3, MAX_TORUS_FRAGMENTS)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(bf::imgui::checkSliderChanged("r fragments",smallFragments, 3, 60)) {
+	if(bf::imgui::checkSliderChanged("r fragments",smallFragments, 3, MAX_TORUS_FRAGMENTS)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;

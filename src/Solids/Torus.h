@@ -7,6 +7,7 @@
 #include <vector>
 #include <climits>
 #include "Solid.h"
+constexpr int MAX_TORUS_FRAGMENTS = 60;
 namespace bf {
 	class Shader;
 	class Settings;
