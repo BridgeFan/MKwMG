@@ -1,7 +1,7 @@
 #include <GL/glew.h>
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
+#include "imgui-master/imgui.h"
+#include "imgui-master/backends/imgui_impl_glfw.h"
+#include "imgui-master/backends/imgui_impl_opengl3.h"
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
@@ -19,11 +19,10 @@
 #include "camera.h"
 #include "Solids/Torus.h"
 #include "Solids/Point.h"
-#include "Solids/Cursor.h"
 #include "Util.h"
-#include "Solids/MultiCursor.h"
 #include <memory>
-#include <algorithm>
+#include "Solids/BezierCurve.h"
+#include "Scene.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -37,32 +36,25 @@ int main() {
 	//init ImGUI
     //structures
 	ImGuiIO& io = bf::imgui::init(window);
-    std::vector<std::unique_ptr<bf::Object> > objects;
-    bf::Cursor cursor;
-    bf::MultiCursor multiCursor;
-    bf::Transform& multiTransform=multiCursor.transform;
-    glm::vec3 multiCentre;
-    bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
-    std::vector<bool> selection;
+    //bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
+	bf::Scene scene(settings.aspect,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f),0.1f,100.f);
+	bf::Transform& multiTransform=scene.multiCursor.transform;
     float deltaTime = 0.0f;
-    bf::GlfwStruct glfwStruct(settings,camera,selection,objects,deltaTime,io,cursor,multiCursor,multiTransform,multiCentre);
-    glfwSetWindowUserPointer(window,&glfwStruct);
-	//bool show_another_window = false;
-	ImVec4 clear_color = ImVec4(0.25f, 0.25f, 0.20f, 1.00f);
 	bf::Shader shader(SHADER_PATH+"shader.vert", SHADER_PATH+"shader.frag");
 
-	objects.emplace_back(new bf::Torus());
+    bf::GlfwStruct glfwStruct(settings,scene,deltaTime,io);
+    glfwSetWindowUserPointer(window,&glfwStruct);
+	//bool show_another_window = false;
 
-
-    settings.Projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
-    settings.InverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
-    settings.View = camera.GetViewMatrix();
-    settings.InverseView = camera.GetInverseViewMatrix();
+	scene.objectArray.add<bf::Torus>();
+	bf::Point::initObjArrayRef(scene.objectArray);
+	bf::BezierCurve::initData(scene, settings, window);
+	//objects.emplace_back(new bf::Torus());
 
 	while (!glfwWindowShouldClose(window))
 	{
 		static float lastFrame;
-		auto currentFrame = (float)glfwGetTime();
+		auto currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		// Poll and handle events (inputs, window resize, etc.)
@@ -78,84 +70,71 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
 		///CREATE OBJECT PANEL
 		ImGui::Begin("Create object");
 		//ImGui::
 		if(ImGui::Button("Torus")) {
-			objects.emplace_back(new bf::Torus(cursor.transform));
-			clearSelection(selection,-1,settings);
-			settings.activeIndex = selection.size();
-			selection.emplace_back(true);
+			scene.objectArray.add<bf::Torus>(scene.cursor.transform);
 		}
 		if(ImGui::Button("Point")) {
-			objects.emplace_back(new bf::Point(cursor.transform));
-			clearSelection(selection,-1,settings);
-			settings.activeIndex = selection.size();
-			selection.emplace_back(true);
+			scene.objectArray.add<bf::Point>(scene.cursor.transform);
+		}
+		if(ImGui::Button("Bézier curve 0")) {
+			scene.objectArray.addRef<bf::BezierCurve>();
 		}
 		ImGui::End();
 		//ImGui
 		///LIST OF OBJECTS PANEL
 		ImGui::Begin("List of objects");
-		if(selection.size()!=objects.size()) { //resize selection if needed
-			selection.resize(objects.size(),false);
-		}
 		ImGui::Text("Hold CTRL and click to select multiple items.");
-		if(ImGui::Button("Delete")) {
-			deleteObjects(selection, objects);
-		}
-		if(ImGui::Button(settings.isMultiState ? "To single" : "To multi")) {
-			settings.isMultiState = !settings.isMultiState;
+
+		if(ImGui::Checkbox("Multipled clicked objects", &settings.isMultiState)) {
 			if(!settings.isMultiState)
-				clearSelection(selection, -1, settings);
+				scene.objectArray.clearSelection();
 		}
-        if(ImGui::Button(settings.isUniformScaling ? "To non-uniform scaling" : "To uniform scaling")) {
-            settings.isUniformScaling = !settings.isUniformScaling;
-        }
+		ImGui::Checkbox("Uniform scalng", &settings.isUniformScaling);
 		for(int i=0;i<3;i++) {
+			static bool tmp[3];
 			constexpr char axisName[] = {'X', 'Y', 'Z'};
-			if(ImGui::Button((std::string((settings.isAxesLocked>>i)%2 ? "Unlock " : "Lock ")+axisName[i]).c_str())) {
-				if ((settings.isAxesLocked >> i) % 2)
-					settings.isAxesLocked -= 0x1 << i;
-				else
+			tmp[i]=settings.isAxesLocked&(0x1<<i);
+			if(ImGui::Checkbox((std::string("Lock ")+axisName[i]).c_str(), &tmp[i])) {
+				if (tmp[i])
 					settings.isAxesLocked += 0x1 << i;
+				else
+					settings.isAxesLocked -= 0x1 << i;
 			}
 		}
-
+		if(ImGui::Button("Delete")) {
+			scene.objectArray.removeActive();
+		}
 		if(ImGui::Button("Clear selection"))
-			clearSelection(selection, -1, settings);
-		for (int n = 0; n < (int)selection.size(); n++)
+			scene.objectArray.clearSelection(-1);
+		for (std::size_t n = 0u; n < scene.objectArray.size(); n++)
 		{
-			if(!objects[n]) {
+			if(!scene.objectArray.isCorrect(n)) {
 				ImGui::Text("Empty unique pointer");
 				continue;
 			}
-			if (bf::imgui::checkSelectableChanged(objects[n]->name.c_str(), selection, n))
+			if (scene.objectArray.imGuiCheckChanged(n))
 			{
                 multiTransform = bf::Transform::Default;
 				if (!settings.isMultiState) { // Clear selection when CTRL is not held
-					clearSelection(selection, n, settings);
+					scene.objectArray.clearSelection(n);
 				}
-				//selection[n] = !selection[n];
-				if(selection[n])
-					settings.activeIndex = n;
-				else
-					settings.activeIndex = -1;
-				multiCentre = bf::getCentre(selection, objects);
 			}
 		}
 		ImGui::End();
 		/// MODIFY OBJECT PANEL
 		ImGui::Begin("Modify object");
 		//active object settings
-		if(settings.activeIndex>=0 && settings.activeIndex<(int)objects.size() && !settings.isMultiState)
-			objects[settings.activeIndex]->ObjectGui();
+		if(scene.objectArray.getActiveIndex()!=-1 && !settings.isMultiState)
+			scene.objectArray[scene.objectArray.getActiveIndex()].ObjectGui();
 		else {
 			bool isAny = false;
 			if (settings.isMultiState) {
-				for (int i = 0; i < (int)objects.size(); i++) {
-					if (objects[i] && selection[i]) {
+				for (std::size_t i = 0u; i < scene.objectArray.size(); i++) {
+					if (scene.objectArray.isCorrect(i) && scene.objectArray.isActive(i)) {
 						isAny=true;
 						break;
 					}
@@ -166,67 +145,31 @@ int main() {
 					bool tmp = bf::imgui::checkChanged("Object position", multiTransform.position);
 					tmp = bf::imgui::checkChanged("Object rotation", multiTransform.rotation) || tmp;
 					tmp = bf::imgui::checkChanged("Object scale", multiTransform.scale, true) || tmp;
-					//multiCentre = getCentre(selection, objects);
 					if (tmp) {
-						for (int i = 0; i < (int)objects.size(); i++) {
-							if (objects[i] && selection[i]) {
-								objects[i]->setNewTransform(multiCentre, oldTransform, multiTransform);
+						for (std::size_t i = 0; i < scene.objectArray.size(); i++) {
+							if (scene.objectArray.isCorrect(i) && scene.objectArray.isActive(i)) {
+								scene.objectArray[i].setNewTransform(scene.objectArray.getCentre(), oldTransform, multiTransform);
 							}
 						}
 					}
 				}
 			}
 			if(!isAny) {
-				cursor.ObjectGui(window, settings.View, settings.InverseView, settings.Projection, settings.InverseProjection);
+				scene.cursor.ObjectGui(window, scene.getView(), scene.getInverseView(), scene.getProjection(), scene.getInverseProjection());
 			}
 		}
 		ImGui::End();
 		//camera info and set cursor
 		///CAMERA INFO PANEL
 		ImGui::Begin("Camera info");
-		camera.ObjectGui();
+		scene.camera.ObjectGui();
 		ImGui::End();
 		// Rendering
 		ImGui::Render();
+		//OpenGL draw
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
-		glViewport(0, 0, display_w, display_h);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		shader.use();
-		// pass projection matrix to shader (note that in this case it could change every frame)
-		settings.Projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
-		settings.InverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
-		shader.setMat4("projection", settings.Projection);
-		// camera/view transformation
-		settings.View = camera.GetViewMatrix();
-		settings.InverseView = camera.GetInverseViewMatrix();
-		shader.setMat4("view", settings.View);
-		//draw objects
-		for(int i=0;i<(int)objects.size();i++) {
-			if(objects[i]) {
-				if(selection[i])
-					shader.setVec3("color",1.f,.5f,.0f);
-				else
-					shader.setVec3("color",1.f,1.f,1.f);
-				objects[i]->draw(shader);
-			}
-		}
-		if(settings.isMultiState && std::find(selection.begin(),selection.end(),true)!=selection.end()) {
-            multiCursor.transform.position+=multiCentre;
-            multiCursor.draw(shader, settings);
-            multiCursor.transform.position-=multiCentre;
-		}
-        else if(!settings.isMultiState && settings.activeIndex>=0 && settings.activeIndex < (int)selection.size() &&
-            objects[settings.activeIndex]) {
-            bf::Transform oldTransform = multiCursor.transform;
-            multiCursor.transform=objects[settings.activeIndex]->getTransform();
-            multiCursor.draw(shader, settings);
-            multiCursor.transform=std::move(oldTransform);
-        }
-        cursor.draw(shader, settings);
-		//cursor.transform = cursorTransform;
+		scene.draw(shader, settings, display_w, display_h);
 		//end of OpenGL draw
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);

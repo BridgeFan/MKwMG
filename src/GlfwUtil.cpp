@@ -7,13 +7,19 @@
 #include "Settings.h"
 #include "camera.h"
 #include <array>
-#include "Solids/Object.h"
-#include "../../imgui-master/imgui.h"
+#include "src/Object/Object.h"
+#include "imgui-master/imgui.h"
+//#include "imgui.h"
 #include "Util.h"
 #include "Solids/Cursor.h"
+#include "src/Object/ObjectArray.h"
+#include "Solids/Point.h"
+#include "Solids/Torus.h"
+#include "Scene.h"
 
 constexpr int SRC_WIDTH=1024;
 constexpr int SRC_HEIGHT=768;
+constexpr float SRC_ASPECT = static_cast<float>(SRC_WIDTH)/static_cast<float>(SRC_HEIGHT);
 
 //declaration of functions
 GLFWwindow* initWindow(bf::Settings& settings);
@@ -46,7 +52,7 @@ void bf::glfw::destroy(GLFWwindow* window) {
 
 GLFWwindow* initWindow(bf::Settings& settings)
 {
-	settings.aspect=(float)SRC_WIDTH/(float)SRC_HEIGHT;
+	settings.aspect=SRC_ASPECT;
 	GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, "Project 2", nullptr, nullptr);
 	if (window == nullptr)
 	{
@@ -85,10 +91,12 @@ GLFWwindow* initWindow(bf::Settings& settings)
 glm::vec3 bf::glfw::toScreenPos(GLFWwindow* window, const glm::vec3& worldPos, const glm::mat4& view, const glm::mat4& projection) {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
+	auto widthF = static_cast<float>(width);
+	auto heightF = static_cast<float>(height);
     auto v = projection*view*glm::vec4(worldPos,1.f);
     v/=v.w;
-    v.x=(v.x+1.f)*(float)width*.5f;
-    v.y=(1.f-v.y)*(float)height*.5f;
+    v.x=(v.x+1.f)*widthF*.5f;
+    v.y=(1.f-v.y)*heightF*.5f;
     return {v.x,v.y,v.z};
 }
 
@@ -96,8 +104,10 @@ glm::vec3 bf::glfw::toGlobalPos(GLFWwindow* window, const glm::vec3& mousePos, c
     auto mp = mousePos;
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    mp.x = 2.f*mp.x/(float)width-1.f;
-    mp.y = 1.f-2.f*mp.y/(float)height;
+	auto widthF = static_cast<float>(width);
+	auto heightF = static_cast<float>(height);
+    mp.x = 2.f*mp.x/widthF-1.f;
+    mp.y = 1.f-2.f*mp.y/heightF;
     auto v = inverseView*inverseProjection*glm::vec4(mp,1.f);
     v/=v.w;
     return {v.x,v.y,v.z};
@@ -111,11 +121,27 @@ void bf::glfw::processInput(GLFWwindow *window)
 		return;*/
 }
 
+bool bf::glfw::isInBounds(GLFWwindow *window, const glm::vec2 &screenPos) {
+	return isInBounds(window,{screenPos.x,screenPos.y,0.f});
+}
+
+bool bf::glfw::isInBounds(GLFWwindow *window, const glm::vec3 &mousePos) {
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	if(std::abs(mousePos.z)>1.f)
+		return false;
+	if(mousePos.x<0 || mousePos.x>width)
+		return false;
+	if(mousePos.y<0 || mousePos.y>height)
+		return false;
+	return true;
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    auto ptr = (bf::GlfwStruct*)glfwGetWindowUserPointer(window);
+	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
 	glViewport(0, 0, width, height);
-	ptr->settings.aspect=(float)width/(float)height;
+	ptr->settings.aspect=static_cast<float>(width)/static_cast<float>(height);
 }
 
 void blockAxes(glm::vec3& v, uint8_t axisLock) {
@@ -129,15 +155,14 @@ void blockAxes(glm::vec3& v, uint8_t axisLock) {
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    auto* ptr = (bf::GlfwStruct*)glfwGetWindowUserPointer(window);
-    bf::Camera& camera = ptr->camera;
+	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
+    bf::Camera& camera = ptr->scene.camera;
     const float& deltaTime = ptr->deltaTime;
     const bf::Settings& settings = ptr->settings;
-    bf::Transform& multiTransform = ptr->multiTransform;
-    glm::vec3& multiCentre = ptr->multiCentre;
-    bf::Cursor& cursor = ptr->cursor;
-    auto& selection = ptr->selection;
-    auto& objects = ptr->objects;
+    bf::Transform& multiTransform = ptr->scene.multiCursor.transform;
+    bf::Cursor& cursor = ptr->scene.cursor;
+	auto& scene = ptr->scene;
+	auto& objectArray = ptr->scene.objectArray;
 
 	auto xpos = static_cast<float>(xposIn);
 	auto ypos = static_cast<float>(yposIn);
@@ -162,52 +187,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	float rotSpeed = camera.RotationSpeed * deltaTime;
 	float scaleSpeed = .5f * deltaTime;
 
-	/*if(settings.state == MiddleClick) {
-		//move right or up
-		camera.Position += speed * (camera.getRight() * xoffset + camera.getUp() * yoffset);
-	}
-	else if(settings.state == RightClick) {
-		//rotate
-		camera.ProcessMouseMovement(xoffset, yoffset);
-	}*/
-	//uint8_t axis1, axis2;
-	//uint8_t axis3 = UINT8_MAX;
-	/*switch(settings.isAxesLocked) {
-		case 0:
-			axis1 = 0;
-			axis2 = 1;
-			axis3 = 2;
-			isRotationInverted=true;
-			break;
-		case 1: //X locked
-			axis1 = 1;
-			axis2 = 2;
-			break;
-		case 2: //Y locked
-			axis1 = 2;
-			axis2 = 0;
-			break;
-		case 3: //X and Y locked
-			axis1 = 2;
-			axis2 = 2;
-			break;
-		case 4: //Z locked
-			axis1 = 0;
-			axis2 = 1;
-			isRotationInverted=true;
-			break;
-		case 5: //X and Z locked
-			axis1 = 1;
-			axis2 = 1;
-			break;
-		case 6: //Y and Z locked
-			axis1 = 0;
-			axis2 = 0;
-			break;
-		case 7: //X, Y and Z locked
-			axis1 = UINT8_MAX; //ignore moving and rotating
-			break;
-	}*/
 	if(settings.state != bf::None) {
 		float myVec[] = {.0f,.0f,.0f};
 		if(settings.isAltPressed)
@@ -228,8 +207,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
                 glm::vec3 centre;
                 if(settings.isMultiState)
                     centre = multiTransform.position;
-                else if(settings.activeIndex>=0 && settings.activeIndex<(int)objects.size() && objects[settings.activeIndex])
-                    centre = objects[settings.activeIndex]->getPosition();
+                else if(objectArray.isMovable(objectArray.getActiveIndex()))
+                    centre = objectArray[objectArray.getActiveIndex()].getPosition();
                 else
                     centre = cursor.transform.position;
                 bf::Transform rotated = rotateAboutPoint(camera, centre, rotSpeed * glmVec);
@@ -272,30 +251,29 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
             bf::Transform t;
             if(settings.isMultiState)
                 t = multiTransform;
-            else if(settings.activeIndex>=0 && settings.activeIndex<(int)objects.size() && objects[settings.activeIndex])
-                t = objects[settings.activeIndex]->getTransform();
+            else if(objectArray.isMovable(objectArray.getActiveIndex()))
+                t = objectArray[objectArray.getActiveIndex()].getTransform();
             else
                 t = cursor.transform;
             t.position += deltaTransform.position;
             t.rotation += deltaTransform.rotation;
             t.scale += deltaTransform.scale;
 			if(settings.isMultiState) {
-				for (int i = 0; i < (int)objects.size(); i++) {
-					if (objects[i] && selection[i]) {
-						objects[i]->setNewTransform(multiCentre, multiTransform, t);
+				for (std::size_t i = 0; i < objectArray.size(); i++) {
+					if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
+						objectArray[i].setNewTransform(scene.objectArray.getCentre(), multiTransform, t);
 					}
 				}
                 multiTransform = std::move(t);
-				//multiCentre = getCentre(selection, objects);
 			}
-			else if(settings.activeIndex>=0 && settings.activeIndex<(int)objects.size() && objects[settings.activeIndex]) {
-                objects[settings.activeIndex]->setTransform(std::move(t));
+			else if(objectArray.isMovable(objectArray.getActiveIndex())) {
+                objectArray[objectArray.getActiveIndex()].setTransform(std::move(t));
 			}
 			else {
-                glm::vec3 screenPos = bf::glfw::toScreenPos(window,cursor.transform.position,settings.View,settings.Projection);
+                glm::vec3 screenPos = bf::glfw::toScreenPos(window,cursor.transform.position,scene.getView(),scene.getProjection());
                 screenPos.x = xpos;
                 screenPos.y = ypos;
-                cursor.transform.position = bf::glfw::toGlobalPos(window,screenPos, settings.InverseView, settings.InverseProjection);
+                cursor.transform.position = bf::glfw::toGlobalPos(window,screenPos, scene.getInverseView(), scene.getInverseProjection());
 			}
 		}
 	}
@@ -303,15 +281,15 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
 {
-    auto* ptr = (bf::GlfwStruct*)glfwGetWindowUserPointer(window);
-	ptr->camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
+	ptr->scene.camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/) {
-    auto* ptr = (bf::GlfwStruct*)glfwGetWindowUserPointer(window);
+	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
-    auto& selection = ptr->selection;
-    auto& objects = ptr->objects;
+	bf::Cursor& cursor = ptr->scene.cursor;
+    auto& objectArray = ptr->scene.objectArray;
 	if(ptr->io.WantCaptureKeyboard)
 		return;
 	if(key==GLFW_KEY_LEFT_CONTROL || key==GLFW_KEY_RIGHT_CONTROL) {
@@ -350,15 +328,19 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 					settings.isAxesLocked += 0x4;
 				break;
 			case GLFW_KEY_C:
-				clearSelection(selection, -1, settings);
-                ptr->multiCentre = bf::getCentre(selection, objects);
+				objectArray.clearSelection();
+				break;
+			case GLFW_KEY_P:
+				objectArray.add<bf::Point>(cursor.transform);
+				break;
+			case GLFW_KEY_T:
+				objectArray.add<bf::Torus>(cursor.transform);
 				break;
             case GLFW_KEY_U:
                 settings.isUniformScaling = !settings.isUniformScaling;
                 break;
 			case GLFW_KEY_DELETE:
-				deleteObjects(selection, objects);
-                ptr->multiCentre = bf::getCentre(selection, objects);
+				objectArray.removeActive();
 				break;
 			default:
 				;
@@ -366,12 +348,12 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 	}
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
 {
-    auto* ptr = (bf::GlfwStruct*)glfwGetWindowUserPointer(window);
+	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
-    auto& selection = ptr->selection;
-    auto& objects = ptr->objects;
+	auto& objectArray = ptr->scene.objectArray;
+	auto& scene = ptr->scene;
 	if(ptr->io.WantCaptureMouse)
 		return;
 	if(action == GLFW_RELEASE && ((button == GLFW_MOUSE_BUTTON_RIGHT && settings.state == bf::RightClick) ||
@@ -384,31 +366,29 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		double mouseX, mouseY;
 		glfwGetCursorPos(window, &mouseX, &mouseY);
+		auto mouseXF = static_cast<float>(mouseX);
+		auto mouseYF = static_cast<float>(mouseY);
 		constexpr float sqrDist = 64.f;
         int selectionIndex = -1;
         float actualZ = 9.999f;
-		for(unsigned i=0u;i<objects.size();i++) {
-			if(!objects[i]/* || typeid(*objects[i])!=typeid(Point)*/)
+		for(unsigned i=0u;i<objectArray.size();i++) {
+			if(!objectArray.isCorrect(i)/* || typeid(*objects[i])!=typeid(Point)*/)
 				continue;
-            auto screenPos = bf::glfw::toScreenPos(window, objects[i]->getTransform().position, settings.View, settings.Projection);
-            float d = (screenPos.x-(float)mouseX)*(screenPos.x-(float)mouseX)+(screenPos.y-(float)mouseY)*(screenPos.y-(float)mouseY);
+            auto screenPos = bf::glfw::toScreenPos(window, objectArray[i].getTransform().position, scene.getView(), scene.getProjection());
+			if(screenPos==bf::outOfWindow)
+				continue;
+            float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
             //float d = glm::length2(glm::cross(objects[i]->getPosition()-camera.position, ray))/glm::length2(ray);
 			if(d<=sqrDist && actualZ>screenPos.z) {
-                selectionIndex=(int)i;
+                selectionIndex=static_cast<int>(i);
                 actualZ=screenPos.z;
-				/*if(!(mods&GLFW_MOD_CONTROL))
-					clearSelection(selection, i, settings);
-				selection[i] = true;
-                ptr->multiCentre = getCentre(selection, objects);
-				break;*/
 			}
 		}
         if(selectionIndex >= 0) {
-            if(!(mods&GLFW_MOD_CONTROL))
-                bf::clearSelection(selection, selectionIndex, settings);
-            selection[selectionIndex] = true;
-            settings.activeIndex = selectionIndex;
-            ptr->multiCentre = bf::getCentre(selection, objects);
+            if(!settings.isCtrlPressed)
+				objectArray.clearSelection(selectionIndex);
+			else
+                objectArray.setActive(selectionIndex);
         }
 	}
 }

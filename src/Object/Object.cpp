@@ -4,10 +4,10 @@
 
 #include <glm/gtx/euler_angles.hpp>
 #include "Object.h"
-#include "../Settings.h"
-#include "../ImGuiUtil.h"
+#include "src/Settings.h"
+#include "src/ImGuiUtil.h"
 
-int bf::Object::index = 1;
+int bf::Object::_objIndex = 1;
 
 void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& oldTransform, const bf::Transform& newTransform) {
     if(oldTransform==newTransform)

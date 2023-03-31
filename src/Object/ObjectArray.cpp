@@ -1,0 +1,223 @@
+//
+// Created by kamil-hp on 27.03.23.
+//
+
+#include "ObjectArray.h"
+#include "Settings.h"
+#include "Object.h"
+#include "imgui-master/imgui.h"
+#include "ImGuiUtil.h"
+#include <algorithm>
+#include "Shader.h"
+#include "Solids/BezierCurve.h"
+
+auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
+
+bf::Object &bf::ObjectArray::operator[](std::size_t index) {
+	if(index >= objects.size())
+		throw std::out_of_range("Index too large");
+	if(!objects[index].first)
+		throw std::domain_error("Null pointer exception");
+	return *objects[index].first;
+}
+
+const bf::Object &bf::ObjectArray::operator[](std::size_t index) const {
+	if(index >= objects.size())
+		throw std::out_of_range("Index too large");
+	if(!objects[index].first)
+		throw std::domain_error("Null pointer exception");
+	return *objects[index].first;
+}
+
+bool bf::ObjectArray::isCorrect(std::size_t index) const {
+	return (index < objects.size() && objects[index].first);
+}
+
+void bf::ObjectArray::add(bf::Object* object) {
+	objects.emplace_back(object, false);
+}
+
+bool bf::ObjectArray::remove(std::size_t index) {
+    activeRedirector=-1;
+	if(index>=objects.size())
+		return false;
+	for(auto a: listeners)
+		if(a)
+			a->onRemoveObject(index);
+	for(std::size_t i=index+1;i<objects.size();i++)
+		std::swap(objects[i-1],objects[i]);
+	if(objects.back().second)
+		countActive--;
+	objects.pop_back();
+	if(countActive==0)
+		activeIndex = -1;
+	else if(countActive==1)
+		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
+	return true;
+}
+
+
+bool bf::ObjectArray::isActive(std::size_t index) {
+	if(index >= objects.size())
+		throw std::out_of_range("Index too large");
+	return objects[index].second;
+}
+
+void bf::ObjectArray::removeActive() {
+	for(std::size_t i=0u;i<size();i++)
+		if(objects[i].second) {
+			remove(i);
+			i--;
+		}
+}
+
+void bf::ObjectArray::clearSelection(std::size_t index) {
+    if(isCorrect(activeRedirector)) {
+        if(activeRedirector==static_cast<int>(index)) {
+            activeRedirector = -1;
+        }
+        else {
+            operator[](activeRedirector).addPoint(index);
+            return;
+        }
+    }
+	for(std::size_t i=0;i<objects.size();i++)
+		if(i!=index)
+			objects[i].second=false;
+	if(isCorrect(index)) {
+		objects[index].second=true;
+		activeIndex = static_cast<int>(index);
+		countActive = 1;
+	}
+	else {
+		activeIndex = -1;
+		countActive = 0;
+	}
+}
+
+glm::vec3 bf::ObjectArray::getCentre() {
+	int count=0;
+	glm::vec3 sum = {.0f,.0f,.0f};
+	for(std::size_t i=0;i<objects.size();i++) {
+		if(!isCorrect(i))
+			continue;
+		if(objects[i].second) {
+			sum+=objects[i].first->getPosition();
+			count++;
+		}
+	}
+	if(count>0)
+		sum /= count;
+	return sum;
+}
+
+bool bf::ObjectArray::isAnyActive() {
+	return countActive>0;
+}
+bool bf::ObjectArray::isMultipleActive() {
+	return countActive>1;
+}
+
+bool bf::ObjectArray::setActive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+    if(isCorrect(activeRedirector)) {
+        if(operator[](activeRedirector).addPoint(index))
+            return true;
+    }
+	if(!objects[index].second)
+		countActive++;
+	if(countActive==1)
+		activeIndex=index;
+	objects[index].second=true;
+	return true;
+}
+bool bf::ObjectArray::setUnactive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+    if(static_cast<int>(index)==activeRedirector)
+        activeRedirector=-1;
+	if(objects[index].second)
+		countActive--;
+	if(countActive==1)
+		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
+	objects[index].second=false;
+	return true;
+}
+
+bool bf::ObjectArray::toggleActive(std::size_t index) {
+	if(!isCorrect(index))
+		return false;
+	objects[index].second ? setUnactive(index) : setActive(index);
+	return true;
+}
+
+void bf::ObjectArray::addListener(bf::ObjectArrayListener &listener) {
+	listeners.insert(&listener);
+}
+void bf::ObjectArray::removeListener(bf::ObjectArrayListener &listener) {
+	listeners.erase(&listener);
+}
+
+bool bf::ObjectArray::isMovable(std::size_t index) {
+	return isCorrect(index) && objects[index].first->isMovable();
+}
+
+int bf::ObjectArray::getActiveIndex() const
+{
+	if(isCorrect(activeIndex))
+		return activeIndex;
+    return -1;
+}
+
+bool bf::ObjectArray::imGuiCheckChanged(std::size_t index) {
+	if(!isCorrect(index)) {
+		ImGui::Text("_");
+		return false;
+	}
+	bool val = isActive(index);
+	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(),val);
+	if(ret)
+		toggleActive(index);
+	return ret;
+}
+
+void bf::ObjectArray::draw(bf::Shader& shader) {
+    std::vector<unsigned> usedIndices;
+    if(isCorrect(activeIndex)) {
+        usedIndices = objects[activeIndex].first->usedVectors();
+    }
+	for(std::size_t i=0;i<objects.size();i++) {
+		if(isCorrect(i) && std::find(usedIndices.begin(),usedIndices.end(),i)==usedIndices.end()) {
+			if(isActive(i))
+				shader.setVec3("color",1.f,.5f,.0f);
+			else
+				shader.setVec3("color",1.f,1.f,1.f);
+			objects[i].first->draw(shader);
+		}
+	}
+}
+
+void bf::ObjectArray::onMove(std::size_t index) {
+	for(auto a: listeners)
+		if(a)
+			a->onMoveObject(index);
+}
+
+int bf::ObjectArray::getAddToIndex() const {
+    return addToIndex;
+}
+
+void bf::ObjectArray::setAddToIndex(int adt) {
+    ObjectArray::addToIndex = adt;
+}
+
+void bf::ObjectArray::setActiveRedirector(const bf::Object *redirector) {
+    activeRedirector=-1;
+    for(unsigned i=0u;i<objects.size();i++) {
+        if(objects[i].first.get()==redirector) {
+            activeRedirector = i;
+            return;
+        }
+    }
+}

@@ -7,44 +7,43 @@
 #include <GL/glew.h>
 //file based on https://learnopengl.com tutorials for OpenGL
 
+std::string getShaderTypeName(int shaderType) {
+    switch(shaderType) {
+        case GL_VERTEX_SHADER:
+            return "SHADER";
+        case GL_FRAGMENT_SHADER:
+            return "FRAGMENT";
+        case GL_GEOMETRY_SHADER:
+            return "GEOMETRY";
+        case GL_TESS_CONTROL_SHADER:
+            return "GL_TESS_CONTROL_SHADER";
+        case GL_TESS_EVALUATION_SHADER:
+            return "GL_TESS_EVALUATION_SHADER";
+        default:
+            return "";
+    }
+}
+
+unsigned bf::Shader::compileShaderFromFile(const std::string& path, int shaderType) const {
+    std::string code = readWholeFile(path.c_str());
+    if(code.empty())
+        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", path.c_str());
+    const char* codePtr = code.c_str();
+    unsigned index = glCreateShader(shaderType);
+    glShaderSource(index, 1, &codePtr, nullptr);
+    glCompileShader(index);
+    checkCompileErrors(index, getShaderTypeName(shaderType));
+    return index;
+}
+
 bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath) {
     bool isGeometryShaderUsed = !geometryPath.empty();
-    // 1. retrieve the vertex/fragment source code from filePath
-	std::string vertexCode = readWholeFile(vertexPath.c_str());
-	std::string fragmentCode = readWholeFile(fragmentPath.c_str());
-	std::string geometryCode = readWholeFile(geometryPath.c_str());
-    if(vertexCode.empty())
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", vertexPath.c_str());
-    if(fragmentCode.empty())
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", fragmentPath.c_str());
-    if(!geometryPath.empty() && geometryCode.empty()) {
-        fprintf(stderr, "ERROR::bf::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", geometryPath.c_str());
-    }
-	const char* vShaderCode = vertexCode.c_str();
-	const char * fShaderCode = fragmentCode.c_str();
-	// 2. compile shaders
-	unsigned int vertex, fragment;
-	// vertex shader
-	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, 1, &vShaderCode, nullptr);
-	glCompileShader(vertex);
-	checkCompileErrors(vertex, "VERTEX");
-	// fragment Shader
-	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, 1, &fShaderCode, nullptr);
-	glCompileShader(fragment);
-	checkCompileErrors(fragment, "FRAGMENT");
-	// if geometry shader is given, compile geometry shader
+    unsigned int vertex = compileShaderFromFile(vertexPath, GL_VERTEX_SHADER);
+    unsigned int fragment = compileShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
 	unsigned int geometry;
-	if(isGeometryShaderUsed)
-	{
-		const char * gShaderCode = geometryCode.c_str();
-		geometry = glCreateShader(GL_GEOMETRY_SHADER);
-		glShaderSource(geometry, 1, &gShaderCode, nullptr);
-		glCompileShader(geometry);
-		checkCompileErrors(geometry, "GEOMETRY");
+	if(isGeometryShaderUsed) {
+        geometry = compileShaderFromFile(geometryPath, GL_GEOMETRY_SHADER);
 	}
-	// shader Program
 	ID = glCreateProgram();
 	glAttachShader(ID, vertex);
 	glAttachShader(ID, fragment);
@@ -64,7 +63,7 @@ void bf::Shader::use() const
 }
 void bf::Shader::setBool(const std::string &name, bool value) const
 {
-	glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+	glUniform1i(glGetUniformLocation(ID, name.c_str()), static_cast<int>(value));
 }
 void bf::Shader::setInt(const std::string &name, int value) const
 {
@@ -103,4 +102,34 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 bf::Shader::~Shader()
 {
 	glDeleteProgram(ID);
+}
+
+bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &tessControlPath,
+                   const std::string &tessEvalPath, const std::string &geometryPath) {
+    bool isGeometryShaderUsed = !geometryPath.empty();
+    unsigned int vertex = compileShaderFromFile(vertexPath, GL_VERTEX_SHADER);
+    unsigned int fragment = compileShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
+    unsigned int tessCtrl = compileShaderFromFile(tessControlPath, GL_TESS_CONTROL_SHADER);
+    unsigned int tessEval = compileShaderFromFile(tessEvalPath, GL_TESS_EVALUATION_SHADER);
+    unsigned int geometry;
+    if(isGeometryShaderUsed) {
+        geometry = compileShaderFromFile(geometryPath, GL_GEOMETRY_SHADER);
+    }
+    ID = glCreateProgram();
+    glAttachShader(ID, vertex);
+    glAttachShader(ID, fragment);
+    glAttachShader(ID, tessCtrl);
+    glAttachShader(ID, tessEval);
+    if(!geometryPath.empty())
+        glAttachShader(ID, geometry);
+    glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
+    // delete the shaders as they're linked into our program now and no longer necessery
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    glDeleteShader(tessCtrl);
+    glDeleteShader(tessEval);
+    if(isGeometryShaderUsed)
+        glDeleteShader(geometry);
+
 }

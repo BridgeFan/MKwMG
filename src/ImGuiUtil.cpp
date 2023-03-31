@@ -2,13 +2,12 @@
 // Created by kamil-hp on 13.03.2022.
 //
 #include "ImGuiUtil.h"
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
-#include <glm/glm.hpp>
+#include "imgui-master/imgui.h"
+#include "imgui-master/backends/imgui_impl_glfw.h"
+#include "imgui-master/backends/imgui_impl_opengl3.h"
 #include <string>
 #include <algorithm>
-#include "misc/cpp/imgui_stdlib.h"
+#include "imgui-master/misc/cpp/imgui_stdlib.h"
 #include "Util.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -75,13 +74,18 @@ bool bf::imgui::checkChanged(const char* name, glm::vec3& values, bool isZeroIns
 	return ret;
 }
 
-bool bf::imgui::checkChanged(const char* name, glm::vec2& values) {
+bool bf::imgui::checkChanged(const char* name, glm::vec2& values, const char* format) {
     float array[] = {values.x, values.y};
-    ImGui::InputFloat2(name, array);
-    bool ret = !almostEqual(array[0],values.x) || !almostEqual(array[1],values.y);
+	if(format)
+    	ImGui::InputFloat2(name, array, format);
+	else
+		ImGui::InputFloat2(name, array);
+    bool ret = !almostEqual(array[0],values.x, 1e-4) || !almostEqual(array[1],values.y, 1e-4);
+    if(!ret)
+        return false;
     values.x = array[0];
     values.y = array[1];
-    return ret;
+    return true;
 }
 
 bool bf::imgui::checkSliderChanged(const char* name, int& value, int min, int max) {
@@ -103,12 +107,4 @@ bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;
-}
-
-bool bf::imgui::checkSelectableChanged(const char *name, std::vector<bool> &selectable, int n) {
-    bool val = selectable[n];
-    bool ret = bf::imgui::checkSelectableChanged(name,val);
-    if(ret)
-        selectable[n]=!selectable[n];
-    return ret;
 }

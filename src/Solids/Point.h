@@ -5,21 +5,30 @@
 #ifndef MG1_ZAD2_POINT_H
 #define MG1_ZAD2_POINT_H
 
-#include "Object.h"
+#include "src/Object/Object.h"
 
 namespace bf {
+	class ObjectArray;
 	class Point : public bf::Object {
 	private:
 		static int index;
 		static void Init();
 		static unsigned int VBO, VAO;
 		static bool isInited;
+		static bf::ObjectArray* objectArray;
 	public:
 		Point(const bf::Transform &transform, const std::string &pointName);
 		explicit Point(const std::string &pointName) : Point(bf::Transform::Default, pointName) {}
-		explicit Point(const bf::Transform &t = bf::Transform::Default) : Point(t, "Point " + std::to_string(
+		explicit Point(const bf::Transform &t = bf::Transform::Default) : Point( t, "Point " + std::to_string(
 				index)) { index++; }
 		void draw(const bf::Shader &shader) const override;
+		static void initObjArrayRef(bf::ObjectArray& objArray);
+
+		void setPosition(const glm::vec3 &pos) override;
+
+		void setTransform(const Transform &t) override;
+
+		void setTransform(Transform &&t) override;
 	};
 }
 

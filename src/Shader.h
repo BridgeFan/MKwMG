@@ -15,6 +15,7 @@ namespace bf {
 
         // constructor reads and builds the shader
         Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &geometryPath = {});
+        Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &tessControlPath, const std::string &tessEvalPath, const std::string& geometryPath = {});
 
         ~Shader();
 
@@ -71,6 +72,7 @@ namespace bf {
 
     private:
         void checkCompileErrors(unsigned int shader, const std::string &type) const;
+        unsigned compileShaderFromFile(const std::string& path, int shaderType) const;
     };
 }
 

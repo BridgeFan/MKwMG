@@ -14,3 +14,7 @@ U - uniform/non-uniform scaling
 Del - delete objects
 Alt/A - move Z instead of XY
 Shift - scaling
+
+Creating object:
+P - point
+T - torus
