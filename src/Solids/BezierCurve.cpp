@@ -58,7 +58,7 @@ bool bf::BezierCurve::addPoint(unsigned index) {
 bool bf::BezierCurve::removePoint(unsigned index) {
 	if(!objectArray.isCorrect(index) || pointIndices.empty())
 		return false;
-	for(std::size_t i=index+1u;i<objectArray.size();i++)
+	for(std::size_t i=index;i<objectArray.size();i++)
 		std::swap(pointIndices[i], pointIndices[i + 1u]);
 	pointIndices.pop_back();
 	activeIndex=0;
@@ -111,7 +111,7 @@ void bf::BezierCurve::draw(const bf::Shader &shader) const {
             objectArray[pointIndices[i]].draw(shader);
         }
     }
-    shader.setVec3("color", 1.f,0.5f,0.f);
+    shader.setVec3("color", 0.f,0.f,0.f);
     if(pointIndices.empty() || indices.empty() || vertices.empty()) {
         return;
     }
@@ -128,34 +128,35 @@ void bf::BezierCurve::draw(const bf::Shader &shader) const {
     if(fovIndices.empty() || fovVertices.empty()) {
         return;
     }
+    shader.setVec3("color", 1.f,0.5f,0.f);
 	if(isCurveVisible) {
-        int LOD;
+        int LOD=0;
 		glBindVertexArray(FVAO);
 		for(unsigned i=0u;i<countParts(pointIndices.size());i++) {
 			if(!scene || !window || !settings)
 				LOD = 3;
 			else {
-				bool pr = false;
+				//bool pr = false;
 				auto gPos1 = glm::vec2(bf::glfw::toScreenPos(window,objectArray[indices[i*3]].getPosition(),
 												   scene->getView(), scene->getProjection()));
 				auto gPos2 = glm::vec2(bf::glfw::toScreenPos(window,objectArray[indices[i*3+1]].getPosition(),
 												   scene->getView(), scene->getProjection()));
-				pr |= bf::glfw::isInBounds(window, gPos1);
-				pr |= bf::glfw::isInBounds(window, gPos2);
+				//pr |= bf::glfw::isInBounds(window, gPos1);
+				//pr |= bf::glfw::isInBounds(window, gPos2);
 				float distance = glm::distance(gPos1,gPos2);
 				if(i+2<pointIndices.size()) {
 					gPos1 = glm::vec2(bf::glfw::toScreenPos(window,objectArray[indices[i*3+2]].getPosition(),
 																 scene->getView(), scene->getProjection()));
-					pr |= bf::glfw::isInBounds(window, gPos1);
+					//pr |= bf::glfw::isInBounds(window, gPos1);
 					distance += glm::distance(gPos1, gPos2);
 				}
 				if(i+3<pointIndices.size()) {
 					gPos2 = glm::vec2(bf::glfw::toScreenPos(window,objectArray[indices[i*3+3]].getPosition(),
 															scene->getView(), scene->getProjection()));
-					pr |= bf::glfw::isInBounds(window, gPos1);
+					//pr |= bf::glfw::isInBounds(window, gPos1);
 					distance += glm::distance(gPos1, gPos2);
 				}
-				if(i+2>=pointIndices.size() || !pr)
+				if(i+2>=pointIndices.size()/* || !pr*/)
 					LOD=0;
 				else {
 					float tmp=1.f;
