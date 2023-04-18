@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include "BezierCurve.h"
 #include "../Object/ObjectArray.h"
 #include "Point.h"
@@ -351,4 +352,18 @@ void bf::BezierCurve::initData(const bf::Scene &sc, const bf::Settings &s, GLFWw
 
 std::vector<unsigned int> bf::BezierCurve::usedVectors() const {
     return pointIndices;
+}
+
+bool bf::BezierCurve::onKeyPressed(int key, int mods) {
+    if(objectArray.getActiveRedirector()>=0) {
+        if(key==GLFW_KEY_P && scene) {
+            objectArray.add<bf::Point>(scene->cursor.transform);
+            addPoint(objectArray.size()-1);
+            return true;
+        }
+        else if(key==GLFW_KEY_T) {
+            return true;
+        }
+    }
+    return false;
 }

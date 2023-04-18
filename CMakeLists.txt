@@ -8,8 +8,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXra
 -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference \
 -Woverloaded-virtual -Wcast-align -Wshadow -fno-common -Wfloat-equal -Wcast-qual \
 -Wold-style-cast -Wuseless-cast -Wformat-signedness")
-#include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master") #only for imgui
-#include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master/backends") #only for imgui
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "src")
 link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master")

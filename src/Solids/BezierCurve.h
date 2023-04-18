@@ -42,7 +42,9 @@ namespace bf {
 		static void initData(const Scene& scene, const Settings& settings, GLFWwindow* window);
 		void ObjectGui() override;
 		[[nodiscard]] bool isMovable() const override {return false;}
-	};
+
+        bool onKeyPressed(int key, int mods) override;
+    };
 }
 
 

@@ -43,6 +43,8 @@ namespace bf {
         [[nodiscard]] virtual std::vector<unsigned> usedVectors() const {return {};}
 		//utility functions
 		[[nodiscard]] virtual bool isMovable() const {return true;}
+        virtual bool onKeyPressed(int key, int mods) {return false;}
+        virtual bool onKeyReleased(int key, int mods) {return false;}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

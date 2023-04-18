@@ -221,3 +221,18 @@ void bf::ObjectArray::setActiveRedirector(const bf::Object *redirector) {
         }
     }
 }
+
+bool bf::ObjectArray::onKeyPressed(int key, int mods) {
+    for(auto&& [o, b]: objects) {
+        if(b && o->onKeyPressed(key, mods))
+            return true;
+    }
+    return false;
+}
+bool bf::ObjectArray::onKeyReleased(int key, int mods) {
+    for(auto&& [o, b]: objects) {
+        if(b && o->onKeyReleased(key, mods))
+            return true;
+    }
+    return false;
+}
