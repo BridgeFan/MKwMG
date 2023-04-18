@@ -76,8 +76,8 @@ namespace bf {
 		bool imGuiCheckChanged(std::size_t index);
 		[[nodiscard]] int getActiveIndex() const;
 		void draw(bf::Shader& shader);
-        virtual bool onKeyPressed(int key, int mods); //return if event should not be checked after
-        virtual bool onKeyReleased(int key, int mods); //return if event should not be checked after
+        bool onKeyPressed(int key, int mods); //return if event should not be checked after
+        bool onKeyReleased(int key, int mods); //return if event should not be checked after
 	};
 }
 

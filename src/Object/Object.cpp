@@ -47,3 +47,9 @@ void bf::Object::setRelativeScale(const glm::vec3 &pos, float multiplier) {
 glm::mat4 bf::Object::getModelMatrix(const bf::Transform &relativeTo) const {
 	return transform.CalculateMatrix(relativeTo);
 }
+
+bool bf::Object::addPoint(unsigned int) { return false; }
+
+bool bf::Object::onKeyPressed(int, int) {return false;}
+
+bool bf::Object::onKeyReleased(int, int) {return false;}

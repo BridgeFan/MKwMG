@@ -25,7 +25,7 @@ namespace bf {
 		explicit Object(const std::string &objName) : bf::Object(Transform::Default, objName) {}
 		virtual ~Object() = default;
 		virtual void draw(const bf::Shader &shader) const = 0;
-        virtual bool addPoint(unsigned index) { return false; }
+        virtual bool addPoint(unsigned index);
 		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }
 		virtual void setPosition(const glm::vec3 &pos) { transform.position = pos; }
 		[[nodiscard]] [[maybe_unused]] const glm::vec3 &getRotation() const { return transform.rotation; }
@@ -43,8 +43,8 @@ namespace bf {
         [[nodiscard]] virtual std::vector<unsigned> usedVectors() const {return {};}
 		//utility functions
 		[[nodiscard]] virtual bool isMovable() const {return true;}
-        virtual bool onKeyPressed(int key, int mods) {return false;}
-        virtual bool onKeyReleased(int key, int mods) {return false;}
+        virtual bool onKeyPressed(int key, int mods);
+        virtual bool onKeyReleased(int key, int mods);
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

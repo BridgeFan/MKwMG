@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(MG1_zad2)
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp -ljsoncpp -Wall -Wextra -llua5.3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -Wall -Wextra -Wunused \
 -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel \
 -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override \
@@ -32,7 +31,15 @@ add_executable(MG1_zad2
         src/Solids/MultiCursor.cpp
         src/Solids/MultiCursor.h
         src/Object/ObjectArray.cpp
-        src/Object/ObjectArray.h src/Object/ObjectArrayListener.cpp src/Object/ObjectArrayListener.h src/Solids/BezierCurve.cpp src/Solids/BezierCurve.h src/Scene.cpp src/Scene.h)
+        src/Object/ObjectArray.h
+        src/Object/ObjectArrayListener.cpp
+        src/Object/ObjectArrayListener.h
+        src/Curves/BezierCurve.cpp
+        src/Curves/BezierCurve.h
+        src/Scene.cpp
+        src/Scene.h
+        src/Curves/BasicBezier.cpp
+        src/Curves/BasicBezier.h src/Curves/BezierCurve2.cpp)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

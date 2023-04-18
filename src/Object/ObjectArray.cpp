@@ -9,7 +9,7 @@
 #include "ImGuiUtil.h"
 #include <algorithm>
 #include "Shader.h"
-#include "Solids/BezierCurve.h"
+#include "Curves/BezierCurve.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 
@@ -133,14 +133,18 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 	return true;
 }
 bool bf::ObjectArray::setUnactive(std::size_t index) {
-	if(!isCorrect(index))
-		return false;
-    if(static_cast<int>(index)==activeRedirector)
-        activeRedirector=-1;
-	if(objects[index].second)
-		countActive--;
-	if(countActive==1)
-		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
+	if(!isCorrect(index)) {
+        return false;
+    }
+    if(static_cast<int>(index)==activeRedirector) {
+        activeRedirector = -1;
+    }
+	if(objects[index].second) {
+        countActive--;
+    }
+	if(countActive==1) {
+        activeIndex = std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin();
+    }
 	objects[index].second=false;
 	return true;
 }

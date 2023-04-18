@@ -21,8 +21,9 @@
 #include "Solids/Point.h"
 #include "Util.h"
 #include <memory>
-#include "Solids/BezierCurve.h"
+#include "Curves/BezierCurve.h"
 #include "Scene.h"
+#include "Curves/BezierCurve2.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -48,7 +49,7 @@ int main() {
 
 	scene.objectArray.add<bf::Torus>();
 	bf::Point::initObjArrayRef(scene.objectArray);
-	bf::BezierCurve::initData(scene, settings, window);
+	bf::BezierCommon::initData(scene, settings, window);
 	//objects.emplace_back(new bf::Torus());
 
 	while (!glfwWindowShouldClose(window))
@@ -83,6 +84,9 @@ int main() {
 		if(ImGui::Button("Bézier curve 0")) {
 			scene.objectArray.addRef<bf::BezierCurve>();
 		}
+        if(ImGui::Button("Bézier curve 2")) {
+            scene.objectArray.addRef<bf::BezierCurve2>();
+        }
 		ImGui::End();
 		//ImGui
 		///LIST OF OBJECTS PANEL
