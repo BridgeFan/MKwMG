@@ -18,10 +18,15 @@ namespace bf {
     class Scene;
     class Settings;
     class BasicBezier: bf::Solid {
+    protected:
+        void setLineBuffers();
+        void clearLineBuffers();
+        unsigned lVAO=UINT_MAX, lVBO=UINT_MAX, lIBO=UINT_MAX;
     public:
+        virtual ~BasicBezier();
         BasicBezier();
         std::vector<glm::vec3> points;
-        void draw(const bf::Shader& shader, GLFWwindow* window, const bf::Scene& scene, const bf::Settings& settings) const;
+        void draw(const bf::Shader& shader, GLFWwindow* window, const bf::Scene& scene, const bf::Settings& settings, bool isLineDrawn=false, bool isPointDraw=false) const;
         void recalculate(bool wasSizeChanged=true);
     };
 }

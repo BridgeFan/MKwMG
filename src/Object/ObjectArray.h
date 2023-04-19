@@ -10,13 +10,13 @@
 #include <vector>
 #include <glm/vec3.hpp>
 #include <unordered_set>
-#include "src/Object/ObjectArrayListener.h"
+#include "ObjectArrayListener.h"
+#include "Object.h"
 
 template<class T, class U>
 concept Derived = std::is_base_of<U, T>::value;
 
 namespace bf {
-	class Object;
 	class Settings;
 	class Shader;
 	class ObjectArray {
@@ -52,11 +52,13 @@ namespace bf {
 		template<Derived<bf::Object> T, typename... Args>
 		void add(Args&... args) {
 			std::unique_ptr<bf::Object> ptr(new T(std::forward<Args>(args)...));
+			ptr->postInit();
 			objects.emplace_back(std::move(ptr), false);
 		}
 		template<Derived<bf::Object> T, typename... Args>
 		void addRef(Args&... args) {
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
+			ptr->postInit();
 			objects.emplace_back(std::move(ptr), false);
 		}
         void setActiveRedirector(bf::Object const* redirector=nullptr);

@@ -39,7 +39,7 @@ add_executable(MG1_zad2
         src/Scene.cpp
         src/Scene.h
         src/Curves/BasicBezier.cpp
-        src/Curves/BasicBezier.h src/Curves/BezierCurve2.cpp)
+        src/Curves/BasicBezier.h src/Curves/BezierCurve2.cpp src/Curves/BezierCommon.cpp src/Curves/BezierCommon.h)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

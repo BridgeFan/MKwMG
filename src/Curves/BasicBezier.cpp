@@ -24,45 +24,6 @@ glm::vec3 deCasteljau(float t, const std::vector<glm::vec3>& pos) {
     return beta[0];
 }
 
-void bf::BasicBezier::draw(const bf::Shader &shader, GLFWwindow* window, const bf::Scene& scene, const bf::Settings& settings) const {
-    int LOD=0;
-    glBindVertexArray(VAO);
-    for(unsigned i=0u;i<countParts(points.size());i++) {
-        if (!window)
-            LOD = 3;
-        else {
-            //bool pr = false;
-            auto gPos1 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3], scene.getView(), scene.getProjection()));
-            auto gPos2 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 1], scene.getView(), scene.getProjection()));
-            float distance = glm::distance(gPos1, gPos2);
-            if (i + 2 < points.size()) {
-                gPos1 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 2], scene.getView(), scene.getProjection()));
-                distance += glm::distance(gPos1, gPos2);
-            }
-            if (i + 3 < points.size()) {
-                gPos2 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 3], scene.getView(), scene.getProjection()));
-                distance += glm::distance(gPos1, gPos2);
-            }
-            if (i + 2 >= points.size())
-                LOD = 0;
-            else {
-                float tmp = 1.f;
-                for (LOD = 0; i < MAX_FOV_LOG_PARTS; LOD++) {
-                    if (distance <= tmp * 3.f)
-                        break;
-                    tmp *= 2.f;
-                }
-            }
-        }
-        LOD = std::min(LOD, MAX_FOV_LOG_PARTS);
-        printf("%d ", LOD);
-        glDrawElements(GL_LINES, fastPow(2, LOD + 1), GL_UNSIGNED_INT,   // type
-                       reinterpret_cast<void *>((getIndex(LOD) + i * getIndex(MAX_FOV_LOG_PARTS + 1)) *
-                                                sizeof(GLuint))           // element array buffer offset
-        );
-    }
-    printf("\n");
-}
 
 bf::BasicBezier::BasicBezier() {
 
@@ -101,9 +62,107 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
             }
         }
         setBuffers();
+		setLineBuffers();
     }
     else {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+        glBindBuffer(GL_ARRAY_BUFFER, lVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(glm::vec3), points.data());
     }
+}
+
+void bf::BasicBezier::draw(const bf::Shader &shader, GLFWwindow *window, const bf::Scene &scene,
+                           const bf::Settings &settings, bool isLineDrawn, bool isPointDrawn) const {
+    int LOD=0;
+    glBindVertexArray(VAO);
+    for(unsigned i=0u;i<countParts(points.size());i++) {
+        if (!window)
+            LOD = 3;
+        else {
+            //bool pr = false;
+            auto gPos1 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3], scene.getView(), scene.getProjection()));
+            auto gPos2 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 1], scene.getView(), scene.getProjection()));
+            float distance = glm::distance(gPos1, gPos2);
+            if (i + 2 < points.size()) {
+                gPos1 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 2], scene.getView(), scene.getProjection()));
+                distance += glm::distance(gPos1, gPos2);
+            }
+            if (i + 3 < points.size()) {
+                gPos2 = glm::vec2(bf::glfw::toScreenPos(window, points[i * 3 + 3], scene.getView(), scene.getProjection()));
+                distance += glm::distance(gPos1, gPos2);
+            }
+            if (i + 2 >= points.size())
+                LOD = 0;
+            else {
+                float tmp = 1.f;
+                for (LOD = 0; i < MAX_FOV_LOG_PARTS; LOD++) {
+                    if (distance <= tmp * 3.f)
+                        break;
+                    tmp *= 2.f;
+                }
+            }
+        }
+        LOD = std::min(LOD, MAX_FOV_LOG_PARTS);
+        glDrawElements(GL_LINES, fastPow(2, LOD + 1), GL_UNSIGNED_INT,   // type
+                       reinterpret_cast<void *>((getIndex(LOD) + i * getIndex(MAX_FOV_LOG_PARTS + 1)) *
+                                                sizeof(GLuint))           // element array buffer offset
+        );
+    }
+    if(isLineDrawn) {
+        shader.setVec3("color", {1.f,0.f,1.f});
+        glBindVertexArray(lVAO);
+        glDrawElements(GL_LINES, points.size()*2-2, GL_UNSIGNED_INT, 0);
+    }
+	if(isPointDrawn) {
+		shader.setVec3("color", {1.f,0.f,1.f});
+		glBindVertexArray(lVAO);
+		glDrawElements(GL_POINTS, points.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>((points.size()*2-2)*sizeof(GLuint)));
+	}
+}
+
+bf::BasicBezier::~BasicBezier() {
+	clearLineBuffers();
+}
+
+void bf::BasicBezier::setLineBuffers() {
+    clearLineBuffers();
+    //set buffers
+    if(points.empty()) {
+        return;
+    }
+    glGenVertexArrays(1, &lVAO);
+    glGenBuffers(1, &lVBO);
+
+    glBindVertexArray(lVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, lVBO);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec3), points.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+    glEnableVertexAttribArray(0);
+
+    std::vector<unsigned> indices;
+	//line topology
+    for(unsigned i=0u;i<points.size();i++) {
+        indices.push_back(i);
+        if(i!=0u && i!=points.size()-1)
+            indices.push_back(i);
+    }
+	//point topology
+	for(unsigned i=0u;i<points.size();i++) {
+		indices.push_back(i);
+	}
+    glGenBuffers(1, &lIBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lIBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
+
+}
+
+void bf::BasicBezier::clearLineBuffers() {
+    if(lVAO<UINT_MAX)
+        glDeleteVertexArrays(1, &lVAO);
+    if(lVBO<UINT_MAX)
+        glDeleteBuffers(1, &lVBO);
+    if(lIBO<UINT_MAX)
+        glDeleteBuffers(1, &lIBO);
 }

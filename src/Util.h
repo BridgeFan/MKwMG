@@ -13,6 +13,18 @@ class ImGuiIO;
 namespace bf {
 	template<typename T>
 	concept arithmetic = std::is_arithmetic<T>::value;
+	template<typename T>
+	concept linearFloat = requires(const T& t1, const T& t2, float u) {
+		{t1+t2} -> std::convertible_to<T>;
+		{t1*u} -> std::convertible_to<T>;
+	};
+	template<typename T>
+	concept linearDouble = requires(const T& t1, const T& t2, double u) {
+		{t1+t2} -> std::convertible_to<T>;
+		{t1*u} -> std::convertible_to<T>;
+	};
+	template<typename T>
+	concept linear = linearFloat<T> || linearDouble<T>;
     struct Settings;
 	class Scene;
     class Transform;
@@ -21,7 +33,6 @@ namespace bf {
 		bf::Scene &scene;
         const float &deltaTime;
         ImGuiIO &io;
-
         GlfwStruct(bf::Settings &settings1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1);
     };
 }
@@ -48,6 +59,11 @@ T fastPow(T base, U power) {
 	}
 	return base*result;
 }
+template<bf::linear T, std::floating_point U>
+T lerp(const T& p1, const T& p2, U t) {
+	return p1*(1-t)+p2*t;
+}
+
 
 bool almostEqual(float a1, float a2, float eps=1e-7);
 
