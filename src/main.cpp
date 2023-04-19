@@ -80,6 +80,10 @@ int main() {
 		}
 		if(ImGui::Button("Point")) {
 			scene.objectArray.add<bf::Point>(scene.cursor.transform);
+			int redIndex = scene.objectArray.getActiveRedirector();
+			if(scene.objectArray.isCorrect(redIndex)) {
+				scene.objectArray[redIndex].addPoint(scene.objectArray.size()-1);
+			}
 		}
 		if(ImGui::Button("Bézier curve 0")) {
 			scene.objectArray.addRef<bf::BezierCurve>();

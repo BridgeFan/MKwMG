@@ -46,6 +46,9 @@ namespace bf {
 		[[nodiscard]] virtual bool isMovable() const {return true;}
         virtual bool onKeyPressed(int key, int mods);
         virtual bool onKeyReleased(int key, int mods);
+		virtual bool onMouseButtonPressed(int button, int mods);
+		virtual bool onMouseButtonReleased(int button, int mods);
+		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

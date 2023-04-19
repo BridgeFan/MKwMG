@@ -35,36 +35,17 @@ std::size_t binSearch(const std::vector<T>& sorted, std::size_t value) {
 }
 
 void bf::BezierCurve2::bezierOnAdd() {
-    /*if(pointIndices.size()<=3)
-        return;
-	if(pointIndices.size()==4)
-		bezier.points.emplace_back();
-	bezier.points.emplace_back();
-	bezier.points.emplace_back();
-	bezier.points.emplace_back();
-	bezierOnMove(bezier.points.size()-1);*/
-    /*auto p1 = getPoint(pointIndices.size()-3);
-    auto p2 = getPoint(pointIndices.size()-2);
-    auto p3 = getPoint(pointIndices.size()-1);
-    bf::linear auto np1 = lerp(p1,p2,1.f/3.f);
-    bf::linear auto np2 = lerp(p1,p2,2.f/3.f);
-    bf::linear auto np4 = lerp(p2,p3,1.f/3.f);
-    bf::linear auto np3 = lerp(np2,np4,.5f);
-    if(pointIndices.size()==4) {
-        auto np_1 = lerp(objectArray[pointIndices[0]].getPosition(),p1,2.f/3.f);
-        bezier.points.push_back(lerp(np_1,np1,.5f));
-    }
-    bezier.points.emplace_back(np1);
-    bezier.points.emplace_back(np2);
-    bezier.points.emplace_back(np3);*/
+	activeBezierIndex=-1;
     recalculate(true);
 }
 
 void bf::BezierCurve2::bezierOnRemove(unsigned int index) {
+	activeBezierIndex=-1;
 	recalculate(true);
 }
 
 void bf::BezierCurve2::bezierOnSwap(unsigned int index1, unsigned int index2) {
+	activeBezierIndex=-1;
 	recalculate(false);
 }
 
@@ -111,4 +92,63 @@ void bf::BezierCurve2::recalculate(bool wasResized) {
 		bezier.points.clear();
 	}
 	bezier.recalculate(wasResized);
+}
+
+bool bf::BezierCurve2::onMouseButtonPressed(int button, int) {
+	if(!scene || button!=GLFW_MOUSE_BUTTON_LEFT)
+		return false;
+	double mouseX, mouseY;
+	glfwGetCursorPos(window, &mouseX, &mouseY);
+	auto mouseXF = static_cast<float>(mouseX);
+	auto mouseYF = static_cast<float>(mouseY);
+	constexpr float sqrDist = 64.f;
+	int selectionIndex = -1;
+	float actualZ = 9.999f;
+	for(unsigned i=0u;i<bezier.points.size();i++) {
+		auto screenPos = bf::glfw::toScreenPos(window, bezier.points[i], scene->getView(), scene->getProjection());
+		if(screenPos==bf::outOfWindow)
+			continue;
+		float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
+		if(d<=sqrDist && actualZ>screenPos.z) {
+			selectionIndex=static_cast<int>(i);
+			actualZ=screenPos.z;
+		}
+	}
+	activeBezierIndex = selectionIndex;
+	return activeBezierIndex>=0;
+}
+
+bool bf::BezierCurve2::onMouseButtonReleased(int button, int) {
+	if(button==GLFW_MOUSE_BUTTON_LEFT) {
+		activeBezierIndex = -1;
+		return true;
+	}
+	return false;
+}
+
+void bf::BezierCurve2::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) {
+	if(activeBezierIndex<=0)
+		return;
+	printf("%d\n",activeBezierIndex);
+	float z = bf::glfw::toScreenPos(window,bezier.points[activeBezierIndex],scene->getView(),scene->getProjection()).z;
+	glm::vec3 newPosZ = {newPos.x,newPos.y,z};
+	auto newWorldPos = bf::glfw::toGlobalPos(window,newPosZ,scene->getInverseView(),scene->getInverseProjection());
+	auto difVector = newWorldPos - bezier.points[activeBezierIndex];
+	int oaIndex = activeBezierIndex/3+1;
+	switch(activeBezierIndex%3) {
+		case 0:
+			objectArray[pointIndices[oaIndex]].setPosition(getPoint(oaIndex)+difVector);
+			break;
+		case 1:
+			objectArray[pointIndices[oaIndex]].setPosition(getPoint(oaIndex)+2.f*difVector);
+			objectArray[pointIndices[oaIndex+1]].setPosition(getPoint(oaIndex+1)-difVector);
+			break;
+		case 2:
+			objectArray[pointIndices[oaIndex]].setPosition(getPoint(oaIndex)-difVector);
+			objectArray[pointIndices[oaIndex+1]].setPosition(getPoint(oaIndex+1)+2.f*difVector);
+			break;
+		default:
+			break;
+	}
+	recalculate(false);
 }

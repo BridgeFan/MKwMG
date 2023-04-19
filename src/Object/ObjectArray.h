@@ -80,6 +80,9 @@ namespace bf {
 		void draw(bf::Shader& shader);
         bool onKeyPressed(int key, int mods); //return if event should not be checked after
         bool onKeyReleased(int key, int mods); //return if event should not be checked after
+		bool onMouseButtonPressed(int button, int mods); //return if event should not be checked after
+		bool onMouseButtonReleased(int button, int mods); //return if event should not be checked after
+		void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos); //return if event should not be checked after
 	};
 }
 

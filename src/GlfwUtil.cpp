@@ -176,6 +176,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 		lastY = ypos;
 		firstMouse = false;
 	}
+	objectArray.onMouseMove({lastX,lastY},{xpos,ypos});
 
 	float xoffset = xpos - lastX;
 	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
@@ -292,17 +293,14 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
     auto& objectArray = ptr->scene.objectArray;
 	if(ptr->io.WantCaptureKeyboard)
 		return;
-    if(objectArray.isCorrect(objectArray.getActiveRedirector())) {
-        auto& r = objectArray[objectArray.getActiveRedirector()];
-        if(action==GLFW_PRESS) {
-            if(r.onKeyPressed(key, mods))
-                return;
-        }
-        else {
-            if(r.onKeyReleased(key, mods))
-                return;
-        }
-    }
+    if(action==GLFW_PRESS) {
+		if(objectArray.onKeyPressed(key, mods))
+			return;
+	}
+	else {
+		if(objectArray.onKeyReleased(key, mods))
+			return;
+	}
 	if(key==GLFW_KEY_LEFT_CONTROL || key==GLFW_KEY_RIGHT_CONTROL) {
 		settings.isCtrlPressed = (action == GLFW_PRESS);
 	}
@@ -359,7 +357,7 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 	}
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     bf::Settings& settings = ptr->settings;
@@ -367,6 +365,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mod
 	auto& scene = ptr->scene;
 	if(ptr->io.WantCaptureMouse)
 		return;
+	if(action==GLFW_PRESS) {
+		if(objectArray.onMouseButtonPressed(button, mods))
+			return;
+	}
+	else {
+		if(objectArray.onMouseButtonReleased(button, mods))
+			return;
+	}
 	if(action == GLFW_RELEASE && ((button == GLFW_MOUSE_BUTTON_RIGHT && settings.state == bf::RightClick) ||
 		(button == GLFW_MOUSE_BUTTON_MIDDLE && settings.state == bf::MiddleClick)))
 		settings.state = bf::None;

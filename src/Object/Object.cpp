@@ -49,7 +49,8 @@ glm::mat4 bf::Object::getModelMatrix(const bf::Transform &relativeTo) const {
 }
 
 bool bf::Object::addPoint(unsigned int) { return false; }
-
 bool bf::Object::onKeyPressed(int, int) {return false;}
-
 bool bf::Object::onKeyReleased(int, int) {return false;}
+bool bf::Object::onMouseButtonPressed(int, int) {return false;}
+bool bf::Object::onMouseButtonReleased(int, int) {return false;}
+void bf::Object::onMouseMove(const glm::vec2&, const glm::vec2&) {}

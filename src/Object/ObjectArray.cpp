@@ -240,3 +240,25 @@ bool bf::ObjectArray::onKeyReleased(int key, int mods) {
     }
     return false;
 }
+
+bool bf::ObjectArray::onMouseButtonPressed(int button, int mods) {
+	for(auto&& [o, b]: objects) {
+		if(b && o->onMouseButtonPressed(button, mods))
+			return true;
+	}
+	return false;
+}
+bool bf::ObjectArray::onMouseButtonReleased(int button, int mods) {
+	for(auto&& [o, b]: objects) {
+		if(b && o->onMouseButtonReleased(button, mods))
+			return true;
+	}
+	return false;
+}
+
+void bf::ObjectArray::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) {
+	for(auto&& [o, b]: objects) {
+		if(b)
+			o->onMouseMove(oldPos, newPos);
+	}
+}

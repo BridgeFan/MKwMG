@@ -13,6 +13,7 @@ namespace bf {
 	struct Settings;
 	class BezierCurve2: public bf::BezierCommon {
 	private:
+		int activeBezierIndex=-1;
 		static int _index;
 		void bezierOnAdd() override;
 		void bezierOnRemove(unsigned int index) override;
@@ -22,7 +23,10 @@ namespace bf {
 		void recalculate(bool wasResized);
 	public:
 		explicit BezierCurve2(bf::ObjectArray& array);
-    };
+		bool onMouseButtonPressed(int button, int mods) override;
+		bool onMouseButtonReleased(int button, int mods) override;
+		void onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) override;
+	};
 }
 
 
