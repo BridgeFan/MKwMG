@@ -16,13 +16,13 @@ void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& o
     auto v = glm::vec4(transform.position-(centre+oldTransform.position),1.f);
     glm::mat4 invMatrix = bf::getScalingMatrix(1.f/oldTransform.scale)*bf::getInverseRotateMatrix(oldTransform.rotation);
     glm::mat4 matrix = bf::getRotateMatrix(newTransform.rotation)*bf::getScalingMatrix(newTransform.scale);
-    transform.position = glm::vec3(matrix * invMatrix * v) + centre + newTransform.position;
+    setPosition(glm::vec3(matrix * invMatrix * v) + centre + newTransform.position);
     //scale (assumed that scaling is INDEPENDENT of rotation)
     transform.scale *= (newTransform.scale / oldTransform.scale);
     //rotation
     auto rotMat = bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(transform.rotation)*bf::getRotateMatrix(newTransform.rotation);
     glm::extractEulerAngleXYZ(rotMat, transform.rotation.x, transform.rotation.y, transform.rotation.z);
-    transform.rotation = glm::degrees(transform.rotation);
+    setRotation(glm::degrees(transform.rotation));
 }
 
 void bf::Object::ObjectGui() {
@@ -41,7 +41,7 @@ glm::vec3 bf::getMiddle(const std::vector<bf::Object>& objects) {
 }
 
 void bf::Object::setRelativeScale(const glm::vec3 &pos, float multiplier) {
-	transform.position += (pos-transform.position) * (multiplier-1);
+	setPosition(transform.position + (pos-transform.position) * (multiplier-1));
 }
 
 glm::mat4 bf::Object::getModelMatrix(const bf::Transform &relativeTo) const {

@@ -9,7 +9,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXra
 -Wold-style-cast -Wuseless-cast -Wformat-signedness")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "src")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cpp/Serializer/Serializer")
 link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master")
+link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cpp/Serializer")
 
 set(HEADER_FILES)
 
@@ -39,7 +41,11 @@ add_executable(MG1_zad2
         src/Scene.cpp
         src/Scene.h
         src/Curves/BasicBezier.cpp
-        src/Curves/BasicBezier.h src/Curves/BezierCurve2.cpp src/Curves/BezierCommon.cpp src/Curves/BezierCommon.h)
+        src/Curves/BasicBezier.h
+        src/Curves/BezierCurve2.cpp
+        src/Curves/BezierCommon.cpp
+        src/Curves/BezierCommon.h
+        src/Curves/BezierCurveInter.cpp)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)
@@ -52,3 +58,4 @@ target_link_libraries(MG1_zad2 GLEW)
 target_link_libraries(MG1_zad2 imgui_impl_glfw)
 target_link_libraries(MG1_zad2 imgui_impl_opengl3)
 target_link_libraries(MG1_zad2 imgui)
+target_link_libraries(MG1_zad2 MGSerializer)

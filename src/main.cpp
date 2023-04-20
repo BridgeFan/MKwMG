@@ -24,6 +24,7 @@
 #include "Curves/BezierCurve.h"
 #include "Scene.h"
 #include "Curves/BezierCurve2.h"
+#include "Curves/BezierCurveInter.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -91,6 +92,9 @@ int main() {
         if(ImGui::Button("Bézier curve 2")) {
             scene.objectArray.addRef<bf::BezierCurve2>();
         }
+		if(ImGui::Button("Bézier curve inter")) {
+			scene.objectArray.addRef<bf::BezierCurveInter>();
+		}
 		ImGui::End();
 		//ImGui
 		///LIST OF OBJECTS PANEL

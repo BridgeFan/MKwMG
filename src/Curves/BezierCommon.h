@@ -18,7 +18,7 @@ namespace bf {
 		bool isTmpPointDrawn=false;
 		bf::BasicBezier bezier;
 		static GLFWwindow* window;
-		bool isPolygonVisible, isCurveVisible;
+		bool isPolygonVisible, isCurveVisible, isLineDrawn;
 		std::size_t activeIndex;
 		std::vector<unsigned> pointIndices;
 		static const Scene* scene;
@@ -29,6 +29,7 @@ namespace bf {
 		virtual void bezierOnRemove(unsigned index) = 0;
 		virtual void bezierOnSwap(unsigned index1, unsigned index2) = 0;
 		virtual void bezierOnMove(unsigned index) = 0;
+        glm::vec3 getPoint(int pIndex) const;
 	public:
 		explicit BezierCommon(bf::ObjectArray& array);
 		void postInit() override;

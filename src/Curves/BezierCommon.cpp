@@ -86,7 +86,7 @@ void bf::BezierCommon::onRemoveObject(unsigned index) {
 
 bf::BezierCommon::BezierCommon(bf::ObjectArray &array):
 		bf::Solid("Bézier curve0 " + std::to_string(_index)), ObjectArrayListener(array),
-		isPolygonVisible(false), isCurveVisible(true) {
+		isPolygonVisible(false), isCurveVisible(true), isLineDrawn(true) {
 	_index++;
 }
 
@@ -119,7 +119,7 @@ void bf::BezierCommon::draw(const bf::Shader &shader) const {
 	shader.setMat4("model", glm::mat4(1.f)); //transform is ignored
 
 	//glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
-	if(isPolygonVisible) {
+	if(isPolygonVisible && isLineDrawn) {
 		glBindVertexArray(VAO);
 		glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
 					   reinterpret_cast<void *>(0)           // element array buffer offset
@@ -204,7 +204,7 @@ void bf::BezierCommon::recalculate() {
 	setBuffers();
 	bezier.recalculate();
 }
-void bf::BezierCommon::recalculatePart(int index) {
+void bf::BezierCommon::recalculatePart(int) {
 	//update vertices
 	vertices.clear();
 	for(unsigned i=0u;i<pointIndices.size();i++) {
@@ -229,6 +229,15 @@ void bf::BezierCommon::onMoveObject(unsigned index) {
 		if(piIndex%3!=0 || piIndex<static_cast<int>(pointIndices.size())-1)
 			recalculatePart(piIndex/3);
 	}
+}
+
+glm::vec3 bf::BezierCommon::getPoint(int pIndex) const {
+    int size = static_cast<int>(pointIndices.size());
+    if(pIndex>=size)
+        pIndex=pIndex%size;
+    if(pIndex<0)
+        pIndex=(pIndex+size*(-pIndex/size+1))%size;
+    return objectArray[pointIndices[pIndex]].getPosition();
 }
 
 void bf::BezierCommon::initData(const bf::Scene &sc, const bf::Settings &s, GLFWwindow* w) {

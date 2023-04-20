@@ -18,7 +18,7 @@ namespace bf {
     class Scene;
     class Settings;
     class BasicBezier: bf::Solid {
-    protected:
+    private:
         void setLineBuffers();
         void clearLineBuffers();
         unsigned lVAO=UINT_MAX, lVBO=UINT_MAX, lIBO=UINT_MAX;
@@ -29,6 +29,8 @@ namespace bf {
         void draw(const bf::Shader& shader, GLFWwindow* window, const bf::Scene& scene, const bf::Settings& settings, bool isLineDrawn=false, bool isPointDraw=false) const;
         void recalculate(bool wasSizeChanged=true);
     };
+	std::vector<glm::vec3> bezier2ToBezier0(const std::vector<glm::vec3>& points);
+	std::vector<glm::vec3> bezier0ToBezier2(const std::vector<glm::vec3>& points);
 }
 
 

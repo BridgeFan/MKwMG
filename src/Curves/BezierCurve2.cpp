@@ -36,23 +36,23 @@ std::size_t binSearch(const std::vector<T>& sorted, std::size_t value) {
 
 void bf::BezierCurve2::bezierOnAdd() {
 	activeBezierIndex=-1;
-    recalculate(true);
+    recalculate();
 }
 
-void bf::BezierCurve2::bezierOnRemove(unsigned int index) {
+void bf::BezierCurve2::bezierOnRemove(unsigned int) {
 	activeBezierIndex=-1;
-	recalculate(true);
+	recalculate();
 }
 
-void bf::BezierCurve2::bezierOnSwap(unsigned int index1, unsigned int index2) {
+void bf::BezierCurve2::bezierOnSwap(unsigned int, unsigned int) {
 	activeBezierIndex=-1;
-	recalculate(false);
+	recalculate();
 }
 
 void bf::BezierCurve2::bezierOnMove(unsigned int index) {
 	if(pointIndices.size()<=3 || index>=pointIndices.size())
 		return;
-	recalculate(false);
+	recalculate();
 }
 
 bf::BezierCurve2::BezierCurve2(bf::ObjectArray &array) : BezierCommon(array) {
@@ -62,35 +62,15 @@ bf::BezierCurve2::BezierCurve2(bf::ObjectArray &array) : BezierCommon(array) {
 	isTmpPointDrawn=true;
 }
 
-glm::vec3 bf::BezierCurve2::getPoint(int pIndex) const {
-	int size = static_cast<int>(pointIndices.size());
-	if(pIndex>=size)
-		pIndex=pIndex%size;
-	if(pIndex<0)
-		pIndex=(pIndex+size*(-pIndex/size+1))%size;
-	return objectArray[pointIndices[pIndex]].getPosition();
-}
-
-void bf::BezierCurve2::recalculate(bool wasResized) {
+void bf::BezierCurve2::recalculate() {
 	//update all points
-	if(pointIndices.size()>3) {
-		bezier.points.resize(3*pointIndices.size()-8);
-		for (int i = 1; i < static_cast<int>(pointIndices.size()) - 2; i++) {
-			bezier.points[3*i-2]=lerp(getPoint(i),getPoint(i+1),1.f/3.f);
-			bezier.points[3*i-1]=lerp(getPoint(i),getPoint(i+1),2.f/3.f);
-			if(i==1u)
-				bezier.points[0]=lerp(lerp(getPoint(0),getPoint(1),2.f/3.f),bezier.points[1],.5f);
-			else
-				bezier.points[3*i-3]=lerp(bezier.points[3*i-4],bezier.points[3*i-2],.5f);
-		}
-		bezier.points[3*pointIndices.size()-9]=
-				lerp(bezier.points[3*pointIndices.size()-10],
-					 lerp(getPoint(pointIndices.size()-2),getPoint(pointIndices.size()-1),1.f/3.f),
-					 .5f);
-	}
-	else {
-		bezier.points.clear();
-	}
+	std::vector<glm::vec3> points;
+	for(const auto& i: pointIndices)
+		if(objectArray.isCorrect(i))
+			points.push_back(objectArray[i].getPosition());
+	auto newPoints = bf::bezier2ToBezier0(points);
+	bool wasResized = newPoints.size()!=points.size();
+	bezier.points = std::move(newPoints);
 	bezier.recalculate(wasResized);
 }
 
@@ -126,10 +106,9 @@ bool bf::BezierCurve2::onMouseButtonReleased(int button, int) {
 	return false;
 }
 
-void bf::BezierCurve2::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) {
-	if(activeBezierIndex<=0)
+void bf::BezierCurve2::onMouseMove(const glm::vec2&, const glm::vec2 &newPos) {
+	if(activeBezierIndex<0)
 		return;
-	printf("%d\n",activeBezierIndex);
 	float z = bf::glfw::toScreenPos(window,bezier.points[activeBezierIndex],scene->getView(),scene->getProjection()).z;
 	glm::vec3 newPosZ = {newPos.x,newPos.y,z};
 	auto newWorldPos = bf::glfw::toGlobalPos(window,newPosZ,scene->getInverseView(),scene->getInverseProjection());
@@ -150,5 +129,5 @@ void bf::BezierCurve2::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &new
 		default:
 			break;
 	}
-	recalculate(false);
+	recalculate();
 }

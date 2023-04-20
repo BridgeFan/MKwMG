@@ -65,15 +65,13 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
 		setLineBuffers();
     }
     else {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
-        glBindBuffer(GL_ARRAY_BUFFER, lVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, points.size() * sizeof(glm::vec3), points.data());
+        glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
+		glNamedBufferSubData(lVBO, 0, points.size() * sizeof(glm::vec3), points.data());
     }
 }
 
 void bf::BasicBezier::draw(const bf::Shader &shader, GLFWwindow *window, const bf::Scene &scene,
-                           const bf::Settings &settings, bool isLineDrawn, bool isPointDrawn) const {
+                           const bf::Settings&, bool isLineDrawn, bool isPointDrawn) const {
     int LOD=0;
     glBindVertexArray(VAO);
     for(unsigned i=0u;i<countParts(points.size());i++) {
@@ -141,20 +139,20 @@ void bf::BasicBezier::setLineBuffers() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
 
-    std::vector<unsigned> indices;
+    std::vector<unsigned> tmpIndices;
 	//line topology
     for(unsigned i=0u;i<points.size();i++) {
-        indices.push_back(i);
+        tmpIndices.push_back(i);
         if(i!=0u && i!=points.size()-1)
-            indices.push_back(i);
+            tmpIndices.push_back(i);
     }
 	//point topology
 	for(unsigned i=0u;i<points.size();i++) {
-		indices.push_back(i);
+        tmpIndices.push_back(i);
 	}
     glGenBuffers(1, &lIBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lIBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, tmpIndices.size() * sizeof(unsigned), &tmpIndices[0], GL_STATIC_DRAW);
 
 }
 
@@ -165,4 +163,39 @@ void bf::BasicBezier::clearLineBuffers() {
         glDeleteBuffers(1, &lVBO);
     if(lIBO<UINT_MAX)
         glDeleteBuffers(1, &lIBO);
+}
+
+std::vector<glm::vec3> bf::bezier2ToBezier0(const std::vector<glm::vec3> &points) {
+	std::vector<glm::vec3> bezier;
+	if(points.size()>3) {
+		bezier.resize(3*points.size()-8);
+		for (int i = 1; i < static_cast<int>(points.size()) - 2; i++) {
+			bezier[3*i-2]=lerp(points[i],points[i+1],1.f/3.f);
+			bezier[3*i-1]=lerp(points[i],points[i+1],2.f/3.f);
+			if(i==1u)
+				bezier[0]=lerp(lerp(points[0],points[1],2.f/3.f),bezier[1],.5f);
+			else
+				bezier[3*i-3]=lerp(bezier[3*i-4],bezier[3*i-2],.5f);
+		}
+		bezier[3*points.size()-9]=
+				lerp(bezier[3*points.size()-10],
+					 lerp(points[points.size()-2],points[points.size()-1],1.f/3.f),
+					 .5f);
+	}
+	return bezier;
+}
+
+std::vector<glm::vec3> bf::bezier0ToBezier2(const std::vector<glm::vec3> &points) {
+	//TODO - test
+	if(points.size()%3!=1 || points.size()<4)
+		return {};
+	std::vector<glm::vec3> retPoints;
+	retPoints.resize(points.size()/3+3);
+	retPoints[1]=lerp(points[1],points[2],-1.f);
+	for(unsigned i=1u;i<points.size()-1;i++) {
+		retPoints[i+1]=lerp(points[3*i-1],points[3*i-2],-1.f);
+	}
+	retPoints[0]=3.f*(points[0]-points[1])+retPoints[2];
+	retPoints[retPoints.size()-1]=3.f*(points[points.size()-1]-points[points.size()-2])+retPoints[retPoints.size()-3];
+	return retPoints;
 }

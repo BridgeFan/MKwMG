@@ -19,8 +19,7 @@ namespace bf {
 		void bezierOnRemove(unsigned int index) override;
 		void bezierOnSwap(unsigned int index1, unsigned int index2) override;
 		void bezierOnMove(unsigned int index) override;
-		glm::vec3 getPoint(int pIndex) const;
-		void recalculate(bool wasResized);
+		void recalculate();
 	public:
 		explicit BezierCurve2(bf::ObjectArray& array);
 		bool onMouseButtonPressed(int button, int mods) override;
