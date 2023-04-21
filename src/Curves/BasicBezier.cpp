@@ -186,7 +186,6 @@ std::vector<glm::vec3> bf::bezier2ToBezier0(const std::vector<glm::vec3> &points
 }
 
 std::vector<glm::vec3> bf::bezier0ToBezier2(const std::vector<glm::vec3> &points) {
-	//TODO - test
 	if(points.size()%3!=1 || points.size()<4)
 		return {};
 	std::vector<glm::vec3> retPoints;

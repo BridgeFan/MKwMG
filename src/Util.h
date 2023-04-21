@@ -65,7 +65,6 @@ std::vector<T> tridiagonalMatrixAlgorithm(const std::vector<float>& a, const std
 	//b - main diagonal (size N)
 	//c - upper diagonal (size N-1)
 	//d - right side of equation (size N)
-	//TODO - check correctness
 	int n = d.size();
 	if(n==0 || static_cast<int>(a.size())!=n-1 || static_cast<int>(b.size())!=n || static_cast<int>(c.size())!=n-1)
 		return {};

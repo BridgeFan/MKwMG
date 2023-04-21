@@ -105,7 +105,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 		}
 		std::vector<unsigned> tmpIndices;
 		tmpIndices.reserve(positions.size()*2-2);
-		for(int i=0;i<positions.size();i++) {
+		for(int i=0;i<static_cast<int>(positions.size());i++) {
 			if(i>0 && i<static_cast<int>(positions.size())-1)
 				tmpIndices.emplace_back(i);
 			tmpIndices.emplace_back(i);

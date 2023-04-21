@@ -40,7 +40,7 @@ bool isnan(const glm::vec4 &v) {
 }
 
 bool almostEqual(float a1, float a2, float eps) {
-	return std::abs(a1-a2)<eps*std::max(std::abs(a1),std::abs(a2));
+	return std::abs(a1-a2)<eps*std::max(std::max(std::abs(a1),std::abs(a2)),1e-5f);
 }
 bf::GlfwStruct::GlfwStruct(bf::Settings &settings1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1) : settings(settings1), scene(scene1),
 						   	deltaTime(deltaTime1), io(io1) {}

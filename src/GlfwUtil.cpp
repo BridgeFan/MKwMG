@@ -84,7 +84,6 @@ GLFWwindow* initWindow(bf::Settings& settings)
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//system("pwd");
 	return window;
 }
 

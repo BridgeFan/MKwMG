@@ -35,7 +35,7 @@ namespace bf {
                 : Transform(pos, rot), zNear(near), zFar(far), MovementSpeed(SPEED), RotationSpeed(ROT_SPEED), Zoom(ZOOM) {}
         //functions
         glm::mat4 GetViewMatrix();
-        glm::mat4 GetInverseViewMatrix();
+        glm::mat4 GetInverseViewMatrix(const glm::mat4& view);
         void ProcessMouseScroll(float yoffset) {
             Zoom = std::max(std::min(Zoom - yoffset, 120.f), 5.f);
         }

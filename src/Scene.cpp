@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include "Settings.h"
 #include "Shader.h"
+#include <glm/gtc/epsilon.hpp>
 
 const glm::vec4 bf::Scene::clearColor = {0.25f, 0.25f, 0.20f, 1.00f};
 const glm::vec4 clear_color = glm::vec4(0.25f, 0.25f, 0.20f, 1.00f);
@@ -23,7 +24,7 @@ void bf::Scene::draw(bf::Shader &shader, const Settings& settings, int width, in
 	shader.setMat4("projection", projection);
 	// camera/view transformation
 	view = camera.GetViewMatrix();
-	inverseView = camera.GetInverseViewMatrix();
+	inverseView = camera.GetInverseViewMatrix(view);
 	shader.setMat4("view", view);
 	//draw objects
     std::vector<unsigned> indices;
@@ -47,7 +48,7 @@ bf::Scene::Scene(float aspect, glm::vec3 &&cameraPos, glm::vec3 &&cameraRot, flo
 	projection = bf::getProjectionMatrix(camera.Zoom,aspect, camera.zNear, camera.zFar);
 	inverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,aspect, camera.zNear, camera.zFar);
 	view = camera.GetViewMatrix();
-	inverseView = camera.GetInverseViewMatrix();
+	inverseView = camera.GetInverseViewMatrix(view);
 
 }
 
