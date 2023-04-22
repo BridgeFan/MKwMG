@@ -4,7 +4,7 @@
 
 #include "Point.h"
 #include <GL/glew.h>
-#include "../Shader.h"
+#include "../ShaderArray.h"
 #include "../Object/ObjectArray.h"
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
@@ -12,12 +12,15 @@ unsigned bf::Point::VBO = UINT_MAX;
 unsigned bf::Point::VAO = UINT_MAX;
 bf::ObjectArray* bf::Point::objectArray = nullptr;
 
-void bf::Point::draw(const Shader &shader) const {
+void bf::Point::draw(const ShaderArray &shaderArray) const {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+        return;
+    }
 	//function assumes set projection and view matrices
 	glBindVertexArray(VAO);
 	/*glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 	model = glm::translate(model, {.0f,.0f,.0f});*/
-	shader.setMat4("model", getModelMatrix());
+	shaderArray.getActiveShader().setMat4("model", getModelMatrix());
 
 	//glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
 	glDrawArrays(GL_POINTS, 0, 1);
@@ -71,6 +74,8 @@ void notify(bf::ObjectArray* objectArray, bf::Point* tis) {
 }
 
 void bf::Point::setPosition(const glm::vec3 &pos) {
+	if(pos==transform.position)
+		return;
 	Object::setPosition(pos);
 	notify(objectArray, this);
 }

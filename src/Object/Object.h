@@ -10,7 +10,7 @@
 #include "Transform.h"
 
 namespace bf {
-	class Shader;
+	class ShaderArray;
 	struct Settings;
 	class Object {
 	private:
@@ -24,7 +24,7 @@ namespace bf {
 				_objIndex)) { _objIndex++; }
 		explicit Object(const std::string &objName) : bf::Object(Transform::Default, objName) {}
 		virtual ~Object() = default;
-		virtual void draw(const bf::Shader &shader) const = 0;
+		virtual void draw(const bf::ShaderArray &shader) const = 0;
 		virtual void postInit() {}
         virtual bool addPoint(unsigned index);
 		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }

@@ -49,8 +49,6 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
     auto m3 = glm::mat3(1.f,0.f,0.f,
                         0.f,1.f,0.f,
                         0.f,0.f,-1.f);
-    const auto matrix = glm::mat3(view);
-    const auto matrixT = glm::transpose(matrix);
     const glm::mat3 invMatrix = glm::mat3(bf::getRotateMatrix(rotation))*m3;
     glm::mat4 ret = glm::mat4(invMatrix);
     ret[3]=tmp[3]; //TODO

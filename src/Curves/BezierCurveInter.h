@@ -24,7 +24,7 @@ namespace bf {
 		void recalculate(bool wasSizeChanged);
     public:
 		~BezierCurveInter();
-        void draw(const Shader &shader) const override;
+        void draw(const ShaderArray &shader) const override;
 
     public:
 		explicit BezierCurveInter(bf::ObjectArray& array);

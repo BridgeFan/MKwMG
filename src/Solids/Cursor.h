@@ -17,7 +17,7 @@ namespace bf {
     public:
         Transform transform;
         explicit Cursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::Shader &shader, const bf::Settings &settings);
+        void draw(const bf::ShaderArray &shader, const bf::Settings &settings);
         void
         ObjectGui(GLFWwindow *window, const glm::mat4 &view, const glm::mat4 &inverseView, const glm::mat4 &projection,
                   const glm::mat4 &inverseProjection);

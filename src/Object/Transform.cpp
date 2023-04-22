@@ -3,8 +3,10 @@
 //
 
 #include "Transform.h"
+#include "Util.h"
 #include <vector>
 #include <glm/gtx/euler_angles.hpp>
+#include <cstdio>
 
 const bf::Transform bf::Transform::Default=bf::Transform();
 

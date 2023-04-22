@@ -3,19 +3,22 @@
 //
 #include "imgui-master/imgui.h"
 #include "Cursor.h"
-#include "Shader.h"
+#include "ShaderArray.h"
 #include "ImGuiUtil.h"
 #include "Settings.h"
 #include "GlfwUtil.h"
 #include "Util.h"
 
-void bf::Cursor::draw(const bf::Shader &shader, const bf::Settings&) {
+void bf::Cursor::draw(const bf::ShaderArray &shaderArray, const bf::Settings&) {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
+        return;
+    const auto& shader = shaderArray.getActiveShader();
 	for(auto & line : lines) {
 			shader.setVec3("color",{1.0f,1.0f,.0f});
 		line.setPosition(transform.position);
 		line.setRotation(glm::vec3(.0f));
 		line.setScale(glm::vec3(1.f));
-		line.draw(shader);
+		line.draw(shaderArray);
 	}
 	shader.setVec3("color",1.f,1.f,1.f);
 }

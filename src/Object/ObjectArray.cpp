@@ -8,8 +8,9 @@
 #include "imgui-master/imgui.h"
 #include "ImGuiUtil.h"
 #include <algorithm>
-#include "Shader.h"
+#include "ShaderArray.h"
 #include "Curves/BezierCurve.h"
+#include "Solids/MultiCursor.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 
@@ -46,8 +47,10 @@ bool bf::ObjectArray::remove(std::size_t index) {
 			a->onRemoveObject(index);
 	for(std::size_t i=index+1;i<objects.size();i++)
 		std::swap(objects[i-1],objects[i]);
-	if(objects.back().second)
-		countActive--;
+	if(objects.back().second) {
+        countActive--;
+        updateCentre();
+    }
 	objects.pop_back();
 	if(countActive==0)
 		activeIndex = -1;
@@ -93,22 +96,27 @@ void bf::ObjectArray::clearSelection(std::size_t index) {
 		activeIndex = -1;
 		countActive = 0;
 	}
+    updateCentre();
 }
 
 glm::vec3 bf::ObjectArray::getCentre() {
-	int count=0;
-	glm::vec3 sum = {.0f,.0f,.0f};
-	for(std::size_t i=0;i<objects.size();i++) {
-		if(!isCorrect(i))
-			continue;
-		if(objects[i].second) {
-			sum+=objects[i].first->getPosition();
-			count++;
-		}
-	}
-	if(count>0)
-		sum /= count;
-	return sum;
+    return centre;
+}
+void bf::ObjectArray::updateCentre() {
+    float count=0.f;
+    glm::vec3 sum = {.0f,.0f,.0f};
+    for(std::size_t i=0;i<objects.size();i++) {
+        if(!isCorrect(i))
+            continue;
+        if(objects[i].second) {
+            sum+=objects[i].first->getPosition();
+            count+=1.f;
+        }
+    }
+    if(count>0)
+        centre = sum * (1.f/count);
+    else
+        centre = {};
 }
 
 bool bf::ObjectArray::isAnyActive() {
@@ -130,6 +138,7 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 	if(countActive==1)
 		activeIndex=index;
 	objects[index].second=true;
+    updateCentre();
 	return true;
 }
 bool bf::ObjectArray::setUnactive(std::size_t index) {
@@ -146,6 +155,7 @@ bool bf::ObjectArray::setUnactive(std::size_t index) {
         activeIndex = std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin();
     }
 	objects[index].second=false;
+    updateCentre();
 	return true;
 }
 
@@ -174,32 +184,37 @@ int bf::ObjectArray::getActiveIndex() const
     return -1;
 }
 
-bool bf::ObjectArray::imGuiCheckChanged(std::size_t index) {
+bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& multiCursor) {
 	if(!isCorrect(index)) {
 		ImGui::Text("_");
 		return false;
 	}
 	bool val = isActive(index);
 	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(),val);
-	if(ret)
-		toggleActive(index);
+	if(ret) {
+        toggleActive(index);
+        multiCursor.transform = bf::Transform();
+    }
 	return ret;
 }
 
-void bf::ObjectArray::draw(bf::Shader& shader) {
+void bf::ObjectArray::draw(bf::ShaderArray& shaderArray) {
     std::vector<unsigned> usedIndices;
     if(isCorrect(activeIndex)) {
         usedIndices = objects[activeIndex].first->usedVectors();
     }
-	for(std::size_t i=0;i<objects.size();i++) {
-		if(isCorrect(i) && std::find(usedIndices.begin(),usedIndices.end(),i)==usedIndices.end()) {
-			if(isActive(i))
-				shader.setVec3("color",1.f,.5f,.0f);
-			else
-				shader.setVec3("color",1.f,1.f,1.f);
-			objects[i].first->draw(shader);
-		}
-	}
+    for(int k=0;k<shaderArray.getSize();k++) {
+        shaderArray.changeShader(k);
+        for (std::size_t i = 0; i < objects.size(); i++) {
+            if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
+                if (isActive(i))
+                    shaderArray.getActiveShader().setVec3("color", 1.f, .5f, .0f);
+                else
+                    shaderArray.getActiveShader().setVec3("color", 1.f, 1.f, 1.f);
+                objects[i].first->draw(shaderArray);
+            }
+        }
+    }
 }
 
 void bf::ObjectArray::onMove(std::size_t index) {

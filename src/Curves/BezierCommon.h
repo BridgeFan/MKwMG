@@ -40,7 +40,7 @@ namespace bf {
 
 		bool addPoint(unsigned index) override;
 		bool removePoint(unsigned index);
-		virtual void draw(const Shader &shader) const override;
+		virtual void draw(const ShaderArray &shaderArray) const override;
 		static void initData(const Scene& scene, const Settings& settings, GLFWwindow* window);
 		void ObjectGui() override;
 		[[nodiscard]] bool isMovable() const override {return false;}

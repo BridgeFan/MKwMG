@@ -9,7 +9,7 @@
 #include "src/Object/Transform.h"
 
 namespace bf {
-	class Shader;
+	class ShaderArray;
 	struct Settings;
     class MultiCursor {
         bf::Solid lines[3];
@@ -17,7 +17,7 @@ namespace bf {
     public:
         Transform transform;
         explicit MultiCursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::Shader &shader, const bf::Settings &settings);
+        void draw(const bf::ShaderArray &shader, const bf::Settings &settings);
         void ObjectGui();
     };
 }

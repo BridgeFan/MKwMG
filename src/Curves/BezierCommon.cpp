@@ -9,7 +9,7 @@
 #include "Solids/Point.h"
 #include "ImGuiUtil.h"
 #include "imgui-master/imgui.h"
-#include "Shader.h"
+#include "ShaderArray.h"
 #include "Scene.h"
 #include "BezierCommon.h"
 
@@ -100,39 +100,45 @@ void bf::BezierCommon::postInit() {
 	recalculate();
 }
 
-void bf::BezierCommon::draw(const bf::Shader &shader) const {
+void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
 	//draw points if active
-	if(objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this) {
-		for(int i=0;i<static_cast<int>(pointIndices.size());i++) {
-			if(i==static_cast<int>(activeIndex))
-				shader.setVec3("color", 1.f,0.f,0.f);
-			else
-				shader.setVec3("color", 0.f,1.f,0.f);
-			objectArray[pointIndices[i]].draw(shader);
-		}
-	}
-	shader.setVec3("color", 0.f,0.f,0.f);
-	if(pointIndices.empty() || indices.empty() || vertices.empty()) {
-		return;
-	}
-	//function assumes set projection and view matrices
-	shader.setMat4("model", glm::mat4(1.f)); //transform is ignored
+    if(shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
+        const Shader& shader = shaderArray.getActiveShader();
+        if (objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()] == this) {
+            for (int i = 0; i < static_cast<int>(pointIndices.size()); i++) {
+                if (i == static_cast<int>(activeIndex))
+                    shader.setVec3("color", 1.f, 0.f, 0.f);
+                else
+                    shader.setVec3("color", 0.f, 1.f, 0.f);
+                objectArray[pointIndices[i]].draw(shaderArray);
+            }
+        }
+        shader.setVec3("color", 0.f, 0.f, 0.f);
+        if (pointIndices.empty() || indices.empty() || vertices.empty()) {
+            return;
+        }
+        //function assumes set projection and view matrices
+        shader.setMat4("model", glm::mat4(1.f)); //transform is ignored
 
-	//glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
-	if(isPolygonVisible && isLineDrawn) {
-		glBindVertexArray(VAO);
-		glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
-					   reinterpret_cast<void *>(0)           // element array buffer offset
-		);
-	}
-	bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
-	if(isActive)
-		shader.setVec3("color", 1.f,0.5f,0.f);
-	else
-		shader.setVec3("color", 1.f,1.f,1.f);
-	if(isCurveVisible && scene && settings) {
-		bezier.draw(shader,window,*scene,*settings,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
-	}
+        //glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
+        if (isPolygonVisible && isLineDrawn) {
+            glBindVertexArray(VAO);
+            glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
+                           reinterpret_cast<void *>(0)           // element array buffer offset
+            );
+        }
+    }
+    else if(shaderArray.getActiveIndex()==bf::ShaderType::BezierShader) {
+        const Shader& shader = shaderArray.getActiveShader();
+        bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
+        if(isActive)
+            shader.setVec3("color", 1.f,0.5f,0.f);
+        else
+            shader.setVec3("color", 1.f,1.f,1.f);
+        if(isCurveVisible && scene && settings) {
+            bezier.draw(shader,window,*scene,*settings,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
+        }
+    }
 }
 
 void bf::BezierCommon::ObjectGui() {

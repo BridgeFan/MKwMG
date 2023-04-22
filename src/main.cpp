@@ -25,6 +25,7 @@
 #include "Scene.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
+#include "ShaderArray.h"
 
 const std::string SHADER_PATH = "../shaders/";
 
@@ -42,7 +43,9 @@ int main() {
 	bf::Scene scene(settings.aspect,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f),0.1f,100.f);
 	bf::Transform& multiTransform=scene.multiCursor.transform;
     float deltaTime = 0.0f;
-	bf::Shader shader(SHADER_PATH+"shader.vert", SHADER_PATH+"shader.frag");
+    bf::ShaderArray shaderArray;
+    shaderArray.addBasicShader(SHADER_PATH+"shader", false);
+    //shaderArray.addBasicShader(SHADER_PATH+"bezierShader", false);
 
     bf::GlfwStruct glfwStruct(settings,scene,deltaTime,io);
     glfwSetWindowUserPointer(window,&glfwStruct);
@@ -128,7 +131,7 @@ int main() {
 				ImGui::Text("Empty unique pointer");
 				continue;
 			}
-			if (scene.objectArray.imGuiCheckChanged(n))
+			if (scene.objectArray.imGuiCheckChanged(n, scene.multiCursor))
 			{
                 multiTransform = bf::Transform::Default;
 				if (!settings.isMultiState) { // Clear selection when CTRL is not held
@@ -179,9 +182,10 @@ int main() {
 		// Rendering
 		ImGui::Render();
 		//OpenGL draw
+        shaderArray.changeShader(bf::ShaderType::BasicShader);
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
-		scene.draw(shader, settings, display_w, display_h);
+		scene.draw(shaderArray, settings, display_w, display_h);
 		//end of OpenGL draw
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);

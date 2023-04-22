@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "Scene.h"
 #include "Util.h"
+#include "ShaderArray.h"
 
 int bf::BezierCurveInter::_index = 1;
 
@@ -127,14 +128,15 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 	}
 }
 
-void bf::BezierCurveInter::draw(const bf::Shader &shader) const {
-	if(pointIndices.size()>=2 && isPolygonVisible) {
-		shader.setVec3("color", 0.f,0.f,0.f);
+void bf::BezierCurveInter::draw(const bf::ShaderArray &shaderArray) const {
+	if(pointIndices.size()>=2 && isPolygonVisible && shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
+        const Shader& shader = shaderArray.getActiveShader();
+        shader.setVec3("color", 0.f,0.f,0.f);
 		shader.setMat4("model", glm::mat4(1.f));
 		glBindVertexArray(lVAO);
 		glDrawElements(GL_LINES, positions.size() * 2 - 2, GL_UNSIGNED_INT, 0);
 	}
-    BezierCommon::draw(shader);
+    BezierCommon::draw(shaderArray);
 }
 
 bf::BezierCurveInter::~BezierCurveInter() {

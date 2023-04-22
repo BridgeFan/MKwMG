@@ -3,14 +3,17 @@
 //
 
 #include "MultiCursor.h"
-#include "Shader.h"
+#include "ShaderArray.h"
 #include "ImGuiUtil.h"
 #include "Settings.h"
 #include "imgui-master/imgui.h"
 
 constexpr glm::vec3 multiColor[3] = {{1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f}};
 
-void bf::MultiCursor::draw(const bf::Shader &shader, const bf::Settings& settings) {
+void bf::MultiCursor::draw(const bf::ShaderArray &shaderArray, const bf::Settings& settings) {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
+        return;
+    const auto& shader = shaderArray.getActiveShader();
     for(int i=0;i<3;i++) {
         auto& line = lines[i];
         if((settings.isAxesLocked>>i)%2)
@@ -20,7 +23,7 @@ void bf::MultiCursor::draw(const bf::Shader &shader, const bf::Settings& setting
         line.setPosition(transform.position);
         line.setRotation(transform.rotation);
         line.setScale(transform.scale);
-        line.draw(shader);
+        line.draw(shaderArray);
     }
     shader.setVec3("color",1.f,1.f,1.f);
 }

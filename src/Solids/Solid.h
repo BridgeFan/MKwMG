@@ -32,8 +32,8 @@ namespace bf {
 		std::vector<unsigned> indices;
 		void setBuffers();
 	public:
-		virtual void draw(const bf::Shader &shader) const override;
-		virtual void draw(const bf::Shader &shader, const bf::Transform &relativeTo) const;
+		virtual void draw(const bf::ShaderArray &shader) const override;
+		virtual void draw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
 
 	};

@@ -12,12 +12,10 @@ int bf::Object::_objIndex = 1;
 void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& oldTransform, const bf::Transform& newTransform) {
     if(oldTransform==newTransform)
         return;
-    //position
-    auto v = glm::vec4(transform.position-(centre+oldTransform.position),1.f);
-    glm::mat4 invMatrix = bf::getScalingMatrix(1.f/oldTransform.scale)*bf::getInverseRotateMatrix(oldTransform.rotation);
-    glm::mat4 matrix = bf::getRotateMatrix(newTransform.rotation)*bf::getScalingMatrix(newTransform.scale);
-    setPosition(glm::vec3(matrix * invMatrix * v) + centre + newTransform.position);
-    //scale (assumed that scaling is INDEPENDENT of rotation)
+    //TODO - non-uniform scaling in different ways
+	glm::mat4 matrix = newTransform.CalculateMatrix()*oldTransform.CalculateInverseMatrix();
+	auto vec = glm::vec4(transform.position-centre,1.f);
+	setPosition(glm::vec3(matrix*vec)+centre);
     transform.scale *= (newTransform.scale / oldTransform.scale);
     //rotation
     auto rotMat = bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(transform.rotation)*bf::getRotateMatrix(newTransform.rotation);

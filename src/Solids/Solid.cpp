@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <err.h>
-#include "../Shader.h"
+#include "../ShaderArray.h"
 int bf::Solid::sindex = 1;
 
 bf::Solid::~Solid() {
@@ -42,18 +42,18 @@ void bf::Solid::setBuffers() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
 }
 
-void bf::Solid::draw(const bf::Shader& shader) const {
-    draw(shader, Transform::Default);
+void bf::Solid::draw(const bf::ShaderArray& shaderArray) const {
+    draw(shaderArray, Transform::Default);
 }
 
-void bf::Solid::draw(const bf::Shader& shader, const bf::Transform& relativeTo) const {
-    if(indices.empty() || vertices.empty())
+void bf::Solid::draw(const bf::ShaderArray& shaderArray, const bf::Transform& relativeTo) const {
+    if(indices.empty() || vertices.empty() || shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
         return;
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);
     /*glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     model = glm::translate(model, {.0f,.0f,.0f});*/
-    shader.setMat4("model", getModelMatrix(relativeTo));
+    shaderArray.getActiveShader().setMat4("model", getModelMatrix(relativeTo));
 
     //glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
     glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type

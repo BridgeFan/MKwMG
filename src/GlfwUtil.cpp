@@ -405,6 +405,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				objectArray.clearSelection(selectionIndex);
 			else
                 objectArray.setActive(selectionIndex);
+            ptr->scene.multiCursor.transform = bf::Transform();
         }
 	}
 }

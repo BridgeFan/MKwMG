@@ -18,7 +18,8 @@ concept Derived = std::is_base_of<U, T>::value;
 
 namespace bf {
 	class Settings;
-	class Shader;
+	class ShaderArray;
+    class MultiCursor;
 	class ObjectArray {
 	private:
         int addToIndex = -1;
@@ -27,6 +28,8 @@ namespace bf {
         int activeRedirector = -1;
 		std::vector<std::pair<std::unique_ptr<bf::Object>, bool> > objects;
 		std::unordered_set<bf::ObjectArrayListener*> listeners;
+        glm::vec3 centre;
+        void updateCentre();
 	public:
 		[[nodiscard]] std::size_t size() const {return objects.size();}
 		bf::Object& operator[](std::size_t index);
@@ -75,9 +78,9 @@ namespace bf {
 		bool isMovable(std::size_t index);
         int getAddToIndex() const;
         void setAddToIndex(int addToIndex);
-		bool imGuiCheckChanged(std::size_t index);
+		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor);
 		[[nodiscard]] int getActiveIndex() const;
-		void draw(bf::Shader& shader);
+		void draw(bf::ShaderArray& shaderArray);
         bool onKeyPressed(int key, int mods); //return if event should not be checked after
         bool onKeyReleased(int key, int mods); //return if event should not be checked after
 		bool onMouseButtonPressed(int button, int mods); //return if event should not be checked after
