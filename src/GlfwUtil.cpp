@@ -9,7 +9,6 @@
 #include <array>
 #include "src/Object/Object.h"
 #include "imgui-master/imgui.h"
-//#include "imgui.h"
 #include "Util.h"
 #include "Solids/Cursor.h"
 #include "src/Object/ObjectArray.h"
@@ -205,7 +204,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 			else if(settings.state == bf::RightClick) {
 				std::swap(glmVec[0],glmVec[1]);
                 glm::vec3 centre;
-                if(settings.isMultiState)
+                if(objectArray.isMultipleActive())
                     centre = multiTransform.position;
                 else if(objectArray.isMovable(objectArray.getActiveIndex()))
                     centre = objectArray[objectArray.getActiveIndex()].getPosition();
@@ -249,7 +248,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 			}
 			//object movement
             bf::Transform t;
-            if(settings.isMultiState)
+            if(objectArray.isMultipleActive())
                 t = multiTransform;
             else if(objectArray.isMovable(objectArray.getActiveIndex()))
                 t = objectArray[objectArray.getActiveIndex()].getTransform();
@@ -258,7 +257,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
             t.position += deltaTransform.position;
             t.rotation += deltaTransform.rotation;
             t.scale += deltaTransform.scale;
-			if(settings.isMultiState) {
+			if(objectArray.isMultipleActive()) {
 				for (std::size_t i = 0; i < objectArray.size(); i++) {
 					if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
 						objectArray[i].setNewTransform(scene.objectArray.getCentre(), multiTransform, t);
@@ -311,9 +310,6 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
 	}
 	if(action == GLFW_PRESS) {
 		switch(key) {
-			case GLFW_KEY_M:
-				settings.isMultiState = !settings.isMultiState;
-				break;
 			case GLFW_KEY_ESCAPE:
 				glfwWindowShouldClose(window);
 				break;
@@ -388,13 +384,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         int selectionIndex = -1;
         float actualZ = 9.999f;
 		for(unsigned i=0u;i<objectArray.size();i++) {
-			if(!objectArray.isCorrect(i)/* || typeid(*objects[i])!=typeid(Point)*/)
+			if(!objectArray.isCorrect(i))
 				continue;
             auto screenPos = bf::glfw::toScreenPos(window, objectArray[i].getTransform().position, scene.getView(), scene.getProjection());
 			if(screenPos==bf::outOfWindow)
 				continue;
             float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
-            //float d = glm::length2(glm::cross(objects[i]->getPosition()-camera.position, ray))/glm::length2(ray);
 			if(d<=sqrDist && actualZ>screenPos.z) {
                 selectionIndex=static_cast<int>(i);
                 actualZ=screenPos.z;
@@ -404,7 +399,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             if(!settings.isCtrlPressed)
 				objectArray.clearSelection(selectionIndex);
 			else
-                objectArray.setActive(selectionIndex);
+                objectArray.toggleActive(selectionIndex);
             ptr->scene.multiCursor.transform = bf::Transform();
         }
 	}

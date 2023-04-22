@@ -17,7 +17,6 @@ namespace bf {
     struct Settings {
         float aspect = 1.f;
         MouseState state = None;
-        bool isMultiState = false;
         bool isCtrlPressed = false;
         bool isAltPressed = false;
         bool isShiftPressed = false;

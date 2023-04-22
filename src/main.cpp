@@ -39,7 +39,6 @@ int main() {
 	//init ImGUI
     //structures
 	ImGuiIO& io = bf::imgui::init(window);
-    //bf::Camera camera(0.1f,100.f,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f));
 	bf::Scene scene(settings.aspect,glm::vec3(0.0f, 0.0f, -10.0f),glm::vec3(0.0f,0.0f,0.f),0.1f,100.f);
 	bf::Transform& multiTransform=scene.multiCursor.transform;
     float deltaTime = 0.0f;
@@ -49,12 +48,10 @@ int main() {
 
     bf::GlfwStruct glfwStruct(settings,scene,deltaTime,io);
     glfwSetWindowUserPointer(window,&glfwStruct);
-	//bool show_another_window = false;
 
 	scene.objectArray.add<bf::Torus>();
 	bf::Point::initObjArrayRef(scene.objectArray);
 	bf::BezierCommon::initData(scene, settings, window);
-	//objects.emplace_back(new bf::Torus());
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -78,7 +75,6 @@ int main() {
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
 		///CREATE OBJECT PANEL
 		ImGui::Begin("Create object");
-		//ImGui::
 		if(ImGui::Button("Torus")) {
 			scene.objectArray.add<bf::Torus>(scene.cursor.transform);
 		}
@@ -103,11 +99,6 @@ int main() {
 		///LIST OF OBJECTS PANEL
 		ImGui::Begin("List of objects");
 		ImGui::Text("Hold CTRL and click to select multiple items.");
-
-		if(ImGui::Checkbox("Multipled clicked objects", &settings.isMultiState)) {
-			if(!settings.isMultiState)
-				scene.objectArray.clearSelection();
-		}
 		ImGui::Checkbox("Uniform scalng", &settings.isUniformScaling);
 		for(int i=0;i<3;i++) {
 			static bool tmp[3];
@@ -134,7 +125,7 @@ int main() {
 			if (scene.objectArray.imGuiCheckChanged(n, scene.multiCursor))
 			{
                 multiTransform = bf::Transform::Default;
-				if (!settings.isMultiState) { // Clear selection when CTRL is not held
+				if (!settings.isCtrlPressed) { // Clear selection when CTRL is not held
 					scene.objectArray.clearSelection(n);
 				}
 			}
@@ -143,11 +134,11 @@ int main() {
 		/// MODIFY OBJECT PANEL
 		ImGui::Begin("Modify object");
 		//active object settings
-		if(scene.objectArray.getActiveIndex()!=-1 && !settings.isMultiState)
+		if(scene.objectArray.getActiveIndex()!=-1 && !scene.objectArray.isMultipleActive())
 			scene.objectArray[scene.objectArray.getActiveIndex()].ObjectGui();
 		else {
 			bool isAny = false;
-			if (settings.isMultiState) {
+			if (scene.objectArray.isMultipleActive()) {
 				for (std::size_t i = 0u; i < scene.objectArray.size(); i++) {
 					if (scene.objectArray.isCorrect(i) && scene.objectArray.isActive(i)) {
 						isAny=true;

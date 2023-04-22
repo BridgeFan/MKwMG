@@ -5,7 +5,6 @@ Right mouse button - rotation
 
 Key:
 Ctrl - camera movement
-M - multistate
 X - block/unblock X axis
 Y - block/unblock X axis
 Z - block/unblock X axis

@@ -29,12 +29,12 @@ void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings, int
     std::vector<unsigned> indices;
 	objectArray.draw(shaderArray);
     shaderArray.changeShader(bf::ShaderType::BasicShader);
-	if(settings.isMultiState && objectArray.isAnyActive()) {
+	if(objectArray.isMultipleActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();
 		multiCursor.draw(shaderArray, settings);
 		multiCursor.transform.position-=objectArray.getCentre();
 	}
-	else if(!settings.isMultiState && objectArray.isMovable(objectArray.getActiveIndex())) {
+	else if(objectArray.isMovable(objectArray.getActiveIndex())) {
 		bf::Transform oldTransform = multiCursor.transform;
 		multiCursor.transform=objectArray[objectArray.getActiveIndex()].getTransform();
 		multiCursor.draw(shaderArray, settings);
