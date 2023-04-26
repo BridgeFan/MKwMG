@@ -93,3 +93,7 @@ void bf::Point::setTransform(bf::Transform &&t) {
 	Object::setTransform(t);
 	notify(objectArray, this);
 }
+
+bf::ShaderType bf::Point::getShaderType() const {
+    return BasicShader;
+}

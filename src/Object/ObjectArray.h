@@ -21,6 +21,7 @@ namespace bf {
 	class ShaderArray;
     class MultiCursor;
 	class ObjectArray {
+		friend bool loadFromFile(const std::string &path, bf::ObjectArray &objectArray);
 	private:
         int addToIndex = -1;
         int activeIndex = -1;
@@ -74,6 +75,7 @@ namespace bf {
 		bool isMultipleActive();
 		void clearSelection(std::size_t index=-1);
 		glm::vec3 getCentre();
+		void removeAll();
 		void onMove(std::size_t index);
 		bool isMovable(std::size_t index);
         int getAddToIndex() const;

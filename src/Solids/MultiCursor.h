@@ -6,7 +6,6 @@
 #define MG1_ZAD2_MULTICURSOR_H
 
 #include "Solid.h"
-#include "src/Object/Transform.h"
 
 namespace bf {
 	class ShaderArray;

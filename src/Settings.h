@@ -4,7 +4,6 @@
 
 #ifndef MG1_ZAD1_SETTINGS_H
 #define MG1_ZAD1_SETTINGS_H
-#include <glm/glm.hpp>
 
 namespace bf {
     enum MouseState {

@@ -10,11 +10,14 @@
 #include "Transform.h"
 
 namespace bf {
-	class ShaderArray;
+    enum ShaderType: int;
 	struct Settings;
+	class ObjectArray;
+    class ShaderArray;
 	class Object {
 	private:
 		static int _objIndex;
+		friend bool saveToFile(const std::string &path, const bf::ObjectArray &objectArray);
 	protected:
 		bf::Transform transform;
 	public:
@@ -49,6 +52,7 @@ namespace bf {
 		virtual bool onMouseButtonPressed(int button, int mods);
 		virtual bool onMouseButtonReleased(int button, int mods);
 		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
+        virtual bf::ShaderType getShaderType() const = 0;
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

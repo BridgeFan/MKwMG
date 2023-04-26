@@ -5,8 +5,6 @@
 #include "Torus.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include "../Shader.h"
-#include "../Settings.h"
 #include "../ImGuiUtil.h"
 #include <numbers>
 
@@ -72,3 +70,9 @@ bf::Torus::Torus(const bf::Transform &t) : Torus(t, "Torus " + std::to_string(
 bf::Torus::Torus(const std::string &torusName) : Torus(bf::Transform::Default, torusName) { updateTorus(); }
 
 bf::Torus::Torus(const bf::Transform &t, const std::string &torusName) : bf::Solid(t, torusName) { updateTorus(); }
+
+bf::Torus::Torus(const bf::Transform &t, const std::string &torusName, float bigR, float smallR, int bigFrag,
+				 int smallFrag): bf::Solid(t,torusName), bigRadius(bigR), smallRadius(smallR),
+				 bigFragments(bigFrag), smallFragments(smallFrag) {
+	updateTorus();
+}

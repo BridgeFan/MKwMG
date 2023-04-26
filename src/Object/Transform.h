@@ -4,7 +4,8 @@
 
 #ifndef MG1_ZAD2_TRANSFORM_H
 #define MG1_ZAD2_TRANSFORM_H
-#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace bf {
     struct Transform {

@@ -4,12 +4,10 @@
 
 #ifndef MG1_ZAD2_CURSOR_H
 #define MG1_ZAD2_CURSOR_H
-#include "src/Object/Object.h"
 #include "Solid.h"
 
 struct GLFWwindow;
 namespace bf {
-    struct Settings;
     class Cursor {
     private:
         Solid lines[3];
@@ -17,7 +15,7 @@ namespace bf {
     public:
         Transform transform;
         explicit Cursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::ShaderArray &shader, const bf::Settings &settings);
+        void draw(const bf::ShaderArray &shaderArray);
         void
         ObjectGui(GLFWwindow *window, const glm::mat4 &view, const glm::mat4 &inverseView, const glm::mat4 &projection,
                   const glm::mat4 &inverseProjection);

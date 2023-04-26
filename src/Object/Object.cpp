@@ -4,8 +4,7 @@
 
 #include <glm/gtx/euler_angles.hpp>
 #include "Object.h"
-#include "src/Settings.h"
-#include "src/ImGuiUtil.h"
+#include "ImGuiUtil.h"
 
 int bf::Object::_objIndex = 1;
 

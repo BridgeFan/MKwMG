@@ -28,6 +28,7 @@ namespace bf {
 
     public:
 		explicit BezierCurveInter(bf::ObjectArray& array);
+		BezierCurveInter(bf::ObjectArray& array, const std::string& bName);
 	};
 }
 

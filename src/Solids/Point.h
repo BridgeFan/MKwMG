@@ -29,7 +29,9 @@ namespace bf {
 		void setTransform(const Transform &t) override;
 
 		void setTransform(Transform &&t) override;
-	};
+
+        ShaderType getShaderType() const override;
+    };
 }
 
 

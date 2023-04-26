@@ -36,7 +36,9 @@ namespace bf {
 		virtual void draw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
 
-	};
+        ShaderType getShaderType() const override;
+
+    };
 }
 
 

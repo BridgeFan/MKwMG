@@ -5,7 +5,8 @@
 #ifndef MG1_ZAD2_UTIL_H
 #define MG1_ZAD2_UTIL_H
 #include <string>
-#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <vector>
 #include <memory>
 

@@ -59,3 +59,7 @@ bf::BezierCurve::BezierCurve(bf::ObjectArray &array) : BezierCommon(array) {
 	name = "Bézier curve0 " + std::to_string(_index);
 	_index++;
 }
+
+bf::BezierCurve::BezierCurve(bf::ObjectArray &array, const std::string &bName): BezierCommon(array) {
+	name=bName;
+}

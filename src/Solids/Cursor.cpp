@@ -5,11 +5,10 @@
 #include "Cursor.h"
 #include "ShaderArray.h"
 #include "ImGuiUtil.h"
-#include "Settings.h"
 #include "GlfwUtil.h"
 #include "Util.h"
 
-void bf::Cursor::draw(const bf::ShaderArray &shaderArray, const bf::Settings&) {
+void bf::Cursor::draw(const bf::ShaderArray &shaderArray) {
     if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
         return;
     const auto& shader = shaderArray.getActiveShader();

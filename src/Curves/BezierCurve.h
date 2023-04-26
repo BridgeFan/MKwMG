@@ -21,6 +21,7 @@ namespace bf {
 		void bezierOnMove(unsigned int index) override;
 	public:
 		explicit BezierCurve(bf::ObjectArray& array);
+		BezierCurve(bf::ObjectArray& array, const std::string& bName);
 	};
 }
 

@@ -12,14 +12,12 @@
 const glm::vec4 bf::Scene::clearColor = {0.25f, 0.25f, 0.20f, 1.00f};
 const glm::vec4 clear_color = glm::vec4(0.25f, 0.25f, 0.20f, 1.00f);
 
-void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings, int width, int height) {
-	float aspect = static_cast<float>(width)/static_cast<float>(height);
-	glViewport(0, 0, width, height);
+void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings) {
 	glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// pass projection matrix to shader (note that in this case it could change every frame)
-	projection = bf::getProjectionMatrix(camera.Zoom,aspect, camera.zNear, camera.zFar);
-	inverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,aspect, camera.zNear, camera.zFar);
+	projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
+	inverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
 	shaderArray.addCommonUniform("projection", projection);
 	// camera/view transformation
 	view = camera.GetViewMatrix();
@@ -27,7 +25,6 @@ void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings, int
 	shaderArray.addCommonUniform("view", view);
 	//draw objects
     std::vector<unsigned> indices;
-	objectArray.draw(shaderArray);
     shaderArray.changeShader(bf::ShaderType::BasicShader);
 	if(objectArray.isMultipleActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();
@@ -40,7 +37,8 @@ void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings, int
 		multiCursor.draw(shaderArray, settings);
 		multiCursor.transform=std::move(oldTransform);
 	}
-	cursor.draw(shaderArray, settings);
+	cursor.draw(shaderArray);
+	objectArray.draw(shaderArray);
 }
 
 bf::Scene::Scene(float aspect, glm::vec3 &&cameraPos, glm::vec3 &&cameraRot, float cameraNear, float cameraFar) :

@@ -269,3 +269,7 @@ bool bf::BezierCommon::onKeyPressed(int key, int) {
 	}
 	return false;
 }
+
+bf::ShaderType bf::BezierCommon::getShaderType() const {
+    return MultipleShaders;
+}

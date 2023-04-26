@@ -61,6 +61,11 @@ bf::BezierCurve2::BezierCurve2(bf::ObjectArray &array) : BezierCommon(array) {
     isTmpLineDrawn=true;
 	isTmpPointDrawn=true;
 }
+bf::BezierCurve2::BezierCurve2(bf::ObjectArray &array, const std::string& bName) : BezierCommon(array) {
+	name = bName;
+	isTmpLineDrawn=true;
+	isTmpPointDrawn=true;
+}
 
 void bf::BezierCurve2::recalculate() {
 	//update all points

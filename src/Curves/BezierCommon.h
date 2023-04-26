@@ -47,7 +47,9 @@ namespace bf {
 
 		bool onKeyPressed(int key, int mods) override;
 
-	};
+        ShaderType getShaderType() const override;
+
+    };
 }
 
 

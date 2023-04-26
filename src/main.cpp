@@ -15,25 +15,72 @@
 #include "Settings.h"
 #include "ImGuiUtil.h"
 #include "GlfwUtil.h"
-#include "Shader.h"
 #include "camera.h"
 #include "Solids/Torus.h"
 #include "Solids/Point.h"
 #include "Util.h"
-#include <memory>
+#include <iostream>
 #include "Curves/BezierCurve.h"
 #include "Scene.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
 #include "ShaderArray.h"
+#include "FileLoading.h"
+#include <format>
 
 const std::string SHADER_PATH = "../shaders/";
+
+void GLAPIENTRY
+MessageCallback( GLenum source,
+				 GLenum type,
+				 GLuint id,
+				 GLenum severity,
+				 GLsizei length,
+				 const GLchar* message,
+				 const void* )
+{
+	std::string sourceStr;
+	switch (source)
+	{
+		case GL_DEBUG_SOURCE_API:				sourceStr="API"; break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:		sourceStr="Window System"; break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER:	sourceStr="Shader Compiler"; break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY:		sourceStr="Third Party"; break;
+		case GL_DEBUG_SOURCE_APPLICATION:		sourceStr="Application"; break;
+		case GL_DEBUG_SOURCE_OTHER: default:	sourceStr="Other"; break;
+	}
+	std::string typeStr;
+	switch (type)
+	{
+		case GL_DEBUG_TYPE_ERROR:				typeStr="Error"; break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	typeStr="Deprecated Behaviour"; break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	typeStr="Undefined Behaviour"; break;
+		case GL_DEBUG_TYPE_PORTABILITY:			typeStr="Portability"; break;
+		case GL_DEBUG_TYPE_PERFORMANCE:			typeStr="Performance"; break;
+		case GL_DEBUG_TYPE_MARKER:				typeStr="Marker"; break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:			typeStr="Push Group"; break;
+		case GL_DEBUG_TYPE_POP_GROUP:			typeStr="Pop Group"; break;
+		case GL_DEBUG_TYPE_OTHER: default:		typeStr="Other"; break;
+	}
+	std::string severityStr;
+	switch(severity) {
+		case GL_DEBUG_SEVERITY_HIGH:		severityStr="HIGH"; break;
+		case GL_DEBUG_SEVERITY_MEDIUM:		severityStr="MEDIUM"; break;
+		case GL_DEBUG_SEVERITY_LOW:			severityStr="LOW"; break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:severityStr="NOTIFICATION"; break;
+		default:							severityStr="?????";
+	}
+	std::cerr << std::format("GL CALLBACK: source = {0}, type = {1}, severity = {2}, message = {3}\n",
+			 sourceStr, typeStr, severityStr, message );
+}
 
 int main() {
     bf::Settings settings;
 	GLFWwindow* window=bf::glfw::init(settings);
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback,nullptr);
 	if(!window) {
-        fprintf(stderr, "Fatal error creating GLFW window\n");
+        std::cerr <<  "Fatal error creating GLFW window\n";
 		return EXIT_FAILURE;
 	}
 	//init ImGUI
@@ -44,8 +91,12 @@ int main() {
     float deltaTime = 0.0f;
     bf::ShaderArray shaderArray;
     shaderArray.addBasicShader(SHADER_PATH+"shader", false);
-    //shaderArray.addBasicShader(SHADER_PATH+"bezierShader", false);
-
+    shaderArray.addBasicShader(SHADER_PATH+"bezierShader", false);
+	{
+		int w,h;
+		glfwGetWindowSize(window,&w,&h);
+		shaderArray.initGL(w,h);
+	}
     bf::GlfwStruct glfwStruct(settings,scene,deltaTime,io);
     glfwSetWindowUserPointer(window,&glfwStruct);
 
@@ -169,14 +220,15 @@ int main() {
 		///CAMERA INFO PANEL
 		ImGui::Begin("Camera info");
 		scene.camera.ObjectGui();
+		if(ImGui::Button("Save to file"))
+			bf::saveToFile("../save.json",scene.objectArray);
+		if(ImGui::Button("Load from file"))
+			bf::loadFromFile("../save.json",scene.objectArray);
 		ImGui::End();
 		// Rendering
 		ImGui::Render();
 		//OpenGL draw
-        shaderArray.changeShader(bf::ShaderType::BasicShader);
-		int display_w, display_h;
-		glfwGetFramebufferSize(window, &display_w, &display_h);
-		scene.draw(shaderArray, settings, display_w, display_h);
+		scene.draw(shaderArray, settings);
 		//end of OpenGL draw
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);

@@ -15,6 +15,8 @@
 #include "Solids/Point.h"
 #include "Solids/Torus.h"
 #include "Scene.h"
+#include <format>
+#include <iostream>
 
 constexpr int SRC_WIDTH=1024;
 constexpr int SRC_HEIGHT=768;
@@ -55,7 +57,7 @@ GLFWwindow* initWindow(bf::Settings& settings)
 	GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, "Project 2", nullptr, nullptr);
 	if (window == nullptr)
 	{
-        fprintf(stderr, "Failed to create GLFW window\n");
+        std::cerr << "Failed to create GLFW window\n";
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
@@ -72,13 +74,15 @@ GLFWwindow* initWindow(bf::Settings& settings)
 	if (GLEW_OK != err)
 	{
 		/* Problem: glewInit failed, something is seriously wrong. */
-        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		std::string str = reinterpret_cast<const char*>(glewGetErrorString(err));
+		std::cerr << std::format("Error: {}\n", str);
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	std::string str = reinterpret_cast<const char*>(glewGetString(GLEW_VERSION));
+	std::cout <<  std::format("Status: Using GLEW {}\n", str);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
+	//glEnable(GL_STENCIL_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

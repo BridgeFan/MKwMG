@@ -204,7 +204,8 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray) {
         usedIndices = objects[activeIndex].first->usedVectors();
     }
     for(int k=0;k<shaderArray.getSize();k++) {
-        shaderArray.changeShader(k);
+		if(k>0)
+        	shaderArray.changeShader(k);
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
                 if (isActive(i))
@@ -276,4 +277,8 @@ void bf::ObjectArray::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newP
 		if(b)
 			o->onMouseMove(oldPos, newPos);
 	}
+}
+
+void bf::ObjectArray::removeAll() {
+	objects.clear();
 }

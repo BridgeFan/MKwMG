@@ -55,6 +55,10 @@ bf::BezierCurveInter::BezierCurveInter(bf::ObjectArray &array) : BezierCommon(ar
 	name = "Bézier curveI " + std::to_string(_index);
 	_index++;
 }
+bf::BezierCurveInter::BezierCurveInter(bf::ObjectArray &array, const std::string& bName) : BezierCommon(array) {
+	isLineDrawn = false;
+	name = bName;
+}
 
 void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 	int n=pointIndices.size();

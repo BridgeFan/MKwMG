@@ -13,7 +13,8 @@
 namespace bf {
     enum ShaderType: int {
         BasicShader=0,
-        BezierShader=1
+        BezierShader=1,
+        MultipleShaders
     };
     template<typename T>
     concept ShaderArrayVariantable = std::is_same_v<T, glm::vec2> || std::is_same_v<T, glm::vec3> || std::is_same_v<T, glm::vec4> ||
@@ -24,6 +25,7 @@ namespace bf {
         void setUniform(const std::string& name, const ShaderArrayVariant& var) const;
         int activeIndex=0;
         std::vector<bf::Shader> shaders;
+		unsigned FBOs, colorBuffers, RBOs;
     public:
         [[nodiscard]] int getActiveIndex() const;
         const bf::Shader& getActiveShader() const;
@@ -52,6 +54,7 @@ namespace bf {
             return commonUniformMap.erase(name)>0;
         }
         bool changeShader(int n);
+		void initGL(int width, int height);
         void addBasicShader(const std::string& path, bool isGeometric);
     };
 }

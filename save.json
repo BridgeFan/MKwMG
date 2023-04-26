@@ -1,0 +1,31 @@
+{
+	"geometry": [
+		{
+			"objectType": "torus",
+			"id": 0,
+			"name": "Torus 1",
+			"smallRadius": 0.30000001192092896,
+			"largeRadius": 1.0,
+			"position": {
+				"x": 0.0,
+				"y": 0.0,
+				"z": 0.0
+			},
+			"rotation": {
+				"x": 0.0,
+				"y": 0.0,
+				"z": 0.0
+			},
+			"scale": {
+				"x": 1.0,
+				"y": 1.0,
+				"z": 1.0
+			},
+			"samples": {
+				"x": 15,
+				"y": 10
+			}
+		}
+	],
+	"points": []
+}

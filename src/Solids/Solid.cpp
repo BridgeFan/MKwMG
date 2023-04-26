@@ -4,8 +4,6 @@
 
 #include "Solid.h"
 #include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <err.h>
 #include "../ShaderArray.h"
 int bf::Solid::sindex = 1;
 
@@ -66,7 +64,11 @@ void bf::Solid::ObjectGui() {
 }
 
 void bf::Solid::addVertex(const glm::vec3 &p) {
-	vertices.push_back(p);
+	vertices.emplace_back(p);
+}
+
+bf::ShaderType bf::Solid::getShaderType() const {
+    return BasicShader;
 }
 
 bf::Vertex::Vertex(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}

@@ -22,6 +22,7 @@ namespace bf {
 		void recalculate();
 	public:
 		explicit BezierCurve2(bf::ObjectArray& array);
+		explicit BezierCurve2(bf::ObjectArray& array, const std::string& name);
 		bool onMouseButtonPressed(int button, int mods) override;
 		bool onMouseButtonReleased(int button, int mods) override;
 		void onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) override;

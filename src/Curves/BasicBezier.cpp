@@ -2,6 +2,7 @@
 // Created by kamil-hp on 18.04.23.
 //
 
+#include "GL/glew.h"
 #include "BasicBezier.h"
 #include "GlfwUtil.h"
 #include "Util.h"

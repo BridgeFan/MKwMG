@@ -5,6 +5,8 @@
 #include "Shader.h"
 #include "Util.h"
 #include <GL/glew.h>
+#include <iostream>
+#include <format>
 //file based on https://learnopengl.com tutorials for OpenGL
 
 std::string getShaderTypeName(int shaderType) {
@@ -27,7 +29,7 @@ std::string getShaderTypeName(int shaderType) {
 unsigned bf::Shader::compileShaderFromFile(const std::string& path, int shaderType) const {
     std::string code = readWholeFile(path.c_str());
     if(code.empty())
-        fprintf(stderr, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: %s\n", path.c_str());
+        std::cerr << std::format("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}\n", path);
     const char* codePtr = code.c_str();
     unsigned index = glCreateShader(shaderType);
     glShaderSource(index, 1, &codePtr, nullptr);
@@ -52,10 +54,10 @@ bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPat
 	glLinkProgram(ID);
 	checkCompileErrors(ID, "PROGRAM");
 	// delete the shaders as they're linked into our program now and no longer necessery
-	glDeleteShader(vertex);
+	/*glDeleteShader(vertex);
 	glDeleteShader(fragment);
 	if(isGeometryShaderUsed)
-		glDeleteShader(geometry);
+		glDeleteShader(geometry);*/
 }
 void bf::Shader::use() const
 {
@@ -83,8 +85,8 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            fprintf(stderr, "ERROR::SHADER_COMPILATION_ERROR of type: %s\n%s",type.c_str(),infoLog);
-            fprintf(stderr, "\n -- --------------------------------------------------- --\n");
+            std::cerr << std::format("ERROR::SHADER_COMPILATION_ERROR of type: {0}\n{1}",type,infoLog);
+            std::cerr <<  "\n -- --------------------------------------------------- --\n";
 		}
 	}
 	else
@@ -93,15 +95,16 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
-            fprintf(stderr, "ERROR::PROGRAM_LINKING_ERROR of type: %s\n%s",type.c_str(),infoLog);
-            fprintf(stderr, "\n -- --------------------------------------------------- --\n");
+			std::cerr << std::format("ERROR::PROGRAM_LINKING_ERROR of type: {}\n{}",type.c_str(),infoLog);
+            std::cerr << "\n -- --------------------------------------------------- --\n";
 		}
 	}
 }
 
 bf::Shader::~Shader()
 {
-	glDeleteProgram(ID);
+	if(ID!=UINT_MAX)
+		glDeleteProgram(ID);
 }
 
 bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath, const std::string &tessControlPath,
@@ -132,4 +135,55 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     if(isGeometryShaderUsed)
         glDeleteShader(geometry);
 
+}
+
+void bf::Shader::setVec2(const std::string &name, const glm::vec2 &value) const {
+    glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+}
+
+void bf::Shader::setVec2(const std::string &name, float x, float y) const {
+    glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
+}
+
+void bf::Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
+    glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+}
+
+void bf::Shader::setVec3(const std::string &name, float x, float y, float z) const {
+    glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
+}
+
+void bf::Shader::setVec4(const std::string &name, const glm::vec4 &value) const {
+    glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+}
+
+void bf::Shader::setVec4(const std::string &name, float x, float y, float z, float w) const {
+    glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
+}
+
+void bf::Shader::setMat2(const std::string &name, const glm::mat2 &mat) const {
+    glUniformMatrix2fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+void bf::Shader::setMat3(const std::string &name, const glm::mat3 &mat) const {
+    glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+void bf::Shader::setMat4(const std::string &name, const glm::mat4 &mat) const {
+    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+
+unsigned int bf::Shader::getID() const {
+	return ID;
+}
+
+bf::Shader& bf::Shader::operator=(bf::Shader &&shader) noexcept {
+	this->ID = shader.ID;
+	shader.ID = UINT_MAX;
+	return *this;
+}
+
+bf::Shader::Shader(bf::Shader &&shader) noexcept {
+	ID = shader.ID;
+	shader.ID = UINT_MAX;
 }
