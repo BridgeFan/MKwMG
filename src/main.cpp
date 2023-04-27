@@ -35,7 +35,7 @@ MessageCallback( GLenum source,
 				 GLenum type,
 				 GLuint id,
 				 GLenum severity,
-				 GLsizei length,
+				 GLsizei,
 				 const GLchar* message,
 				 const void* )
 {
@@ -67,11 +67,11 @@ MessageCallback( GLenum source,
 		case GL_DEBUG_SEVERITY_HIGH:		severityStr="HIGH"; break;
 		case GL_DEBUG_SEVERITY_MEDIUM:		severityStr="MEDIUM"; break;
 		case GL_DEBUG_SEVERITY_LOW:			severityStr="LOW"; break;
-		case GL_DEBUG_SEVERITY_NOTIFICATION:severityStr="NOTIFICATION"; break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:return; //should not be shown
 		default:							severityStr="?????";
 	}
-	std::cerr << std::format("GL CALLBACK: source = {0}, type = {1}, severity = {2}, message = {3}\n",
-			 sourceStr, typeStr, severityStr, message );
+	std::cerr << std::format("GL CALLBACK: id={}, source = {}, type = {}, severity = {}, message = {}\n",
+			 id, sourceStr, typeStr, severityStr, message );
 }
 
 int main() {
@@ -91,12 +91,7 @@ int main() {
     float deltaTime = 0.0f;
     bf::ShaderArray shaderArray;
     shaderArray.addBasicShader(SHADER_PATH+"shader", false);
-    shaderArray.addBasicShader(SHADER_PATH+"bezierShader", false);
-	{
-		int w,h;
-		glfwGetWindowSize(window,&w,&h);
-		shaderArray.initGL(w,h);
-	}
+    shaderArray.addTessellationShader(SHADER_PATH+"bezierShader", false);
     bf::GlfwStruct glfwStruct(settings,scene,deltaTime,io);
     glfwSetWindowUserPointer(window,&glfwStruct);
 

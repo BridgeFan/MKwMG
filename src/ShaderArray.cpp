@@ -11,12 +11,6 @@ bool bf::ShaderArray::changeShader(int n) {
     if(n<0 || n>=static_cast<int>(shaders.size())) {
 		return false;
 	}
-	/*if(n<static_cast<int>(shaders.size())-1) {
-		glBindFramebuffer(GL_FRAMEBUFFER, FBOs + n);
-	}
-	else {
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}*/
 	activeIndex=n;
     shaders[n].use();
 	for (auto &&[name, v]: commonUniformMap) {
@@ -63,28 +57,10 @@ void bf::ShaderArray::addBasicShader(const std::string &path, bool isGeometric) 
     else
         shaders.emplace_back(path + ".vert", path + ".frag");
 }
-
-void bf::ShaderArray::initGL(int width, int height) {
-	//TODO - window size change support
-	int FBOnum = static_cast<int>(shaders.size())-1;
-	glGenRenderbuffers(FBOnum, &RBOs);
-	glGenTextures(FBOnum, &colorBuffers);
-	glGenFramebuffers(FBOnum, &FBOs);
-	for(int i=0;i<FBOnum;i++) {
-		//set texture
-		glBindTexture(GL_TEXTURE_2D, colorBuffers+i);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//set depth buffer
-		glBindRenderbuffer(GL_RENDERBUFFER, RBOs+i);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-		//set buffer
-		glBindFramebuffer(GL_FRAMEBUFFER, FBOs+i);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffers+i, 0);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBOs+i);
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "Framebuffer not complete!\n";
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+void bf::ShaderArray::addTessellationShader(const std::string &path, bool isGeometric) {
+	if(isGeometric)
+		shaders.emplace_back(path + ".vert", path + ".frag", path+".tesc", path+".tese", path+".geom");
+	else
+		shaders.emplace_back(path + ".vert", path + ".frag", path+".tesc", path+".tese");
 }
+

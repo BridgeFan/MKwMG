@@ -2,11 +2,12 @@
 layout (location = 0) in vec3 aPos;
 
 out vec4 vertexColor;
-
-uniform mat4 model;
+//common uniforms
 uniform mat4 view;
 uniform mat4 projection;
+//unique uniforms
 uniform vec3 color;
+uniform mat4 model;
 
 void main()
 {

@@ -15,6 +15,7 @@ const glm::vec4 clear_color = glm::vec4(0.25f, 0.25f, 0.20f, 1.00f);
 void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings) {
 	glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	shaderArray.changeShader(bf::ShaderType::BasicShader);
 	// pass projection matrix to shader (note that in this case it could change every frame)
 	projection = bf::getProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
 	inverseProjection = bf::getInverseProjectionMatrix(camera.Zoom,settings.aspect, camera.zNear, camera.zFar);
@@ -25,7 +26,6 @@ void bf::Scene::draw(bf::ShaderArray &shaderArray, const Settings& settings) {
 	shaderArray.addCommonUniform("view", view);
 	//draw objects
     std::vector<unsigned> indices;
-    shaderArray.changeShader(bf::ShaderType::BasicShader);
 	if(objectArray.isMultipleActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();
 		multiCursor.draw(shaderArray, settings);

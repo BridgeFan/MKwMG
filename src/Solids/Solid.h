@@ -21,12 +21,14 @@ namespace bf {
 		static int sindex;
 	protected:
 		void addVertex(const glm::vec3& p);
+		bool isDynamic = false;
 	public:
 		virtual ~Solid() override;
-		Solid(const bf::Transform &t, const std::string &solidName) : bf::Object(t, solidName) {}
-		explicit Solid(const bf::Transform &t = bf::Transform::Default) : bf::Solid(t, "Solid " + std::to_string(
-				sindex)) { sindex++; }
-		explicit Solid(const std::string &solidName) : Solid(Transform::Default, solidName) {}
+		Solid(const bf::Transform &t, const std::string &solidName, bool dynamic=false) : bf::Object(t, solidName),
+			isDynamic(dynamic) {}
+		explicit Solid(const bf::Transform &t = bf::Transform::Default, bool dynamic=false) : bf::Solid(t, "Solid " + std::to_string(
+				sindex),dynamic) { sindex++; }
+		explicit Solid(const std::string &solidName, bool dynamic=false) : Solid(Transform::Default, solidName,dynamic) {}
 		unsigned int VBO = UINT_MAX, VAO = UINT_MAX, IBO = UINT_MAX;
 		std::vector<Vertex> vertices;
 		std::vector<unsigned> indices;

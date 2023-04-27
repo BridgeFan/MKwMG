@@ -18,15 +18,8 @@ void bf::Point::draw(const ShaderArray &shaderArray) const {
     }
 	//function assumes set projection and view matrices
 	glBindVertexArray(VAO);
-	/*glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-	model = glm::translate(model, {.0f,.0f,.0f});*/
 	shaderArray.getActiveShader().setMat4("model", getModelMatrix());
-
-	//glDrawArrays(GL_TRIANGLES, 0, vertices.size()/3);
 	glDrawArrays(GL_POINTS, 0, 1);
-	/*glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT,   // type
-	               reinterpret_cast<void*>(0)           // element array buffer offset
-	);*/
 }
 
 void bf::Point::Init() {

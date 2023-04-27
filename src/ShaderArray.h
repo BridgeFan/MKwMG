@@ -54,8 +54,8 @@ namespace bf {
             return commonUniformMap.erase(name)>0;
         }
         bool changeShader(int n);
-		void initGL(int width, int height);
         void addBasicShader(const std::string& path, bool isGeometric);
+		void addTessellationShader(const std::string& path, bool isGeometric);
     };
 }
 

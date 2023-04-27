@@ -122,7 +122,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 		glBindVertexArray(lVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, lVBO);
-		glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
 
