@@ -3,17 +3,13 @@
 //
 
 #include <algorithm>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "BezierCurve2.h"
 #include "Object/ObjectArray.h"
-#include "Solids/Point.h"
-#include "ImGuiUtil.h"
-#include "imgui-master/imgui.h"
-#include "Shader.h"
+#include "src/ImGui/ImGuiUtil.h"
 #include "Util.h"
-#include "GlfwUtil.h"
 #include "Scene.h"
+#include "ConfigState.h"
+#include "Event.h"
 
 int bf::BezierCurve2::_index = 1;
 
@@ -79,18 +75,16 @@ void bf::BezierCurve2::recalculate() {
 	bezier.recalculate(wasResized);
 }
 
-bool bf::BezierCurve2::onMouseButtonPressed(int button, int) {
-	if(!scene || button!=GLFW_MOUSE_BUTTON_LEFT)
+bool bf::BezierCurve2::onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit) {
+	if(!scene || !configState || button!=bf::event::MouseButton::Left)
 		return false;
-	double mouseX, mouseY;
-	glfwGetCursorPos(window, &mouseX, &mouseY);
-	auto mouseXF = static_cast<float>(mouseX);
-	auto mouseYF = static_cast<float>(mouseY);
+	const float& mouseXF = configState->mouseX;
+    const float& mouseYF = configState->mouseY;
 	constexpr float sqrDist = 64.f;
 	int selectionIndex = -1;
 	float actualZ = 9.999f;
 	for(unsigned i=0u;i<bezier.points.size();i++) {
-		auto screenPos = bf::glfw::toScreenPos(window, bezier.points[i], scene->getView(), scene->getProjection());
+		auto screenPos = bf::toScreenPos(configState->screenWidth, configState->screenHeight, bezier.points[i], scene->getView(), scene->getProjection());
 		if(screenPos==bf::outOfWindow)
 			continue;
 		float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
@@ -103,8 +97,8 @@ bool bf::BezierCurve2::onMouseButtonPressed(int button, int) {
 	return activeBezierIndex>=0;
 }
 
-bool bf::BezierCurve2::onMouseButtonReleased(int button, int) {
-	if(button==GLFW_MOUSE_BUTTON_LEFT) {
+bool bf::BezierCurve2::onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit) {
+	if(button==bf::event::MouseButton::Left) {
 		activeBezierIndex = -1;
 		return true;
 	}
@@ -114,9 +108,9 @@ bool bf::BezierCurve2::onMouseButtonReleased(int button, int) {
 void bf::BezierCurve2::onMouseMove(const glm::vec2&, const glm::vec2 &newPos) {
 	if(activeBezierIndex<0)
 		return;
-	float z = bf::glfw::toScreenPos(window,bezier.points[activeBezierIndex],scene->getView(),scene->getProjection()).z;
+	float z = bf::toScreenPos(configState->screenWidth, configState->screenHeight,bezier.points[activeBezierIndex],scene->getView(),scene->getProjection()).z;
 	glm::vec3 newPosZ = {newPos.x,newPos.y,z};
-	auto newWorldPos = bf::glfw::toGlobalPos(window,newPosZ,scene->getInverseView(),scene->getInverseProjection());
+	auto newWorldPos = bf::toGlobalPos(configState->screenWidth, configState->screenHeight,newPosZ,scene->getInverseView(),scene->getInverseProjection());
 	auto difVector = newWorldPos - bezier.points[activeBezierIndex];
 	int oaIndex = activeBezierIndex/3+1;
 	switch(activeBezierIndex%3) {

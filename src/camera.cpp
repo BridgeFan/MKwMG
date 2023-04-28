@@ -3,14 +3,15 @@
 //
 
 #include "camera.h"
-#include "ImGuiUtil.h"
+#include "src/ImGui/ImGuiUtil.h"
 #include "Util.h"
+#include "ConfigState.h"
 #include <glm/gtc/matrix_inverse.hpp>
 
-void bf::Camera::ObjectGui() {
+void bf::Camera::ObjectGui(bf::ConfigState& configState) {
 	bf::imgui::checkChanged("Position", position);
 	bf::imgui::checkChanged("Rotation", rotation);
-	bf::imgui::checkChanged("fov", Zoom, 5.f, 120.f);
+	bf::imgui::checkChanged("fov", configState.cameraZoom, 5.f, 120.f);
 }
 
 const glm::vec3 &bf::Camera::getFront() const {
@@ -55,3 +56,6 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
     //ret[3] = {invMatrix * tmpVec, 1.f};
     return ret;
 }
+
+bf::Camera::Camera(float near, float far, glm::vec3 pos, glm::vec3 rot)
+        : Transform(pos, rot), zNear(near), zFar(far) {}

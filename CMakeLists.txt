@@ -19,7 +19,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(MG1_zad2
         src/camera.cpp
-        src/ImGuiUtil.cpp
+        src/ImGui/ImGuiUtil.cpp
         src/GlfwUtil.cpp
         src/Shader.cpp
         src/Util.cpp
@@ -36,8 +36,8 @@ add_executable(MG1_zad2
         src/Object/ObjectArray.h
         src/Object/ObjectArrayListener.cpp
         src/Object/ObjectArrayListener.h
-        src/Curves/BezierCurve.cpp
-        src/Curves/BezierCurve.h
+        src/Curves/BezierCurve0.cpp
+        src/Curves/BezierCurve0.h
         src/Scene.cpp
         src/Scene.h
         src/Curves/BasicBezier.cpp
@@ -45,7 +45,7 @@ add_executable(MG1_zad2
         src/Curves/BezierCurve2.cpp
         src/Curves/BezierCommon.cpp
         src/Curves/BezierCommon.h
-        src/Curves/BezierCurveInter.cpp src/ShaderArray.cpp src/ShaderArray.h src/FileLoading.h src/FileLoading.cpp)
+        src/Curves/BezierCurveInter.cpp src/ShaderArray.cpp src/ShaderArray.h src/FileLoading.h src/FileLoading.cpp src/Event.h src/ImGui/ImGuiPanel.h src/ImGui/ImGuiPanel.cpp src/ConfigState.cpp)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)
@@ -58,4 +58,5 @@ target_link_libraries(MG1_zad2 GLEW)
 target_link_libraries(MG1_zad2 imgui_impl_glfw)
 target_link_libraries(MG1_zad2 imgui_impl_opengl3)
 target_link_libraries(MG1_zad2 imgui)
+target_link_libraries(MG1_zad2 jsoncpp)
 target_link_libraries(MG1_zad2 MGSerializer)

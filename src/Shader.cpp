@@ -6,7 +6,9 @@
 #include "Util.h"
 #include <GL/glew.h>
 #include <iostream>
+#ifdef USE_STD_FORMAT
 #include <format>
+#endif
 //file based on https://learnopengl.com tutorials for OpenGL
 
 std::string getShaderTypeName(int shaderType) {
@@ -27,9 +29,13 @@ std::string getShaderTypeName(int shaderType) {
 }
 
 unsigned bf::Shader::compileShaderFromFile(const std::string& path, int shaderType) const {
-    std::string code = readWholeFile(path.c_str());
+    std::string code = readWholeFile(path);
     if(code.empty())
+#ifdef USE_STD_FORMAT
         std::cerr << std::format("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}\n", path);
+#else
+        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << path << "\n";
+#endif
     const char* codePtr = code.c_str();
     unsigned index = glCreateShader(shaderType);
     glShaderSource(index, 1, &codePtr, nullptr);
@@ -54,10 +60,10 @@ bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPat
 	glLinkProgram(ID);
 	checkCompileErrors(ID, "PROGRAM");
 	// delete the shaders as they're linked into our program now and no longer necessery
-	/*glDeleteShader(vertex);
+	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 	if(isGeometryShaderUsed)
-		glDeleteShader(geometry);*/
+		glDeleteShader(geometry);
 }
 void bf::Shader::use() const
 {
@@ -85,7 +91,11 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
+#ifdef USE_STD_FORMAT
             std::cerr << std::format("ERROR::SHADER_COMPILATION_ERROR of type: {0}\n{1}",type,infoLog);
+#else
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog;
+#endif
             std::cerr <<  "\n -- --------------------------------------------------- --\n";
 		}
 	}
@@ -95,7 +105,11 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
-			std::cerr << std::format("ERROR::PROGRAM_LINKING_ERROR of type: {}\n{}",type.c_str(),infoLog);
+#ifdef USE_STD_FORMAT
+			std::cerr << std::format("ERROR::PROGRAM_LINKING_ERROR of type: {0}\n{1}",type,infoLog);
+#else
+            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog;
+#endif
             std::cerr << "\n -- --------------------------------------------------- --\n";
 		}
 	}

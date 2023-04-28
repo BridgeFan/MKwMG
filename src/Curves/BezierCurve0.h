@@ -2,17 +2,16 @@
 // Created by kamil-hp on 27.03.23.
 //
 
-#ifndef MG1_ZAD2_BEZIERCURVE_H
-#define MG1_ZAD2_BEZIERCURVE_H
+#ifndef MG1_ZAD2_BEZIERCURVE0_H
+#define MG1_ZAD2_BEZIERCURVE0_H
 
 #include "BezierCommon.h"
 
-class GLFWwindow;
 namespace bf {
 	class Scene;
-	struct Settings;
+	struct ConfigState;
 	class ObjectArray;
-	class BezierCurve: public bf::BezierCommon {
+	class BezierCurve0: public bf::BezierCommon {
 	private:
 		static int _index;
 		void bezierOnAdd() override;
@@ -20,10 +19,10 @@ namespace bf {
 		void bezierOnSwap(unsigned int index1, unsigned int index2) override;
 		void bezierOnMove(unsigned int index) override;
 	public:
-		explicit BezierCurve(bf::ObjectArray& array);
-		BezierCurve(bf::ObjectArray& array, const std::string& bName);
+		explicit BezierCurve0(bf::ObjectArray& array);
+		BezierCurve0(bf::ObjectArray& array, const std::string& bName);
 	};
 }
 
 
-#endif //MG1_ZAD2_BEZIERCURVE_H
+#endif //MG1_ZAD2_BEZIERCURVE0_H

@@ -17,12 +17,9 @@ namespace bf {
         bool isTmpLineDrawn=false;
 		bool isTmpPointDrawn=false;
 		bf::BasicBezier bezier;
-		static GLFWwindow* window;
 		bool isPolygonVisible, isCurveVisible, isLineDrawn;
 		std::size_t activeIndex;
 		std::vector<unsigned> pointIndices;
-		static const Scene* scene;
-		static const Settings* settings;
 		void recalculate();
 		void recalculatePart(int index); //index of part
 		virtual void bezierOnAdd() = 0;
@@ -41,11 +38,10 @@ namespace bf {
 		bool addPoint(unsigned index) override;
 		bool removePoint(unsigned index);
 		virtual void draw(const ShaderArray &shaderArray) const override;
-		static void initData(const Scene& scene, const Settings& settings, GLFWwindow* window);
 		void ObjectGui() override;
 		[[nodiscard]] bool isMovable() const override {return false;}
 
-		bool onKeyPressed(int key, int mods) override;
+		bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods) override;
 
         ShaderType getShaderType() const override;
 

@@ -10,18 +10,27 @@
 #include "Transform.h"
 
 namespace bf {
+    namespace event {
+        enum class Key : int;
+        enum class MouseButton : int;
+        enum ModifierKeyBit : int;
+    }
     enum ShaderType: int;
-	struct Settings;
+	struct ConfigState;
 	class ObjectArray;
     class ShaderArray;
+    class Scene;
 	class Object {
 	private:
 		static int _objIndex;
 		friend bool saveToFile(const std::string &path, const bf::ObjectArray &objectArray);
 	protected:
 		bf::Transform transform;
+        static const ConfigState* configState;
+        static const Scene* scene;
 	public:
 		std::string name;
+        static void initData(const ConfigState& cs, const Scene& s);
 		Object(const bf::Transform &t, const std::string &objName) : transform(t), name(objName) {}
 		explicit Object(const bf::Transform &t = bf::Transform::Default) : Object(t, "Object " + std::to_string(
 				_objIndex)) { _objIndex++; }
@@ -47,10 +56,10 @@ namespace bf {
         [[nodiscard]] virtual std::vector<unsigned> usedVectors() const {return {};}
 		//utility functions
 		[[nodiscard]] virtual bool isMovable() const {return true;}
-        virtual bool onKeyPressed(int key, int mods);
-        virtual bool onKeyReleased(int key, int mods);
-		virtual bool onMouseButtonPressed(int button, int mods);
-		virtual bool onMouseButtonReleased(int button, int mods);
+        virtual bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);
+        virtual bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods);
+		virtual bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
+		virtual bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
 		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
         virtual bf::ShaderType getShaderType() const = 0;
 	};

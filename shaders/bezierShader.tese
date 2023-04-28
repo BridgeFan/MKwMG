@@ -5,6 +5,12 @@ uniform mat4 view;
 uniform mat4 projection;
 //unique uniforms
 uniform int BezierNum;
+uniform float DivisionBegin;
+uniform float DivisionEnd;
+
+float lerp(float t) {
+    return DivisionBegin+t*(DivisionEnd-DivisionBegin);
+}
 
 vec3 deCasteljau(float t, vec3 pos[4], int N) {
     vec3 beta[4] = pos;
@@ -25,6 +31,6 @@ void main() {
     vec3 points[4];
     for(int i=0;i<BezierNum;i++)
         points[i] = gl_in[i].gl_Position.xyz;
-    vec3 p = deCasteljau(u,points,BezierNum);
+    vec3 p = deCasteljau(lerp(u),points,BezierNum);
     gl_Position = projection * view * vec4(p, 1.0);
 }

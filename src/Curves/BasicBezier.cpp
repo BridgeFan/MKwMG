@@ -3,33 +3,19 @@
 //
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "BasicBezier.h"
-#include "GlfwUtil.h"
 #include "Util.h"
 #include "Scene.h"
 #include "ShaderArray.h"
+#include "ConfigState.h"
 
-glm::vec3 deCasteljau(float t, const std::vector<glm::vec3>& pos) {
-    unsigned n = pos.size();
-    auto beta = pos;
-    for(unsigned i=1;i<=n;i++) {
-        for(unsigned k=0;k<n-i;k++) {
-            beta[k] = beta[k]*(1-t)+beta[k+1]*t;
-        }
-    }
-    return beta[0];
-}
+bf::BasicBezier::BasicBezier() {}
 
-
-bf::BasicBezier::BasicBezier() {
-
-}
 void bf::BasicBezier::recalculate(bool wasSizeChanged) {
 	isDynamic=true;
 	vertices.clear();
-	for(int i=0;i<points.size();i++) {
-		vertices.emplace_back(points[i]);
+	for(auto & point : points) {
+		vertices.emplace_back(point);
 	}
     //update curve
     if(wasSizeChanged) {
@@ -46,17 +32,17 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
 		}
         setBuffers();
     }
-    else {
+    else if (VBO<UINT_MAX){
         glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
     }
 }
 
-void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, GLFWwindow *window, const bf::Scene &scene,
-                           const bf::Settings&, bool isLineDrawn, bool isPointDrawn) const {
+void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &,
+                           const bf::ConfigState& configState, bool isLineDrawn, bool isPointDrawn) const {
 	auto& shader = shaderArray.getActiveShader();
 	if(shaderArray.getActiveIndex()==BasicShader) {
 		glBindVertexArray(VAO);
-		shader.setVec3("color", {1.f,0.f,1.f});
+        shader.setVec3("color", 1.f,0.f,1.f);
 		if(isLineDrawn) {
 			glDrawElements(GL_LINE_STRIP, vertices.size(), GL_UNSIGNED_INT, 0);
 		}
@@ -65,22 +51,27 @@ void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, GLFWwindow *windo
 		}
 	}
 	else if(shaderArray.getActiveIndex()==BezierShader) {
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
         glBindVertexArray(VAO);
 		glPatchParameteri( GL_PATCH_VERTICES, 4);
         shader.setInt("MinSegments", 1);
-        shader.setInt("MaxSegments", 4096);
-        shader.setInt("ScreenWidth", width);
-        shader.setInt("ScreenHeight", height);
-        shader.setInt("BezierNum", 4);
+        shader.setInt("MaxSegments", configState.totalDivision/configState.divisionNum);
+        shader.setInt("ScreenWidth", configState.screenWidth);
+        shader.setInt("ScreenHeight", configState.screenHeight);
         int vertSize = static_cast<int>(vertices.size());
         int fullSegments = (vertSize-1)/3;
-		glDrawElements(GL_PATCHES, 4*fullSegments, GL_UNSIGNED_INT, reinterpret_cast<void*>(vertSize*sizeof(GLuint)));
         int restLength = (vertSize-1)%3+1;
-        if(restLength>1) {
-            shader.setInt("BezierNum", restLength);
-            glDrawElements(GL_PATCHES, 4, GL_UNSIGNED_INT, reinterpret_cast<void*>((vertSize+4*fullSegments)*sizeof(GLuint)));
+        auto dNum = static_cast<float>(configState.divisionNum);
+        for(int i=0;i<configState.divisionNum;i++) {
+            shader.setFloat("DivisionBegin", static_cast<float>(i)/dNum);
+            shader.setFloat("DivisionEnd", static_cast<float>(i+1)/dNum);
+            shader.setInt("BezierNum", 4);
+            glDrawElements(GL_PATCHES, 4 * fullSegments, GL_UNSIGNED_INT,
+                           reinterpret_cast<void *>(vertSize * sizeof(GLuint)));
+            if (restLength > 1) {
+                shader.setInt("BezierNum", restLength);
+                glDrawElements(GL_PATCHES, 4, GL_UNSIGNED_INT,
+                               reinterpret_cast<void *>((vertSize + 4 * fullSegments) * sizeof(GLuint)));
+            }
         }
 	}
 }

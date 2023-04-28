@@ -9,6 +9,17 @@
 #include <glm/vec4.hpp>
 #include <vector>
 #include <memory>
+#include <glm/mat4x4.hpp>
+
+#if defined(__clang__) && __clang_major__>=14
+#define USE_STD_FORMAT
+#endif
+#if defined(__GNUC__) && __GNUC_PREREQ(13,0)
+#define USE_STD_FORMAT
+#endif
+#if defined(_MSC_VER) && _MSC_VER>=1929
+#define USE_STD_FORMAT
+#endif
 
 class ImGuiIO;
 namespace bf {
@@ -21,19 +32,19 @@ namespace bf {
 		{t1*u} -> std::convertible_to<T>;
 		{u*t1} -> std::convertible_to<T>;
 	};
-    struct Settings;
+    struct ConfigState;
 	class Scene;
     class Transform;
     struct GlfwStruct {
-        bf::Settings &settings;
+        bf::ConfigState &configState;
 		bf::Scene &scene;
         const float &deltaTime;
         ImGuiIO &io;
-        GlfwStruct(bf::Settings &settings1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1);
+        GlfwStruct(bf::ConfigState &configState1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1);
     };
 }
 
-std::string readWholeFile(const char* path);
+std::string readWholeFile(const std::string& path);
 
 std::string toString(const glm::vec3& v);
 std::string toString(const glm::vec4& v);
@@ -93,5 +104,16 @@ std::vector<T> tridiagonalMatrixAlgorithm(const std::vector<float>& a, const std
 
 
 bool almostEqual(float a1, float a2, float eps=1e-7);
+namespace  bf {
+    glm::vec3 toScreenPos(int screenWidth, int screenHeight, const glm::vec3 &worldPos, const glm::mat4 &view,
+                          const glm::mat4 &projection);
 
+    glm::vec3 toGlobalPos(int screenWidth, int screenHeight, const glm::vec3 &mousePos, const glm::mat4 &inverseView,
+                          const glm::mat4 &inverseProjection);
+
+    constexpr glm::vec3 outOfWindow={-1.f,-1.f,-1.f};
+    bool isInBounds(int screenWidth, int screenHeight, const glm::vec2& screenPos);
+    bool isInBounds(int screenWidth, int screenHeight, const glm::vec3& mousePos);
+    float getDeltaTime();
+}
 #endif //MG1_ZAD2_UTIL_H

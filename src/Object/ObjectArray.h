@@ -17,7 +17,7 @@ template<class T, class U>
 concept Derived = std::is_base_of<U, T>::value;
 
 namespace bf {
-	class Settings;
+	class ConfigState;
 	class ShaderArray;
     class MultiCursor;
 	class ObjectArray {
@@ -83,10 +83,10 @@ namespace bf {
 		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor);
 		[[nodiscard]] int getActiveIndex() const;
 		void draw(bf::ShaderArray& shaderArray);
-        bool onKeyPressed(int key, int mods); //return if event should not be checked after
-        bool onKeyReleased(int key, int mods); //return if event should not be checked after
-		bool onMouseButtonPressed(int button, int mods); //return if event should not be checked after
-		bool onMouseButtonReleased(int button, int mods); //return if event should not be checked after
+        bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);
+        bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods);
+        bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
+        bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
 		void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos); //return if event should not be checked after
 	};
 }

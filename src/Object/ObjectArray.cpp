@@ -3,13 +3,13 @@
 //
 
 #include "ObjectArray.h"
-#include "Settings.h"
+#include "ConfigState.h"
 #include "Object.h"
 #include "imgui-master/imgui.h"
-#include "ImGuiUtil.h"
+#include "src/ImGui/ImGuiUtil.h"
 #include <algorithm>
 #include "ShaderArray.h"
-#include "Curves/BezierCurve.h"
+#include "Curves/BezierCurve0.h"
 #include "Solids/MultiCursor.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
@@ -242,14 +242,14 @@ void bf::ObjectArray::setActiveRedirector(const bf::Object *redirector) {
     }
 }
 
-bool bf::ObjectArray::onKeyPressed(int key, int mods) {
+bool bf::ObjectArray::onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods) {
     for(auto&& [o, b]: objects) {
         if(b && o->onKeyPressed(key, mods))
             return true;
     }
     return false;
 }
-bool bf::ObjectArray::onKeyReleased(int key, int mods) {
+bool bf::ObjectArray::onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods) {
     for(auto&& [o, b]: objects) {
         if(b && o->onKeyReleased(key, mods))
             return true;
@@ -257,14 +257,14 @@ bool bf::ObjectArray::onKeyReleased(int key, int mods) {
     return false;
 }
 
-bool bf::ObjectArray::onMouseButtonPressed(int button, int mods) {
+bool bf::ObjectArray::onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods) {
 	for(auto&& [o, b]: objects) {
 		if(b && o->onMouseButtonPressed(button, mods))
 			return true;
 	}
 	return false;
 }
-bool bf::ObjectArray::onMouseButtonReleased(int button, int mods) {
+bool bf::ObjectArray::onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods) {
 	for(auto&& [o, b]: objects) {
 		if(b && o->onMouseButtonReleased(button, mods))
 			return true;

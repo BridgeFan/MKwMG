@@ -9,18 +9,12 @@
 class ImGuiIO;
 struct GLFWwindow;
 namespace bf {
-	class Settings;
+	class ConfigState;
 	class Camera;
 	class Transform;
-	const glm::vec3 outOfWindow={-1.f,-1.f,-1.f};
 	namespace glfw {
-		GLFWwindow* init(bf::Settings& settings);
+		GLFWwindow* init(const bf::ConfigState& configState);
 		void destroy(GLFWwindow* window);
-		void processInput(GLFWwindow *window);
-		glm::vec3 toScreenPos(GLFWwindow *window, const glm::vec3 &worldPos, const glm::mat4 &view, const glm::mat4 &projection);
-		glm::vec3 toGlobalPos(GLFWwindow *window, const glm::vec3 &mousePos, const glm::mat4 &inverseView, const glm::mat4 &inverseProjection);
-		bool isInBounds(GLFWwindow* window, const glm::vec2& screenPos);
-		bool isInBounds(GLFWwindow* window, const glm::vec3& mousePos);
 	}
 }
 //callbacks

@@ -2,9 +2,7 @@
 // Created by kamil-hp on 21.04.23.
 //
 
-#include <GL/glew.h>
 #include <iostream>
-#include <format>
 #include "ShaderArray.h"
 
 bool bf::ShaderArray::changeShader(int n) {

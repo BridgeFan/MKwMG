@@ -9,14 +9,14 @@
 
 namespace bf {
 	class ShaderArray;
-	struct Settings;
+	struct ConfigState;
     class MultiCursor {
         bf::Solid lines[3];
         void initLines();
     public:
         Transform transform;
         explicit MultiCursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::ShaderArray &shader, const bf::Settings &settings);
+        void draw(const bf::ShaderArray &shader, const bf::ConfigState &configState);
         void ObjectGui();
     };
 }

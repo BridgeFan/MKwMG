@@ -61,7 +61,7 @@ void bf::Solid::ObjectGui() {
 }
 
 void bf::Solid::addVertex(const glm::vec3 &p) {
-	vertices.emplace_back(p);
+	vertices.push_back(p);
 }
 
 bf::ShaderType bf::Solid::getShaderType() const {

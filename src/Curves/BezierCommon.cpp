@@ -7,16 +7,14 @@
 #include <GLFW/glfw3.h>
 #include "Object/ObjectArray.h"
 #include "Solids/Point.h"
-#include "ImGuiUtil.h"
+#include "src/ImGui/ImGuiUtil.h"
 #include "imgui-master/imgui.h"
 #include "ShaderArray.h"
 #include "Scene.h"
 #include "BezierCommon.h"
+#include "Event.h"
 
 int bf::BezierCommon::_index = 1;
-const bf::Scene* bf::BezierCommon::scene = nullptr;
-const bf::Settings* bf::BezierCommon::settings = nullptr;
-GLFWwindow* bf::BezierCommon::window = nullptr;
 
 template<typename T>
 std::size_t binSearch(const std::vector<T>& sorted, std::size_t value, std::size_t begin, std::size_t end) {
@@ -127,16 +125,14 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
             );
         }
     }
-    else if(shaderArray.getActiveIndex()==bf::ShaderType::BezierShader) {
-        const Shader& shader = shaderArray.getActiveShader();
-        bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
-        if(isActive)
-            shader.setVec3("color", 1.f,0.5f,0.f);
-        else
-            shader.setVec3("color", 1.f,1.f,1.f);
-        if(isCurveVisible && scene && settings) {
-            bezier.draw(shaderArray,window,*scene,*settings,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
-        }
+    const Shader& shader = shaderArray.getActiveShader();
+    bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
+    if(isActive)
+        shader.setVec3("color", 1.f,0.5f,0.f);
+    else
+        shader.setVec3("color", 1.f,1.f,1.f);
+    if(isCurveVisible && scene && configState) {
+        bezier.draw(shaderArray,*scene,*configState,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
     }
 }
 
@@ -245,24 +241,18 @@ glm::vec3 bf::BezierCommon::getPoint(int pIndex) const {
     return objectArray[pointIndices[pIndex]].getPosition();
 }
 
-void bf::BezierCommon::initData(const bf::Scene &sc, const bf::Settings &s, GLFWwindow* w) {
-	scene=&sc;
-	settings=&s;
-	window=w;
-}
-
 std::vector<unsigned int> bf::BezierCommon::usedVectors() const {
 	return pointIndices;
 }
 
-bool bf::BezierCommon::onKeyPressed(int key, int) {
+bool bf::BezierCommon::onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit) {
 	if(objectArray.getActiveRedirector()>=0) {
-		if(key==GLFW_KEY_P && scene) {
+		if(key==bf::event::Key::P && scene) {
 			objectArray.add<bf::Point>(scene->cursor.transform);
 			addPoint(objectArray.size()-1);
 			return true;
 		}
-		else if(key==GLFW_KEY_T) {
+		else if(key==bf::event::Key::T) {
 			return true;
 		}
 	}

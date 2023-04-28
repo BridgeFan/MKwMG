@@ -7,10 +7,9 @@
 
 #include "BezierCommon.h"
 
-class GLFWwindow;
 namespace bf {
 	class Scene;
-	struct Settings;
+	struct ConfigState;
 	class BezierCurve2: public bf::BezierCommon {
 	private:
 		int activeBezierIndex=-1;
@@ -23,8 +22,8 @@ namespace bf {
 	public:
 		explicit BezierCurve2(bf::ObjectArray& array);
 		explicit BezierCurve2(bf::ObjectArray& array, const std::string& name);
-		bool onMouseButtonPressed(int button, int mods) override;
-		bool onMouseButtonReleased(int button, int mods) override;
+		bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods) override;
+		bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods) override;
 		void onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) override;
 	};
 }

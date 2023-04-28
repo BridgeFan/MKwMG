@@ -12,7 +12,7 @@
 
 namespace bf {
 	class ShaderArray;
-	class Settings;
+	class ConfigState;
 
 	class Scene {
 	private:
@@ -28,8 +28,8 @@ namespace bf {
 		const glm::mat4 &getInverseProjection() const;
 		const glm::mat4 &getView() const;
 		const glm::mat4 &getInverseView() const;
-		Scene(float aspect, glm::vec3&& cameraPos, glm::vec3&& cameraRot, float cameraNear=.1f, float cameraFar=100.f);
-		void draw(bf::ShaderArray& shaderArray, const Settings& settings);
+		Scene(float aspect, glm::vec3&& cameraPos, glm::vec3&& cameraRot, float cameraZoom, float cameraNear=.1f, float cameraFar=100.f);
+		void draw(bf::ShaderArray& shaderArray, const ConfigState& configState);
 	};
 }
 

@@ -4,8 +4,7 @@
 #include "imgui-master/imgui.h"
 #include "Cursor.h"
 #include "ShaderArray.h"
-#include "ImGuiUtil.h"
-#include "GlfwUtil.h"
+#include "src/ImGui/ImGuiUtil.h"
 #include "Util.h"
 
 void bf::Cursor::draw(const bf::ShaderArray &shaderArray) {
@@ -40,19 +39,19 @@ void bf::Cursor::initLines() {
 	}
 }
 
-void bf::Cursor::ObjectGui(GLFWwindow* window, const glm::mat4& view, const glm::mat4& inverseView, const glm::mat4& projection, const glm::mat4& inverseProjection) {
+void bf::Cursor::ObjectGui(int screenWidth, int screenHeight, const glm::mat4& view, const glm::mat4& inverseView, const glm::mat4& projection, const glm::mat4& inverseProjection) {
 	ImGui::Text("Cursor");
 	bf::imgui::checkChanged("Cursor position", transform.position);
-    if(window!=nullptr){
-        glm::vec3 screenPos = bf::glfw::toScreenPos(window, transform.position, view, projection);
+    {
+        glm::vec3 screenPos = bf::toScreenPos(screenWidth, screenHeight, transform.position, view, projection);
         auto screenPos2 = glm::vec2(screenPos);
-        if(bf::glfw::isInBounds(window, screenPos2)) {
+        if(bf::isInBounds(screenWidth, screenHeight, screenPos2)) {
             if (bf::imgui::checkChanged("Screen position", screenPos2)) {
                 if (isnan(screenPos)) {
                     screenPos2 = {.0f, .0f};
                     screenPos.z = 0.f;
                 }
-                transform.position = bf::glfw::toGlobalPos(window, glm::vec3(screenPos2, screenPos.z), inverseView,
+                transform.position = bf::toGlobalPos(screenWidth, screenHeight, glm::vec3(screenPos2, screenPos.z), inverseView,
                                                            inverseProjection);
             }
         }

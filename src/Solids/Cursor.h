@@ -6,7 +6,6 @@
 #define MG1_ZAD2_CURSOR_H
 #include "Solid.h"
 
-struct GLFWwindow;
 namespace bf {
     class Cursor {
     private:
@@ -17,7 +16,7 @@ namespace bf {
         explicit Cursor(const bf::Transform &t = bf::Transform::Default);
         void draw(const bf::ShaderArray &shaderArray);
         void
-        ObjectGui(GLFWwindow *window, const glm::mat4 &view, const glm::mat4 &inverseView, const glm::mat4 &projection,
+        ObjectGui(int screenWidth, int screenHeight, const glm::mat4 &view, const glm::mat4 &inverseView, const glm::mat4 &projection,
                   const glm::mat4 &inverseProjection);
     };
 }

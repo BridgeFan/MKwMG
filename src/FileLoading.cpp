@@ -7,7 +7,7 @@
 #include "Object/ObjectArray.h"
 #include "Solids/Point.h"
 #include "Solids/Torus.h"
-#include "Curves/BezierCurve.h"
+#include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
 
@@ -49,7 +49,7 @@ bool bf::loadFromFile(const std::string &path, bf::ObjectArray &objectArray) {
 	}
 	for(const auto& b0: scene.bezierC0) {
 		int id = b0.GetId()-1;
-		auto obj = std::make_unique<bf::BezierCurve>(objectArray,b0.name);
+		auto obj = std::make_unique<bf::BezierCurve0>(objectArray, b0.name);
 		for(const auto& a: b0.controlPoints) {
 			obj->addPoint(a.GetId());
 		}
@@ -101,8 +101,8 @@ bool bf::saveToFile(const std::string &path, const bf::ObjectArray &objectArray)
 			torus.SetId(i);
 			scene.tori.emplace_back(std::move(torus));
 		}
-		else if(typeid(*&o)==typeid(bf::BezierCurve)) {
-			const auto b = dynamic_cast<const bf::BezierCurve*>(&o);
+		else if(typeid(*&o)==typeid(bf::BezierCurve0)) {
+			const auto b = dynamic_cast<const bf::BezierCurve0*>(&o);
 			MG1::BezierC0 bezier;
 			bezier.name = b->name;
 			for(const auto& p: b->usedVectors()) {

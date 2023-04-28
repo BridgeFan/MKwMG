@@ -7,10 +7,9 @@
 
 #include "BezierCommon.h"
 
-class GLFWwindow;
 namespace bf {
 	class Scene;
-	struct Settings;
+	struct ConfigState;
 	class ObjectArray;
 	class BezierCurveInter: public bf::BezierCommon {
 	private:

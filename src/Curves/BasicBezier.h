@@ -9,20 +9,17 @@
 #include <glm/vec3.hpp>
 #include "Solids/Solid.h"
 
-//constexpr int MAX_FOV_PARTS = 256;
-//constexpr int MAX_FOV_LOG_PARTS = 8; //should be equal to log2(MAX_FOV_PARTS)
-
-struct GLFWwindow;
 namespace bf {
     class Scene;
-    class Settings;
+    class ConfigState;
 	class ShaderArray;
     class BasicBezier: bf::Solid {
     public:
         virtual ~BasicBezier()=default;
         BasicBezier();
         std::vector<glm::vec3> points;
-        virtual void draw(const bf::ShaderArray& shaderArray, GLFWwindow* window, const bf::Scene& scene, const bf::Settings& settings, bool isLineDrawn=false, bool isPointDraw=false) const;
+        virtual void draw(const bf::ShaderArray& shaderArray,
+                          const bf::Scene& scene, const bf::ConfigState& configState, bool isLineDrawn, bool isPointDraw) const;
         void recalculate(bool wasSizeChanged=true);
     };
 	std::vector<glm::vec3> bezier2ToBezier0(const std::vector<glm::vec3>& points);

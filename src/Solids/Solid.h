@@ -16,7 +16,7 @@ namespace bf {
         Vertex(const glm::vec3& p);
     };
 	class Shader;
-	struct Settings;
+	struct ConfigState;
 	class Solid : public bf::Object {
 		static int sindex;
 	protected:

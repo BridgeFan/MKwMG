@@ -3,10 +3,10 @@
 //
 
 #include "Torus.h"
-#include <GL/glew.h>
 #include <glm/glm.hpp>
-#include "../ImGuiUtil.h"
+#include "ImGui/ImGuiUtil.h"
 #include <numbers>
+#include "ConfigState.h"
 
 int bf::Torus::index = 1;
 constexpr float PI = std::numbers::pi_v<float>;
@@ -35,6 +35,8 @@ void bf::Torus::updateTorus() {
 
 void bf::Torus::ObjectGui() {
 	bf::Solid::ObjectGui();
+    if(!configState)
+        return;
 	bool isCalculationNeeded=false;
 	if(bf::imgui::checkChanged("R",bigRadius)) {
 		if(bigRadius<1e-6f)
@@ -46,12 +48,12 @@ void bf::Torus::ObjectGui() {
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(bf::imgui::checkSliderChanged("R fragments",bigFragments, 3, MAX_TORUS_FRAGMENTS)) {
+	if(bf::imgui::checkSliderChanged("R fragments",bigFragments, 3, configState->maxTorusFragments)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
 	}
-	if(bf::imgui::checkSliderChanged("r fragments",smallFragments, 3, MAX_TORUS_FRAGMENTS)) {
+	if(bf::imgui::checkSliderChanged("r fragments",smallFragments, 3, configState->maxTorusFragments)) {
 		if(smallRadius<.0f)
 			smallRadius=.0f;
 		isCalculationNeeded=true;
