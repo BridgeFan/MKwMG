@@ -6,10 +6,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "Object/ObjectArray.h"
-#include "Solids/Point.h"
+#include "src/Object/Point.h"
 #include "src/ImGui/ImGuiUtil.h"
 #include "imgui-master/imgui.h"
-#include "ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 #include "Scene.h"
 #include "BezierCommon.h"
 #include "Event.h"
@@ -102,15 +102,6 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
 	//draw points if active
     if(shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-        if (objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()] == this) {
-            for (int i = 0; i < static_cast<int>(pointIndices.size()); i++) {
-                if (i == static_cast<int>(activeIndex))
-                    shader.setVec3("color", 1.f, 0.f, 0.f);
-                else
-                    shader.setVec3("color", 0.f, 1.f, 0.f);
-                objectArray[pointIndices[i]].draw(shaderArray);
-            }
-        }
         shader.setVec3("color", 0.f, 0.f, 0.f);
         if (pointIndices.empty() || indices.empty() || vertices.empty()) {
             return;
@@ -123,6 +114,18 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
             glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
                            reinterpret_cast<void *>(0)           // element array buffer offset
             );
+        }
+    }
+    else if(shaderArray.getActiveIndex()==bf::ShaderType::PointShader) {
+        const Shader& shader = shaderArray.getActiveShader();
+        if (objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()] == this) {
+            for (int i = 0; i < static_cast<int>(pointIndices.size()); i++) {
+                if (i == static_cast<int>(activeIndex))
+                    shader.setVec3("color", 1.f, 0.f, 0.f);
+                else
+                    shader.setVec3("color", 0.f, 1.f, 0.f);
+                objectArray[pointIndices[i]].draw(shaderArray);
+            }
         }
     }
     const Shader& shader = shaderArray.getActiveShader();

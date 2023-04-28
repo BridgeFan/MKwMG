@@ -4,7 +4,7 @@
 
 #ifndef MG1_ZAD2_CURSOR_H
 #define MG1_ZAD2_CURSOR_H
-#include "Solid.h"
+#include "src/Solids/Solid.h"
 
 namespace bf {
     class Cursor {

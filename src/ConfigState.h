@@ -6,8 +6,14 @@
 #define MG1_ZAD1_CONFIGSTATE_H
 
 #include <cstdint>
+#include <glm/vec3.hpp>
 
 namespace bf {
+    namespace event {
+        enum class Key: int;
+        enum class MouseButton: int;
+        enum ModifierKeyBit: int;
+    }
     enum MouseState {
         LeftClick,
         MiddleClick,
@@ -16,6 +22,14 @@ namespace bf {
     };
 
     struct ConfigState {
+	private:
+		float cameraFOVmin = 5.f;
+		float cameraFOVmax = 120.f;
+		float cameraNear = .1f;
+		float cameraFar = 100.f;
+		glm::vec3 cameraInitPos = {0.0f, 0.0f, -10.0f};
+		glm::vec3 cameraInitRot = {0.0f, 0.0f, 0.0f};
+	public:
         ConfigState();
         ~ConfigState();
         //state of program
@@ -25,6 +39,7 @@ namespace bf {
         bool isShiftPressed = false;
         float mouseX = 0.f;
         float mouseY = 0.f;
+        float deltaTime = 0.f;
         //state set from UI / config
         int screenWidth = 1024;
         int screenHeight = 768;
@@ -35,7 +50,21 @@ namespace bf {
         int maxTorusFragments = 60;
         float movementSpeed = 2.5f;
         float rotationSpeed = 20.f;
-        float cameraZoom = 45.f;
+        float cameraFOV = 45.f;
+		float pointRadius = 8.f;
+		uint8_t backgroundColorR = 64;
+		uint8_t backgroundColorG = 64;
+		uint8_t backgroundColorB = 51;
+		float getCameraFoVmax() const;
+		float getCameraFoVmin() const;
+		float getCameraNear() const;
+		float getCameraFar() const;
+		const glm::vec3 &getCameraInitPos() const;
+		const glm::vec3 &getCameraInitRot() const;
+        void onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);
+        void onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);
+        void onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
+        void onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
     };
 }
 

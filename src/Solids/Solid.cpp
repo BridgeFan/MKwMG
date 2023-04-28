@@ -4,7 +4,7 @@
 
 #include "Solid.h"
 #include <GL/glew.h>
-#include "../ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 int bf::Solid::sindex = 1;
 
 bf::Solid::~Solid() {

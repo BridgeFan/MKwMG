@@ -21,7 +21,7 @@ namespace bf {
 	class ShaderArray;
     class MultiCursor;
 	class ObjectArray {
-		friend bool loadFromFile(const std::string &path, bf::ObjectArray &objectArray);
+		friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
 	private:
         int addToIndex = -1;
         int activeIndex = -1;
@@ -82,7 +82,7 @@ namespace bf {
         void setAddToIndex(int addToIndex);
 		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor);
 		[[nodiscard]] int getActiveIndex() const;
-		void draw(bf::ShaderArray& shaderArray);
+		void draw(bf::ShaderArray& shaderArray, const bf::ConfigState& configState);
         bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);
         bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods);
         bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);

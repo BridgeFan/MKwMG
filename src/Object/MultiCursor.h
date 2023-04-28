@@ -5,7 +5,7 @@
 #ifndef MG1_ZAD2_MULTICURSOR_H
 #define MG1_ZAD2_MULTICURSOR_H
 
-#include "Solid.h"
+#include "src/Solids/Solid.h"
 
 namespace bf {
 	class ShaderArray;

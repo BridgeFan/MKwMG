@@ -7,7 +7,7 @@
 #include "Scene.h"
 #include "ConfigState.h"
 #include "Solids/Torus.h"
-#include "Solids/Point.h"
+#include "src/Object/Point.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
@@ -114,9 +114,9 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     ImGui::Begin("Camera info");
     scene.camera.ObjectGui(configState);
     if(ImGui::Button("Save to file"))
-        bf::saveToFile("../save.json",scene.objectArray);
+        bf::saveToFile(scene.objectArray); //TODO - choose file
     if(ImGui::Button("Load from file"))
-        bf::loadFromFile("../save.json",scene.objectArray);
+        bf::loadFromFile(scene.objectArray); //TODO - choose file
     ImGui::End();
 }
 

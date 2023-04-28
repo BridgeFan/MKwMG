@@ -3,7 +3,7 @@
 //
 
 #include "MultiCursor.h"
-#include "ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 #include "src/ImGui/ImGuiUtil.h"
 #include "ConfigState.h"
 #include "imgui-master/imgui.h"

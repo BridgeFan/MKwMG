@@ -35,8 +35,9 @@ void bf::Torus::updateTorus() {
 
 void bf::Torus::ObjectGui() {
 	bf::Solid::ObjectGui();
-    if(!configState)
+    if(!configState) {
         return;
+    }
 	bool isCalculationNeeded=false;
 	if(bf::imgui::checkChanged("R",bigRadius)) {
 		if(bigRadius<1e-6f)

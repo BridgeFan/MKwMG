@@ -13,8 +13,14 @@ class ImGuiIO;
 struct GLFWwindow;
 namespace bf {
 	namespace imgui {
-		ImGuiIO &init(GLFWwindow *window);
-		void destroy();
+        class IO {
+        public:
+            ImGuiIO& io;
+            IO(GLFWwindow* window);
+            ~IO();
+        };
+        void preDraw();
+        void postDraw();
 		bool checkChanged(const char *name, float &value);
 		bool checkChanged(const char *name, float &value, float min, float max, float step = 1.f, float stepGreat = 10.f);
 		bool checkChanged(const char *name, int &value);

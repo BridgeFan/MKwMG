@@ -3,35 +3,26 @@
 //
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "GlfwUtil.h"
+#include "Window.h"
 #include "ConfigState.h"
-#include "camera.h"
+#include "Camera.h"
 #include <array>
 #include "imgui-master/imgui.h"
 #include "Util.h"
-#include "Solids/Cursor.h"
-#include "src/Object/ObjectArray.h"
-#include "Solids/Point.h"
-#include "Solids/Torus.h"
+#include "src/Object/Cursor.h"
 #include "Scene.h"
 #ifdef USE_STD_FORMAT
 #include <format>
 #endif
 #include <iostream>
 #include "Event.h"
+#include "ImGui/ImGuiUtil.h"
+#include "ImGui/ImGuiPanel.h"
 
 void GLAPIENTRY
-MessageCallback( GLenum source,
-                 GLenum type,
-                 GLuint id,
-                 GLenum severity,
-                 GLsizei,
-                 const GLchar* message,
-                 const void* )
-{
+MessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, const void* ) {
     std::string sourceStr;
-    switch (source)
-    {
+    switch (source) {
         case GL_DEBUG_SOURCE_API:				sourceStr="API"; break;
         case GL_DEBUG_SOURCE_WINDOW_SYSTEM:		sourceStr="Window System"; break;
         case GL_DEBUG_SOURCE_SHADER_COMPILER:	sourceStr="Shader Compiler"; break;
@@ -40,8 +31,7 @@ MessageCallback( GLenum source,
         case GL_DEBUG_SOURCE_OTHER: default:	sourceStr="Other"; break;
     }
     std::string typeStr;
-    switch (type)
-    {
+    switch (type) {
         case GL_DEBUG_TYPE_ERROR:				typeStr="Error"; break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:	typeStr="Deprecated Behaviour"; break;
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	typeStr="Undefined Behaviour"; break;
@@ -71,33 +61,58 @@ MessageCallback( GLenum source,
 
 //declaration of functions
 GLFWwindow* initWindow(const bf::ConfigState& configState);
-
 void framebuffer_size_callback(GLFWwindow*, int width, int height);
 void mouse_callback(GLFWwindow*, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow*, double /*xoffset*/, double yoffset);
 void key_callback(GLFWwindow*, int key, int /*scancode*/, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
+bf::GlfwStruct::GlfwStruct(bf::ConfigState &configState1, GLFWwindow* window) : configState(configState1), io(window), scene(configState1) {}
 
-GLFWwindow* bf::glfw::init(const bf::ConfigState& configState) {
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#if defined(__APPLE__) || defined (__MACH__)
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-	GLFWwindow* window=initWindow(configState);
-	glfwSwapInterval(1);
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback,nullptr);
-	return window;
-}
-
-void bf::glfw::destroy(GLFWwindow* window) {
+bf::Window::~Window() {
 	glfwDestroyWindow(window);
 	glfwTerminate();
+    delete glfwStruct;
 }
+
+bf::Window::Window(const bf::ConfigState &configState) {
+    glfwStruct = nullptr;
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#if defined(__APPLE__) || defined (__MACH__)
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+    window=initWindow(configState);
+    glfwSwapInterval(1);
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback,nullptr);
+}
+
+void bf::Window::run(bf::ConfigState &configState) {
+	glfwStruct = new bf::GlfwStruct(configState, window);
+	glfwSetWindowUserPointer(window,glfwStruct);
+	if(!glfwStruct)
+		return;
+	auto& scene = glfwStruct->scene;
+	while (!glfwWindowShouldClose(window))
+	{
+		configState.deltaTime = bf::getDeltaTime();
+		///IMGUI
+		bf::imgui::preDraw();
+		bf::imgui::createObjectPanel(scene);
+		bf::imgui::listOfObjectsPanel(scene,configState);
+		bf::imgui::modifyObjectPanel(scene,configState);
+		bf::imgui::cameraInfoPanel(scene, configState);
+		///RENDER
+		scene.draw(configState);
+		bf::imgui::postDraw();
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+}
+
 //internal functions
 
 GLFWwindow* initWindow(const bf::ConfigState& configState)
@@ -141,10 +156,8 @@ GLFWwindow* initWindow(const bf::ConfigState& configState)
 	glEnable(GL_BLEND);
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	return window;
 }
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -174,7 +187,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
         return;
     bf::GlfwStruct& s = *ptr;
     bf::Camera& camera = s.scene.camera;
-    const float& deltaTime = s.deltaTime;
+    const float& deltaTime = s.configState.deltaTime;
     bf::ConfigState& configState = s.configState;
     bf::Transform& multiTransform = s.scene.multiCursor.transform;
     bf::Cursor& cursor = s.scene.cursor;
@@ -307,74 +320,14 @@ void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
         return;
     auto& s = *ptr;
     auto yOffsetF = static_cast<float>(yoffset);
-    s.configState.cameraZoom = std::max(std::min(s.configState.cameraZoom - yOffsetF, 120.f), 5.f);
-}
-
-void onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit , bf::GlfwStruct& s, GLFWwindow*) {
-    using namespace bf::event;
-    if(key==Key::LeftControl || key==Key::RightControl)
-        s.configState.isCtrlPressed = true;
-    if(key==Key::LeftAlt || key==Key::RightAlt || key==Key::A) //A is additional ALT
-        s.configState.isAltPressed = true;
-    if(key==Key::LeftShift || key==Key::RightShift)
-        s.configState.isShiftPressed = true;
-    switch(key) {
-        case Key::X:
-            if(s.configState.isAxesLocked%2)
-                s.configState.isAxesLocked -= 0x1;
-            else
-                s.configState.isAxesLocked += 0x1;
-            break;
-        case Key::Y:
-            if((s.configState.isAxesLocked>>1)%2)
-                s.configState.isAxesLocked -= 0x2;
-            else
-                s.configState.isAxesLocked += 0x2;
-            break;
-        case Key::Z:
-            if((s.configState.isAxesLocked>>2)%2)
-                s.configState.isAxesLocked -= 0x4;
-            else
-                s.configState.isAxesLocked += 0x4;
-            break;
-        case Key::C:
-            s.scene.objectArray.clearSelection();
-            break;
-        case Key::P:
-            s.scene.objectArray.add<bf::Point>(s.scene.cursor.transform);
-            break;
-        case Key::T:
-            s.scene.objectArray.add<bf::Torus>(s.scene.cursor.transform);
-            break;
-        case Key::U:
-            s.configState.isUniformScaling = !s.configState.isUniformScaling;
-            break;
-        case Key::Delete:
-            s.scene.objectArray.removeActive();
-            break;
-        default:
-            ;
-    }
-}
-void onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit, bf::GlfwStruct& s, GLFWwindow*) {
-    using namespace bf::event;
-    if(key==Key::LeftControl || key==Key::RightControl)
-        s.configState.isCtrlPressed = false;
-    if(key==Key::LeftAlt || key==Key::RightAlt || key==Key::A) //A is additional ALT
-        s.configState.isAltPressed = false;
-    if(key==Key::LeftShift || key==Key::RightShift)
-        s.configState.isShiftPressed = false;
-}
-void onPriorityKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit , bf::GlfwStruct&, GLFWwindow* window) {
-    using namespace bf::event;
-    if(key==Key::Escape)
-        glfwSetWindowShouldClose(window, true);
+    s.configState.cameraFOV = std::max(std::min(s.configState.cameraFOV - yOffsetF, s.configState.getCameraFoVmax()),
+									   s.configState.getCameraFoVmin());
 }
 
 void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int mods) {
     //get data from pointer
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-    if(!ptr || ptr->io.WantCaptureKeyboard)
+    if(!ptr || ptr->io.io.WantCaptureKeyboard)
         return;
     auto& s = *ptr;
     //cast data
@@ -383,67 +336,26 @@ void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int m
     auto modKeyBit = static_cast<ModifierKeyBit>(mods);
     auto state = static_cast<KeyState>(action);
     //delegate event
-    if(state==KeyState::Press) {
-        onPriorityKeyPressed(key, modKeyBit, s, window);
-		if(s.scene.objectArray.onKeyPressed(key, modKeyBit))
+    if(state==bf::event::KeyState::Press) {
+		if (key == Key::Escape) {
+			glfwSetWindowShouldClose(window, true);
+		}
+		if(s.scene.onKeyPressed(key, modKeyBit, s.configState))
 			return;
-        onKeyPressed(key, modKeyBit, s, window);
+        s.configState.onKeyPressed(key, modKeyBit);
 	}
 	else {
-		if(s.scene.objectArray.onKeyReleased(key, modKeyBit))
+		if(s.scene.onKeyReleased(key, modKeyBit, s.configState))
 			return;
-        onKeyReleased(key, modKeyBit, s, window);
+        s.configState.onKeyReleased(key, modKeyBit);
 	}
-}
-
-void onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit , bf::GlfwStruct& s, GLFWwindow* window) {
-    using namespace bf::event;
-    if(button==MouseButton::Right)
-        s.configState.state = bf::RightClick;
-    else if(button==MouseButton::Middle)
-        s.configState.state = bf::MiddleClick;
-    else if(button==MouseButton::Left) {
-        double mouseX, mouseY;
-        glfwGetCursorPos(window, &mouseX, &mouseY);
-        auto mouseXF = static_cast<float>(mouseX);
-        auto mouseYF = static_cast<float>(mouseY);
-        constexpr float sqrDist = 64.f;
-        int selectionIndex = -1;
-        float actualZ = 9.999f;
-        for(unsigned i=0u;i<s.scene.objectArray.size();i++) {
-            if(!s.scene.objectArray.isCorrect(i))
-                continue;
-            auto screenPos = bf::toScreenPos(s.configState.screenWidth,s.configState.screenHeight,
-                                             s.scene.objectArray[i].getTransform().position, s.scene.getView(), s.scene.getProjection());
-            if(screenPos==bf::outOfWindow)
-                continue;
-            float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
-            if(d<=sqrDist && actualZ>screenPos.z) {
-                selectionIndex=static_cast<int>(i);
-                actualZ=screenPos.z;
-            }
-        }
-        if(selectionIndex >= 0) {
-            if(!s.configState.isCtrlPressed)
-                s.scene.objectArray.clearSelection(selectionIndex);
-            else
-                s.scene.objectArray.toggleActive(selectionIndex);
-            s.scene.multiCursor.transform = bf::Transform();
-        }
-    }
-}
-void onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit , bf::GlfwStruct& s, GLFWwindow*) {
-    using namespace bf::event;
-    if((button == MouseButton::Right && s.configState.state == bf::RightClick) ||
-       (button == MouseButton::Middle && s.configState.state == bf::MiddleClick))
-        s.configState.state = bf::None;
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     //get data from pointer
     auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-    if(!ptr || ptr->io.WantCaptureMouse)
+    if(!ptr || ptr->io.io.WantCaptureMouse)
         return;
     auto& s = *ptr;
     //cast data
@@ -452,14 +364,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     auto modKeyBit = static_cast<ModifierKeyBit>(mods);
     auto state = static_cast<MouseButtonState>(action);
     //delegate event
-	if(state==MouseButtonState::Press) {
-		if(s.scene.objectArray.onMouseButtonPressed(mouseButton, modKeyBit))
+	if(state==bf::event::MouseButtonState::Press) {
+		if(s.scene.onMouseButtonPressed(mouseButton, modKeyBit, s.configState))
 			return;
-        onMouseButtonPressed(mouseButton, modKeyBit, s, window);
+        s.configState.onMouseButtonPressed(mouseButton, modKeyBit);
 	}
 	else {
-		if(s.scene.objectArray.onMouseButtonReleased(mouseButton, modKeyBit))
+		if(s.scene.onMouseButtonReleased(mouseButton, modKeyBit, s.configState))
 			return;
-        onMouseButtonReleased(mouseButton, modKeyBit, s, window);
+        s.configState.onMouseButtonReleased(mouseButton, modKeyBit);
 	}
 }

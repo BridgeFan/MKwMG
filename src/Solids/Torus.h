@@ -16,7 +16,7 @@ namespace bf {
 		int bigFragments = 15;
 		int smallFragments = 10;
 		void updateTorus();
-		friend bool saveToFile(const std::string &path, const bf::ObjectArray &objectArray);
+		friend bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path);
 	public:
 		Torus(const bf::Transform &t, const std::string &torusName);
 		Torus(const bf::Transform &t, const std::string &torusName,

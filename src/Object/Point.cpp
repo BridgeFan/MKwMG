@@ -4,8 +4,8 @@
 
 #include "Point.h"
 #include <GL/glew.h>
-#include "../ShaderArray.h"
-#include "../Object/ObjectArray.h"
+#include "src/Shader/ShaderArray.h"
+#include "ObjectArray.h"
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
 unsigned bf::Point::VBO = UINT_MAX;
@@ -13,12 +13,12 @@ unsigned bf::Point::VAO = UINT_MAX;
 bf::ObjectArray* bf::Point::objectArray = nullptr;
 
 void bf::Point::draw(const ShaderArray &shaderArray) const {
-    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::PointShader) {
         return;
     }
 	//function assumes set projection and view matrices
 	glBindVertexArray(VAO);
-	shaderArray.getActiveShader().setMat4("model", getModelMatrix());
+	shaderArray.getActiveShader().setVec3("position", transform.position);
 	glDrawArrays(GL_POINTS, 0, 1);
 }
 

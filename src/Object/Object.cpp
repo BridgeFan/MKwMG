@@ -19,7 +19,7 @@ void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& o
 	setPosition(glm::vec3(matrix*vec)+centre);
     transform.scale *= (newTransform.scale / oldTransform.scale);
     //rotation
-    auto rotMat = bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(transform.rotation)*bf::getRotateMatrix(newTransform.rotation);
+    auto rotMat = bf::getRotateMatrix(newTransform.rotation)*bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(transform.rotation);
     glm::extractEulerAngleXYZ(rotMat, transform.rotation.x, transform.rotation.y, transform.rotation.z);
     setRotation(glm::degrees(transform.rotation));
 }

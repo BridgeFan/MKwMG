@@ -6,7 +6,7 @@
 #include "BasicBezier.h"
 #include "Util.h"
 #include "Scene.h"
-#include "ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 #include "ConfigState.h"
 
 bf::BasicBezier::BasicBezier() {}
@@ -46,10 +46,15 @@ void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &
 		if(isLineDrawn) {
 			glDrawElements(GL_LINE_STRIP, vertices.size(), GL_UNSIGNED_INT, 0);
 		}
-		if(isPointDrawn) {
-			glDrawElements(GL_POINTS, vertices.size(), GL_UNSIGNED_INT, 0);
-		}
 	}
+    else if(shaderArray.getActiveIndex()==PointShader) {
+        glBindVertexArray(VAO);
+        shader.setVec3("color", 1.f,0.f,1.f);
+        shader.setVec3("position", 0.f,0.f,0.f);
+        if(isPointDrawn) {
+            glDrawElements(GL_POINTS, vertices.size(), GL_UNSIGNED_INT, 0);
+        }
+    }
 	else if(shaderArray.getActiveIndex()==BezierShader) {
         glBindVertexArray(VAO);
 		glPatchParameteri( GL_PATCH_VERTICES, 4);

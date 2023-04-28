@@ -15,7 +15,7 @@
 #endif
 
 
-ImGuiIO& bf::imgui::init(GLFWwindow* window) {
+ImGuiIO& init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -25,7 +25,7 @@ ImGuiIO& bf::imgui::init(GLFWwindow* window) {
 	return io;
 }
 
-void bf::imgui::destroy() {
+void destroy() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -107,4 +107,21 @@ bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;
+}
+
+void bf::imgui::preDraw() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void bf::imgui::postDraw() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+bf::imgui::IO::IO(GLFWwindow *window) : io(init(window)) {}
+
+bf::imgui::IO::~IO() {
+    destroy();
 }

@@ -46,9 +46,6 @@ bool isnan(const glm::vec4 &v) {
 bool almostEqual(float a1, float a2, float eps) {
 	return std::abs(a1-a2)<eps*std::max(std::max(std::abs(a1),std::abs(a2)),1e-5f);
 }
-bf::GlfwStruct::GlfwStruct(bf::ConfigState &configState1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1) : configState(configState1), scene(scene1),
-                                                                                                                   deltaTime(deltaTime1), io(io1) {}
-
 
 glm::vec3 bf::toScreenPos(int screenWidth, int screenHeight, const glm::vec3& worldPos, const glm::mat4& view, const glm::mat4& projection) {
     auto v = projection*view*glm::vec4(worldPos,1.f);

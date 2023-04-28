@@ -5,7 +5,7 @@
 #include "FileLoading.h"
 #include "Serializer.h"
 #include "Object/ObjectArray.h"
-#include "Solids/Point.h"
+#include "src/Object/Point.h"
 #include "Solids/Torus.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
@@ -20,7 +20,7 @@ MG1::Float3 toFloat3(const glm::vec3& f) {
 	return {f.x,f.y,f.z};
 }
 
-bool bf::loadFromFile(const std::string &path, bf::ObjectArray &objectArray) {
+bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 	try {
 		serializer.LoadScene(path);
 	}
@@ -74,7 +74,7 @@ bool bf::loadFromFile(const std::string &path, bf::ObjectArray &objectArray) {
 	return true;
 }
 
-bool bf::saveToFile(const std::string &path, const bf::ObjectArray &objectArray) {
+bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
 	auto& scene = MG1::Scene::Get();
 	scene.Clear();
 	//TODO - save surfacesC0, surfacesC2

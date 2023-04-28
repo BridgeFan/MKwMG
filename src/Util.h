@@ -32,16 +32,6 @@ namespace bf {
 		{t1*u} -> std::convertible_to<T>;
 		{u*t1} -> std::convertible_to<T>;
 	};
-    struct ConfigState;
-	class Scene;
-    class Transform;
-    struct GlfwStruct {
-        bf::ConfigState &configState;
-		bf::Scene &scene;
-        const float &deltaTime;
-        ImGuiIO &io;
-        GlfwStruct(bf::ConfigState &configState1, bf::Scene& scene1, const float &deltaTime1, ImGuiIO &io1);
-    };
 }
 
 std::string readWholeFile(const std::string& path);

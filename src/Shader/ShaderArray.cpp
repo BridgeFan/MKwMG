@@ -62,3 +62,11 @@ void bf::ShaderArray::addTessellationShader(const std::string &path, bool isGeom
 		shaders.emplace_back(path + ".vert", path + ".frag", path+".tesc", path+".tese");
 }
 
+bf::ShaderArray::ShaderArray() {
+    const std::string SHADER_PATH = "../shaders/";
+    //add shaders here
+    addBasicShader(SHADER_PATH+"shader", false);
+    addTessellationShader(SHADER_PATH+"bezierShader", false);
+    addBasicShader(SHADER_PATH+"pointShader", false);
+}
+

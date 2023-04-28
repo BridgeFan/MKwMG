@@ -80,7 +80,7 @@ bool bf::BezierCurve2::onMouseButtonPressed(bf::event::MouseButton button, bf::e
 		return false;
 	const float& mouseXF = configState->mouseX;
     const float& mouseYF = configState->mouseY;
-	constexpr float sqrDist = 64.f;
+    float sqrDist = configState->pointRadius*configState->pointRadius;
 	int selectionIndex = -1;
 	float actualZ = 9.999f;
 	for(unsigned i=0u;i<bezier.points.size();i++) {

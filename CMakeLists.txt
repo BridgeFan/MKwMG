@@ -18,20 +18,20 @@ set(HEADER_FILES)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(MG1_zad2
-        src/camera.cpp
+        src/Camera.cpp
         src/ImGui/ImGuiUtil.cpp
-        src/GlfwUtil.cpp
-        src/Shader.cpp
+        src/Window.cpp
+        src/Shader/Shader.cpp
         src/Util.cpp
         src/main.cpp
-        src/Solids/Cursor.cpp
+        src/Object/Cursor.cpp
         src/Object/Object.cpp
-        src/Solids/Point.cpp
+        src/Object/Point.cpp
         src/Solids/Solid.cpp
         src/Solids/Torus.cpp
         src/Object/Transform.cpp
-        src/Solids/MultiCursor.cpp
-        src/Solids/MultiCursor.h
+        src/Object/MultiCursor.cpp
+        src/Object/MultiCursor.h
         src/Object/ObjectArray.cpp
         src/Object/ObjectArray.h
         src/Object/ObjectArrayListener.cpp
@@ -45,7 +45,7 @@ add_executable(MG1_zad2
         src/Curves/BezierCurve2.cpp
         src/Curves/BezierCommon.cpp
         src/Curves/BezierCommon.h
-        src/Curves/BezierCurveInter.cpp src/ShaderArray.cpp src/ShaderArray.h src/FileLoading.h src/FileLoading.cpp src/Event.h src/ImGui/ImGuiPanel.h src/ImGui/ImGuiPanel.cpp src/ConfigState.cpp)
+        src/Curves/BezierCurveInter.cpp src/Shader/ShaderArray.cpp src/Shader/ShaderArray.h src/FileLoading.h src/FileLoading.cpp src/Event.h src/ImGui/ImGuiPanel.h src/ImGui/ImGuiPanel.cpp src/ConfigState.cpp)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

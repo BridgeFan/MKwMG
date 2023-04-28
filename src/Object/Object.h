@@ -23,7 +23,7 @@ namespace bf {
 	class Object {
 	private:
 		static int _objIndex;
-		friend bool saveToFile(const std::string &path, const bf::ObjectArray &objectArray);
+		friend bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path);
 	protected:
 		bf::Transform transform;
         static const ConfigState* configState;

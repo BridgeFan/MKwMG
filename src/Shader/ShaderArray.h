@@ -14,6 +14,7 @@ namespace bf {
     enum ShaderType: int {
         BasicShader=0,
         BezierShader=1,
+        PointShader=2,
         MultipleShaders
     };
     template<typename T>
@@ -26,7 +27,10 @@ namespace bf {
         int activeIndex=0;
         std::vector<bf::Shader> shaders;
 		unsigned FBOs, colorBuffers, RBOs;
+        void addBasicShader(const std::string& path, bool isGeometric);
+        void addTessellationShader(const std::string& path, bool isGeometric);
     public:
+        ShaderArray();
         [[nodiscard]] int getActiveIndex() const;
         const bf::Shader& getActiveShader() const;
         int getSize() const;
@@ -54,8 +58,6 @@ namespace bf {
             return commonUniformMap.erase(name)>0;
         }
         bool changeShader(int n);
-        void addBasicShader(const std::string& path, bool isGeometric);
-		void addTessellationShader(const std::string& path, bool isGeometric);
     };
 }
 

@@ -7,13 +7,13 @@
 #include <GLFW/glfw3.h>
 #include "BezierCurveInter.h"
 #include "Object/ObjectArray.h"
-#include "Solids/Point.h"
+#include "src/Object/Point.h"
 #include "src/ImGui/ImGuiUtil.h"
 #include "imgui-master/imgui.h"
-#include "Shader.h"
+#include "src/Shader/Shader.h"
 #include "Scene.h"
 #include "Util.h"
-#include "ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 
 int bf::BezierCurveInter::_index = 1;
 

@@ -8,9 +8,9 @@
 #include "imgui-master/imgui.h"
 #include "src/ImGui/ImGuiUtil.h"
 #include <algorithm>
-#include "ShaderArray.h"
+#include "src/Shader/ShaderArray.h"
 #include "Curves/BezierCurve0.h"
-#include "Solids/MultiCursor.h"
+#include "MultiCursor.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 
@@ -198,7 +198,7 @@ bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& mult
 	return ret;
 }
 
-void bf::ObjectArray::draw(bf::ShaderArray& shaderArray) {
+void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& configState) {
     std::vector<unsigned> usedIndices;
     if(isCorrect(activeIndex)) {
         usedIndices = objects[activeIndex].first->usedVectors();
@@ -206,6 +206,8 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray) {
     for(int k=0;k<shaderArray.getSize();k++) {
 		if(k>0)
         	shaderArray.changeShader(k);
+        if(k==PointShader)
+            shaderArray.getActiveShader().setFloat("pointSize",2.f*configState.pointRadius);
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
                 if (isActive(i))

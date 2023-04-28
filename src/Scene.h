@@ -5,19 +5,18 @@
 #ifndef MG1_ZAD2_SCENE_H
 #define MG1_ZAD2_SCENE_H
 
-#include "Solids/Cursor.h"
-#include "Solids/MultiCursor.h"
-#include "camera.h"
+#include "src/Object/Cursor.h"
+#include "src/Object/MultiCursor.h"
+#include "Camera.h"
 #include "Object/ObjectArray.h"
+#include "Shader/ShaderArray.h"
 
 namespace bf {
-	class ShaderArray;
 	class ConfigState;
-
 	class Scene {
 	private:
-		const static glm::vec4 clearColor;
 		glm::mat4 projection, inverseProjection, view, inverseView;
+		bf::ShaderArray shaderArray;
 	public:
 		bf::ObjectArray objectArray;
 		bf::Cursor cursor;
@@ -28,8 +27,12 @@ namespace bf {
 		const glm::mat4 &getInverseProjection() const;
 		const glm::mat4 &getView() const;
 		const glm::mat4 &getInverseView() const;
-		Scene(float aspect, glm::vec3&& cameraPos, glm::vec3&& cameraRot, float cameraZoom, float cameraNear=.1f, float cameraFar=100.f);
-		void draw(bf::ShaderArray& shaderArray, const ConfigState& configState);
+		Scene(const ConfigState& configState);
+		void draw(const ConfigState& configState);
+        bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit, const bf::ConfigState& configState);
+        bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit, const bf::ConfigState& configState);
+        bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
+        bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
 	};
 }
 

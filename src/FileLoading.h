@@ -8,7 +8,7 @@
 
 namespace bf {
 	class ObjectArray;
-	bool loadFromFile(const std::string &path, bf::ObjectArray &objectArray);
-	bool saveToFile(const std::string &path, const bf::ObjectArray &objectArray);
+	bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path = "../save.json");
+	bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path = "../save.json");
 }
 #endif //MG1_ZAD2_FILELOADING_H
