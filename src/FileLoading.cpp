@@ -3,14 +3,16 @@
 //
 #include <iostream>
 #include "FileLoading.h"
+#ifdef SERIALIZER_AVAILABLE
 #include "Serializer.h"
+#endif
 #include "Object/ObjectArray.h"
 #include "src/Object/Point.h"
 #include "Solids/Torus.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
-
+#ifdef SERIALIZER_AVAILABLE
 MG1::SceneSerializer serializer;
 
 glm::vec3 toVector(const MG1::Float3& f) {
@@ -19,8 +21,10 @@ glm::vec3 toVector(const MG1::Float3& f) {
 MG1::Float3 toFloat3(const glm::vec3& f) {
 	return {f.x,f.y,f.z};
 }
+#endif
 
 bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
+#ifdef SERIALIZER_AVAILABLE
 	try {
 		serializer.LoadScene(path);
 	}
@@ -72,9 +76,14 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 		objectArray.objects[id].first=std::move(obj);
 	}
 	return true;
+#else
+    objectArray.removeAll();
+    return false;
+#endif
 }
 
 bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
+#ifdef SERIALIZER_AVAILABLE
 	auto& scene = MG1::Scene::Get();
 	scene.Clear();
 	//TODO - save surfacesC0, surfacesC2
@@ -142,5 +151,8 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
 		return false;
 	}
 	return true;
+#else
+    return false;
+#endif
 }
 

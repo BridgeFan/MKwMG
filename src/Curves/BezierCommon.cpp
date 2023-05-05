@@ -109,7 +109,7 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
         //function assumes set projection and view matrices
         shader.setMat4("model", glm::mat4(1.f)); //transform is ignored
 
-        if (isPolygonVisible && isLineDrawn) {
+        if (isPolygonVisible && isLineDrawn && VAO<UINT_MAX) {
             glBindVertexArray(VAO);
             glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
                            reinterpret_cast<void *>(0)           // element array buffer offset

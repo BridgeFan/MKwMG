@@ -71,8 +71,8 @@ namespace bf {
 		bool isActive(std::size_t index);
 		bool setActive(std::size_t index);
 		bool setUnactive(std::size_t index);
-		bool isAnyActive();
-		bool isMultipleActive();
+		[[nodiscard]] bool isAnyActive() const;
+		[[nodiscard]] bool isMultipleActive() const;
 		void clearSelection(std::size_t index=-1);
 		glm::vec3 getCentre();
 		void removeAll();

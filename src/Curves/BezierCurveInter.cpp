@@ -68,30 +68,58 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
         bezier.recalculate(wasSizeChanged);
         return;
     }
-	const std::vector<float> a(n-1,1.f);
-	const std::vector<float> b(n,4.f);
-	const std::vector<float> c(n-1,1.f);
-	std::vector<glm::vec3> d(n);
-    d[0]=getPoint(0)-getPoint(1);
-    d[n-1]=getPoint(n-1)-getPoint(n-2);
-	for(int i=1;i<n-1;i++) {
-        d[i]=2.f*getPoint(i)-getPoint(i+1)-getPoint(i-1);
-	}
-	auto newPoints = tridiagonalMatrixAlgorithm(a,b,c,d);
-    positions.resize(newPoints.size()+2);
-    for(int i=0;i<n;i++) {
-        positions[i+1]=getPoint(i)+newPoints[i];
+    //prepare diagonals for solving
+    std::vector<float> a(n-1,.5f);
+    std::vector<float> b(n,2.f);
+    std::vector<float> c(n-1,.5f);
+    std::vector<glm::vec3> d(n);
+    d[0]=glm::vec3(.0f);
+    d[n-1]=glm::vec3(.0f);
+    a[n-2]=c[0]=.0f;
+    for(int i=1;i<n-1;i++) {
+        float di = glm::length(getPoint(i+1)-getPoint(i));
+        float di_1 = glm::length(getPoint(i)-getPoint(i-1));
+        glm::vec3 npi = (getPoint(i+1)-getPoint(i))/di;
+        glm::vec3 npi_1 = (getPoint(i)-getPoint(i-1))/di_1;
+        a[i-1]=di_1/(di+di_1);
+        c[i]=di/(di+di_1);
+        d[i]=3.f/(di_1+di)*(npi-npi_1);
     }
-    //0th point
-    glm::vec3 t1 = lerp(positions[1],positions[2],1.f/3.f);
-    t1 = lerp(getPoint(0),t1,-1.f);
-    positions[0]=lerp(positions[1],t1,3.f);
-    //last point
-    t1 = lerp(positions[n],positions[n-1],1.f/3.f);
-    t1 = lerp(getPoint(n-1),t1,-1.f);
-    positions[n+1]=lerp(positions[n],t1,3.f);
-    //recalculate
-    bezier.points = bf::bezier2ToBezier0(positions);
+	auto pc = tridiagonalMatrixAlgorithm(a,b,c,d);
+    //calculate power polynomials
+    std::vector<glm::vec3> pa(n-1), pb(n-1), pd(n-1);
+    for(int i=0;i<n-1;i++) {
+        float di = glm::length(getPoint(i+1)-getPoint(i));
+        pa[i]=getPoint(i);
+        pd[i]=(pc[i+1]-pc[i])/(di*3.f);
+        pb[i]=(getPoint(i+1)-getPoint(i))/di-di/3.f*(2.f*pc[i]+pc[i+1]);
+    }
+    //normalise (make length of segment in parameter difference as 1)
+    for(int i=0;i<n-1;i++) {
+        float di = glm::length(getPoint(i+1)-getPoint(i));
+        pb[i]*=di;
+        pc[i]*=(di*di);
+        pd[i]*=(di*di*di);
+    }
+    ///debug polynomial - working
+    /*positions.clear();
+    for(int j=0;j<n-1;j++) {
+        for (int i = 0; i <= 16; i++) {
+            float t = static_cast<float>(i) / 16.f;
+            glm::vec3 p = pa[j] + pb[j] * t + pc[j] * t * t + pd[j] * t * t * t;
+            positions.push_back(p);
+        }
+    }*/
+    //convert to Bernstein base - working
+    bezier.points.resize(3*n-2);
+    for(int i=0;i<n-1;i++) {
+        bezier.points[3*i]=pa[i];
+        bezier.points[3*i+1]=pa[i]+pb[i]/3.f;
+        bezier.points[3*i+2]=pa[i]+pb[i]/1.5f+pc[i]/3.f;
+        if(i==n-2)
+            bezier.points[3*i+3]=pa[i]+pb[i]+pc[i]+pd[i];
+    }
+    positions=bf::bezier0ToBezier2(bezier.points);
 	bezier.recalculate(wasSizeChanged);
 	//update GPU data
 	if(!wasSizeChanged) {

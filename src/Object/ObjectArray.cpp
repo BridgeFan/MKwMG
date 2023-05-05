@@ -55,7 +55,7 @@ bool bf::ObjectArray::remove(std::size_t index) {
 	if(countActive==0)
 		activeIndex = -1;
 	else if(countActive==1)
-		activeIndex=std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin();
+		activeIndex=static_cast<int>(std::find_if(objects.begin(),objects.end(),isActiveLambda)-objects.begin());
 	return true;
 }
 
@@ -119,10 +119,10 @@ void bf::ObjectArray::updateCentre() {
         centre = {};
 }
 
-bool bf::ObjectArray::isAnyActive() {
+bool bf::ObjectArray::isAnyActive() const {
 	return countActive>0;
 }
-bool bf::ObjectArray::isMultipleActive() {
+bool bf::ObjectArray::isMultipleActive() const {
 	return countActive>1;
 }
 

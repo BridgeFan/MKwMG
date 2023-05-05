@@ -3,6 +3,7 @@
 //
 
 #include <GL/glew.h>
+#include <optional>
 #include "BasicBezier.h"
 #include "Util.h"
 #include "Scene.h"
@@ -40,6 +41,8 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
 void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &,
                            const bf::ConfigState& configState, bool isLineDrawn, bool isPointDrawn) const {
 	auto& shader = shaderArray.getActiveShader();
+	if(VAO==UINT_MAX)
+		return;
 	if(shaderArray.getActiveIndex()==BasicShader) {
 		glBindVertexArray(VAO);
         shader.setVec3("color", 1.f,0.f,1.f);
@@ -101,16 +104,28 @@ std::vector<glm::vec3> bf::bezier2ToBezier0(const std::vector<glm::vec3> &points
 	return bezier;
 }
 
-std::vector<glm::vec3> bf::bezier0ToBezier2(const std::vector<glm::vec3> &points) {
-	if(points.size()%3!=1 || points.size()<4)
+std::optional<glm::vec3> getIntersection(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& r1, const glm::vec3& r2) {
+    //calculate for XY plane
+    if(almostEqual((p1.x-p2.x)*(r1.y-r2.y)-(p1.y-p2.y)*(r1.x-r2.x),.0f)) //colinear
+        return std::nullopt;
+    auto sols = tridiagonalMatrixAlgorithm<float>({p2.y-p1.y},{p2.x-p1.x,r1.y-r2.y},{r1.x-r2.x},{r1.x-p1.x,r1.y-p1.y});
+    return p1+sols[0]*(p2-p1);
+}
+
+std::vector<glm::vec3> bf::bezier0ToBezier2(const std::vector<glm::vec3> &p) {
+	if(p.size()%3!=1 || p.size()<4)
 		return {};
-	std::vector<glm::vec3> retPoints;
-	retPoints.resize(points.size()/3+3);
-	retPoints[1]=lerp(points[1],points[2],-1.f);
-	for(unsigned i=1u;i<points.size()-1;i++) {
-		retPoints[i+1]=lerp(points[3*i-1],points[3*i-2],-1.f);
-	}
-	retPoints[0]=3.f*(points[0]-points[1])+retPoints[2];
-	retPoints[retPoints.size()-1]=3.f*(points[points.size()-1]-points[points.size()-2])+retPoints[retPoints.size()-3];
+	std::vector<glm::vec3> retPoints(p.size()/3+3);
+    for(unsigned i=1u;i<retPoints.size()-1;i++) {
+        auto inter = getIntersection(p[3*i-2],p[3*i-1],p[3*i+1],p[3*i+2]);
+        if(inter)
+            retPoints[i+1]=*inter;
+        else
+            retPoints[i+1]=p[3*i];
+    }
+    retPoints[1]=lerp(p[1],p[2],-1.f);
+    retPoints[0]=3.f*(p[0]-p[1])+retPoints[2];
+    retPoints[retPoints.size()-2]=lerp(p[p.size()-2],p[p.size()-3],-1.f);
+    retPoints[retPoints.size()-1]=3.f*(p[p.size()-1]-p[p.size()-2])+retPoints[retPoints.size()-2];
 	return retPoints;
 }

@@ -61,7 +61,7 @@ namespace bf {
 		virtual bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
 		virtual bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
 		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
-        virtual bf::ShaderType getShaderType() const = 0;
+        [[nodiscard]] virtual bf::ShaderType getShaderType() const = 0;
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

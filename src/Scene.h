@@ -33,6 +33,7 @@ namespace bf {
         bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit, const bf::ConfigState& configState);
         bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
         bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
+		void onMouseMove(const glm::vec2& oldMousePos, const bf::ConfigState& configState);
 	};
 }
 

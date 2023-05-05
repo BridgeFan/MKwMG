@@ -13,6 +13,7 @@ include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cp
 link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master")
 link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cpp/Serializer")
 
+#add_compile_definitions(SERIALIZER_AVAILABLE)
 set(HEADER_FILES)
 
 set(CMAKE_CXX_STANDARD 20)
