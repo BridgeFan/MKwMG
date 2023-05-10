@@ -1,3 +1,5 @@
+//based on https://github.com/GrabCAD/imgui-cmake
+
 # ImGui as a Library
 
 CMake cross platform module for building [Dear ImGui](https://github.com/ocornut/imgui) as a library.
