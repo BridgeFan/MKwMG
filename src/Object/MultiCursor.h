@@ -11,7 +11,7 @@ namespace bf {
 	class ShaderArray;
 	struct ConfigState;
     class MultiCursor {
-        bf::Solid lines[3];
+        bf::DummySolid lines[3];
         void initLines();
     public:
         Transform transform;

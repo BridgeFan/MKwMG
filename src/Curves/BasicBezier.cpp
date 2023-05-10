@@ -39,20 +39,20 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
 }
 
 void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &,
-                           const bf::ConfigState& configState, bool isLineDrawn, bool isPointDrawn) const {
+                           const bf::ConfigState& cState, bool isLineDrawn, bool isPointDrawn) const {
 	auto& shader = shaderArray.getActiveShader();
 	if(VAO==UINT_MAX)
 		return;
 	if(shaderArray.getActiveIndex()==BasicShader) {
 		glBindVertexArray(VAO);
-        shader.setVec3("color", 1.f,0.f,1.f);
+		shaderArray.setColor({1.f,.0f,1.f});
 		if(isLineDrawn) {
 			glDrawElements(GL_LINE_STRIP, vertices.size(), GL_UNSIGNED_INT, 0);
 		}
 	}
     else if(shaderArray.getActiveIndex()==PointShader) {
         glBindVertexArray(VAO);
-        shader.setVec3("color", 1.f,0.f,1.f);
+		shaderArray.setColor({1.f,.0f,1.f});
         shader.setVec3("position", 0.f,0.f,0.f);
         if(isPointDrawn) {
             glDrawElements(GL_POINTS, vertices.size(), GL_UNSIGNED_INT, 0);
@@ -60,16 +60,15 @@ void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &
     }
 	else if(shaderArray.getActiveIndex()==BezierShader) {
         glBindVertexArray(VAO);
-		glPatchParameteri( GL_PATCH_VERTICES, 4);
         shader.setInt("MinSegments", 1);
-        shader.setInt("MaxSegments", configState.totalDivision/configState.divisionNum);
-        shader.setInt("ScreenWidth", configState.screenWidth);
-        shader.setInt("ScreenHeight", configState.screenHeight);
+        shader.setInt("MaxSegments", cState.totalDivision/cState.divisionNum);
+        shader.setInt("ScreenWidth", cState.screenWidth);
+        shader.setInt("ScreenHeight", cState.screenHeight);
         int vertSize = static_cast<int>(vertices.size());
         int fullSegments = (vertSize-1)/3;
         int restLength = (vertSize-1)%3+1;
-        auto dNum = static_cast<float>(configState.divisionNum);
-        for(int i=0;i<configState.divisionNum;i++) {
+        auto dNum = static_cast<float>(cState.divisionNum);
+        for(int i=0;i<cState.divisionNum;i++) {
             shader.setFloat("DivisionBegin", static_cast<float>(i)/dNum);
             shader.setFloat("DivisionEnd", static_cast<float>(i+1)/dNum);
             shader.setInt("BezierNum", 4);

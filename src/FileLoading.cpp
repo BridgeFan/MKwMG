@@ -2,157 +2,164 @@
 // Created by kamil-hp on 22.04.23.
 //
 #include <iostream>
+#include <jsoncpp/json/json.h>
+#include <memory>
+#include <valijson/adapters/jsoncpp_adapter.hpp>
+#include <valijson/utils/jsoncpp_utils.hpp>
+#include <valijson/schema.hpp>
+#include <valijson/schema_parser.hpp>
+#include <valijson/validator.hpp>
+#include <format>
 #include "FileLoading.h"
-#ifdef SERIALIZER_AVAILABLE
-#include "Serializer.h"
-#endif
 #include "Object/ObjectArray.h"
 #include "src/Object/Point.h"
 #include "Solids/Torus.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
-#ifdef SERIALIZER_AVAILABLE
-MG1::SceneSerializer serializer;
+#include "Object/Object.h"
+#include "Shader/ShaderArray.h"
+#include "Surfaces/BezierSurface0.h"
+#include "JsonUtil.h"
+#include "Surfaces/BezierSurfaceSegment0.h"
 
-glm::vec3 toVector(const MG1::Float3& f) {
-	return {f.x,f.y,f.z};
+
+valijson::Schema modelSchema;
+bool wasValidatorLoaded=false;
+
+void loadValidator() {
+// Load JSON document using JsonCpp with Valijson helper function
+    Json::Value schemaValue;
+    if (!valijson::utils::loadDocument("../schema.json", schemaValue)) {
+        std::cerr << "Failed to load schema document\n";
+        return;
+    }
+    // Parse JSON schema content using valijson
+    valijson::SchemaParser parser;
+    valijson::adapters::JsonCppAdapter modelSchemaAdapter(schemaValue);
+    parser.populateSchema(modelSchemaAdapter, modelSchema);
+    wasValidatorLoaded=true;
 }
-MG1::Float3 toFloat3(const glm::vec3& f) {
-	return {f.x,f.y,f.z};
+
+template<bf::child<bf::BezierCommon> T>
+std::pair<unsigned, T*> loadBezier(Json::Value& bezierValue, bf::ObjectArray& oa, const std::string& ptName) {
+    unsigned id = bezierValue["id"].asUInt();
+    T* bezier;
+    if(bezierValue.isMember("name"))
+        bezier = new T(oa, bezierValue["name"].asString());
+    else
+        bezier = new T(oa);
+    auto& cPts = bezierValue[ptName];
+    for(unsigned i=0u;i<cPts.size();i++) {
+        bezier->addPoint(cPts[i]["id"].asUInt());
+    }
+    return {id, bezier};
 }
-#endif
+
+template<bf::child<bf::Object> T>
+void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool> >& objects, std::pair<unsigned, T*> o) {
+    for(unsigned j=objects.size();j<=o.first;j++) {
+        objects.emplace_back(nullptr, false);
+    }
+    objects[o.first].first.reset(o.second);
+}
 
 bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
-#ifdef SERIALIZER_AVAILABLE
-	try {
-		serializer.LoadScene(path);
-	}
-	catch(...) {
-		return false;
-	}
-	auto& scene = MG1::Scene::Get();
-	objectArray.removeAll();
-	const unsigned totalLength = scene.points.size()+scene.tori.size()+scene.bezierC0.size()+scene.bezierC2.size()+
-								 scene.interpolatedC2.size()+scene.surfacesC0.size()+scene.surfacesC2.size();
-	objectArray.objects.resize(totalLength);
-	for(auto& o: objectArray.objects)
-		o.second = false;
-	//TODO - surfacesC0, surfacesC2
-	for(const auto& p: scene.points) {
-		int id = p.GetId()-1;
-		bf::Transform t(toVector(p.position));
-		objectArray.objects[id].first=std::make_unique<bf::Point>(t,p.name);
-	}
-	for(const auto& t: scene.tori) {
-		int id = t.GetId()-1;
-		bf::Transform transform(toVector(t.position),
-			toVector(t.rotation),toVector(t.scale));
-		objectArray.objects[id].first=std::make_unique<bf::Torus>(transform,t.name,
-			t.largeRadius,t.smallRadius,t.samples.x,t.samples.y);
-	}
-	for(const auto& b0: scene.bezierC0) {
-		int id = b0.GetId()-1;
-		auto obj = std::make_unique<bf::BezierCurve0>(objectArray, b0.name);
-		for(const auto& a: b0.controlPoints) {
-			obj->addPoint(a.GetId());
-		}
-		objectArray.objects[id].first=std::move(obj);
-	}
-	for(const auto& b2: scene.bezierC2) {
-		int id = b2.GetId()-1;
-		auto obj = std::make_unique<bf::BezierCurve2>(objectArray,b2.name);
-		for(const auto& a: b2.controlPoints) {
-			obj->addPoint(a.GetId());
-		}
-		objectArray.objects[id].first=std::move(obj);
-	}
-	for(const auto& bi: scene.interpolatedC2) {
-		int id = bi.GetId()-1;
-		auto obj = std::make_unique<bf::BezierCurveInter>(objectArray,bi.name);
-		for(const auto& a: bi.controlPoints) {
-			obj->addPoint(a.GetId());
-		}
-		objectArray.objects[id].first=std::move(obj);
-	}
-	return true;
-#else
+    //TODO - surfacesC0, surfacesC2
+    if(!wasValidatorLoaded) {
+        loadValidator();
+        if(!wasValidatorLoaded) {
+            std::cout << "Validator not loaded correctly\n";
+            return false;
+        }
+    }
+    Json::Value value;
+    if (!valijson::utils::loadDocument(path, value)) {
+        std::cerr << std::format("File {} not found!\n",path);
+        return false;
+    }
+    valijson::Validator validator;
+    valijson::adapters::JsonCppAdapter myTargetAdapter(value);
+    valijson::ValidationResults errors;
+    if (!validator.validate(modelSchema, myTargetAdapter, &errors)) {
+        std::cerr << std::format("File {} is not valid model file! Found {} errors.\n",path, errors.numErrors());
+        while(errors.numErrors()>0) {
+            valijson::ValidationResults::Error error;
+            std::cout << "Error:\n";
+            errors.popError(error);
+            for(const auto& a: error.context) {
+                std::cout << std::format("{}/",a);
+            }
+            std::cout << std::format("\nDESC: {}\n",error.description);
+        }
+        return false;
+    }
     objectArray.removeAll();
-    return false;
-#endif
+    Json::Value& pointValue = value["points"];
+    for(auto & pValue : pointValue) {
+        emplaceToObjectArray(objectArray.objects,loadPoint(pValue));
+    }
+    Json::Value& geometry = value["geometry"];
+    for(auto& gValue: geometry) {
+        //TODO - other types
+        if(gValue["objectType"]=="torus") {
+            emplaceToObjectArray(objectArray.objects,loadTorus(gValue));
+        }
+        if(gValue["objectType"]=="bezierC0") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve0>(gValue, objectArray, "controlPoints"));
+        }
+        if(gValue["objectType"]=="bezierC2") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve2>(gValue, objectArray, "deBoorPoints"));
+        }
+        if(gValue["objectType"]=="interpolatedC2") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurveInter>(gValue, objectArray, "controlPoints"));
+        }
+    }
+    for(const auto& o: objectArray.objects) {
+        if(o.first)
+            o.first->postInit();
+    }
+    return true;
 }
 
 bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
-#ifdef SERIALIZER_AVAILABLE
-	auto& scene = MG1::Scene::Get();
-	scene.Clear();
-	//TODO - save surfacesC0, surfacesC2
-	for(unsigned i=0;i<objectArray.size();i++) {
+    //TODO - save surfacesC0, surfacesC2
+    Json::Value pValue(Json::arrayValue);
+    Json::Value gValue(Json::arrayValue);
+    for(unsigned i=0;i<objectArray.size();i++) {
 		const auto& o = objectArray[i];
 		if(typeid(*&o)==typeid(bf::Point)) {
-			const auto p = dynamic_cast<const bf::Point*>(&o);
-			MG1::Point point;
-			point.position = toFloat3(p->getPosition());
-			point.name = p->name;
-			point.SetId(i);
-			scene.points.emplace_back(std::move(point));
+            const auto p = dynamic_cast<const bf::Point*>(&o);
+            pValue.append(bf::saveValue(*p, i));
 		}
 		else if(typeid(*&o)==typeid(bf::Torus)) {
 			const auto t = dynamic_cast<const bf::Torus*>(&o);
-			MG1::Torus torus;
-			torus.position = toFloat3(t->getPosition());
-			torus.rotation = toFloat3(t->getRotation());
-			torus.scale = toFloat3(t->getScale());
-			torus.name = t->name;
-			torus.largeRadius = t->bigRadius;
-			torus.smallRadius = t->smallRadius;
-			torus.samples = {static_cast<uint32_t>(t->bigFragments), static_cast<uint32_t>(t->smallFragments)};
-			torus.SetId(i);
-			scene.tori.emplace_back(std::move(torus));
+            gValue.append(bf::saveValue(*t, i));
 		}
 		else if(typeid(*&o)==typeid(bf::BezierCurve0)) {
-			const auto b = dynamic_cast<const bf::BezierCurve0*>(&o);
-			MG1::BezierC0 bezier;
-			bezier.name = b->name;
-			for(const auto& p: b->usedVectors()) {
-				bezier.controlPoints.emplace_back(p);
-			}
-			bezier.SetId(i);
-			scene.bezierC0.emplace_back(std::move(bezier));
+            const auto t = dynamic_cast<const bf::BezierCommon*>(&o);
+            gValue.append(bf::saveValue(*t, i, "bezierC0", "controlPoints"));
 		}
 		else if(typeid(*&o)==typeid(bf::BezierCurve2)) {
-			const auto b = dynamic_cast<const bf::BezierCurve2*>(&o);
-			MG1::BezierC2 bezier;
-			bezier.name = b->name;
-			for(const auto& p: b->usedVectors()) {
-				bezier.controlPoints.emplace_back(p);
-			}
-			bezier.SetId(i);
-			scene.bezierC2.emplace_back(std::move(bezier));
+            const auto t = dynamic_cast<const bf::BezierCommon*>(&o);
+            gValue.append(bf::saveValue(*t, i, "bezierC2", "deBoorPoints"));
 		}
 		else if(typeid(*&o)==typeid(bf::BezierCurveInter)) {
-			const auto b = dynamic_cast<const bf::BezierCurveInter*>(&o);
-			MG1::InterpolatedC2 bezier;
-			bezier.name = b->name;
-			for(const auto& p: b->usedVectors()) {
-				bezier.controlPoints.emplace_back(p);
-			}
-			bezier.SetId(i);
-			scene.interpolatedC2.emplace_back(std::move(bezier));
+            const auto t = dynamic_cast<const bf::BezierCommon*>(&o);
+            gValue.append(bf::saveValue(*t, i, "interpolatedC2", "controlPoints"));
 		}
 		else {
 			std::cout << "Not implemented type\n";
 		}
 	}
-	try {
-		serializer.SaveScene(path);
-	}
-	catch(...) {
-		return false;
-	}
+    Json::Value root;
+    root["points"]=pValue;
+    root["geometry"]=gValue;
+
+    std::ofstream file(path);
+    if(!file.good())
+        return false;
+    file << root;
 	return true;
-#else
-    return false;
-#endif
 }
 

@@ -18,10 +18,9 @@ namespace bf {
         [[nodiscard]] const glm::vec3 &getFront() const;
         [[nodiscard]] const glm::vec3 &getUp() const;
         [[nodiscard]] const glm::vec3 &getRight() const;
-		float zNear, zFar;
     public:
         // constructor with vectors
-        Camera(float near, float far, glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f));
+        Camera(glm::vec3 pos = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 rot = glm::vec3(0.0f, 0.0f, 0.0f));
         //functions
         glm::mat4 GetViewMatrix();
         glm::mat4 GetInverseViewMatrix(const glm::mat4& view);

@@ -15,20 +15,30 @@ void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& o
         return;
     //TODO - non-uniform scaling in different ways
 	glm::mat4 matrix = newTransform.CalculateMatrix()*oldTransform.CalculateInverseMatrix();
-	auto vec = glm::vec4(transform.position-centre,1.f);
+	auto vec = glm::vec4(getPosition()-centre,1.f);
 	setPosition(glm::vec3(matrix*vec)+centre);
     transform.scale *= (newTransform.scale / oldTransform.scale);
     //rotation
-    auto rotMat = bf::getRotateMatrix(newTransform.rotation)*bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(transform.rotation);
-    glm::extractEulerAngleXYZ(rotMat, transform.rotation.x, transform.rotation.y, transform.rotation.z);
-    setRotation(glm::degrees(transform.rotation));
+    glm::vec3 r = getRotation();
+    auto rotMat = bf::getRotateMatrix(newTransform.rotation)*bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(r);
+    glm::extractEulerAngleXYZ(rotMat, r.x, r.y, r.z);
+    setRotation(glm::degrees(r));
 }
 
 void bf::Object::ObjectGui() {
 	bf::imgui::checkChanged("Object name", name);
-	bf::imgui::checkChanged("Object position", transform.position);
-	bf::imgui::checkChanged("Object rotation", transform.rotation);
-	bf::imgui::checkChanged("Object scale", transform.scale, true);
+    glm::vec3 pos = getPosition();
+	if(bf::imgui::checkChanged("Object position", pos)) {
+        setPosition(pos);
+    }
+    glm::vec3 rot = getRotation();
+	if(bf::imgui::checkChanged("Object rotation", rot)) {
+        setRotation(rot);
+    }
+    glm::vec3 s = getScale();
+	if(bf::imgui::checkChanged("Object scale", s, true)) {
+        setScale(s);
+    }
 }
 
 glm::vec3 bf::getMiddle(const std::vector<bf::Object>& objects) {
@@ -58,3 +68,4 @@ void bf::Object::initData(const bf::ConfigState &cs, const bf::Scene &s) {
     configState = &cs;
     scene = &s;
 }
+

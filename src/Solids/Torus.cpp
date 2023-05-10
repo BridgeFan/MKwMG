@@ -79,3 +79,20 @@ bf::Torus::Torus(const bf::Transform &t, const std::string &torusName, float big
 				 bigFragments(bigFrag), smallFragments(smallFrag) {
 	updateTorus();
 }
+
+void bf::Torus::swapTori(bf::Torus &a, bf::Torus &b) {
+    std::swap(a.smallRadius,b.smallRadius);
+    std::swap(a.bigRadius,b.bigRadius);
+    std::swap(a.smallFragments,b.smallFragments);
+    std::swap(a.bigFragments,b.bigFragments);
+}
+
+bf::Torus::Torus(bf::Torus &&solid) noexcept: bf::Solid(std::move(solid)) {
+    swapTori(*this, solid);
+}
+
+bf::Torus &bf::Torus::operator=(bf::Torus &&solid) noexcept {
+    swapSolids(*this, solid);
+    swapTori(*this, solid);
+    return *this;
+}

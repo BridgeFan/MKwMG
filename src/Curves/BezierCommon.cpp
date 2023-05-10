@@ -4,12 +4,11 @@
 
 #include <algorithm>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "Object/ObjectArray.h"
-#include "src/Object/Point.h"
-#include "src/ImGui/ImGuiUtil.h"
-#include "imgui-master/imgui.h"
-#include "src/Shader/ShaderArray.h"
+#include "Object/Point.h"
+#include "ImGui/ImGuiUtil.h"
+#include "ImGui/imgui_include.h"
+#include "Shader/ShaderArray.h"
 #include "Scene.h"
 #include "BezierCommon.h"
 #include "Event.h"
@@ -102,7 +101,7 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
 	//draw points if active
     if(shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-        shader.setVec3("color", 0.f, 0.f, 0.f);
+		shaderArray.setColor({.0f,.0f,.0f});
         if (pointIndices.empty() || indices.empty() || vertices.empty()) {
             return;
         }
@@ -117,23 +116,21 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
         }
     }
     else if(shaderArray.getActiveIndex()==bf::ShaderType::PointShader) {
-        const Shader& shader = shaderArray.getActiveShader();
         if (objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()] == this) {
             for (int i = 0; i < static_cast<int>(pointIndices.size()); i++) {
                 if (i == static_cast<int>(activeIndex))
-                    shader.setVec3("color", 1.f, 0.f, 0.f);
+					shaderArray.setColor({1.f,.0f,.0f});
                 else
-                    shader.setVec3("color", 0.f, 1.f, 0.f);
+					shaderArray.setColor({0.f,1.f,.0f});
                 objectArray[pointIndices[i]].draw(shaderArray);
             }
         }
     }
-    const Shader& shader = shaderArray.getActiveShader();
     bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
     if(isActive)
-        shader.setVec3("color", 1.f,0.5f,0.f);
+		shaderArray.setColor({1.f,.5f,.0f});
     else
-        shader.setVec3("color", 1.f,1.f,1.f);
+		shaderArray.setColor({1.f,1.f,1.f});
     if(isCurveVisible && scene && configState) {
         bezier.draw(shaderArray,*scene,*configState,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
     }
@@ -184,7 +181,7 @@ void bf::BezierCommon::ObjectGui() {
 		if(!objectArray.isCorrect(pointIndices[i]))
 			ImGui::Text("_");
 		bool val = (i==activeIndex);
-		bool ret = bf::imgui::checkSelectableChanged(objectArray[pointIndices[i]].name.c_str(), val);
+		bool ret = bf::imgui::checkSelectableChanged(objectArray[pointIndices[i]].name.c_str(), i, val);
 		if(ret && val) {
 			activeIndex=i;
 		}
@@ -264,4 +261,8 @@ bool bf::BezierCommon::onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBi
 
 bf::ShaderType bf::BezierCommon::getShaderType() const {
     return MultipleShaders;
+}
+
+const std::vector<unsigned int> &bf::BezierCommon::getPointIndices() const {
+    return pointIndices;
 }

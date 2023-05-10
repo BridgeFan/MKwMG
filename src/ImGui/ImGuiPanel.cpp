@@ -2,7 +2,7 @@
 // Created by kamil-hp on 27.04.23.
 //
 #include "ImGuiUtil.h"
-#include "imgui-master/imgui.h"
+#include "ImGui/imgui_include.h"
 #include "ImGui/ImGuiPanel.h"
 #include "Scene.h"
 #include "ConfigState.h"
@@ -12,6 +12,7 @@
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
 #include "FileLoading.h"
+#include "Surfaces/BezierSurface0.h"
 
 void bf::imgui::createObjectPanel(Scene &scene) {
     ImGui::Begin("Create object");
@@ -34,6 +35,9 @@ void bf::imgui::createObjectPanel(Scene &scene) {
     if(ImGui::Button("Bézier curve inter")) {
         scene.objectArray.addRef<bf::BezierCurveInter>();
     }
+	if(ImGui::Button("Bézier surface 0")) {
+		scene.objectArray.addRef<bf::BezierSurface0>(scene.cursor);
+	}
     ImGui::End();
 }
 
@@ -41,6 +45,10 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
     ImGui::Begin("List of objects");
     ImGui::Text("Hold CTRL and click to select multiple items.");
     ImGui::Checkbox("Uniform scalng", &configState.isUniformScaling);
+	ImGui::Checkbox("Stereoscopic", &configState.stereoscopic);
+    if(bf::imgui::checkSliderChanged("Gray percentage", configState.grayPercentage, .0f, 1.f)) {
+        scene.shaderArray.setGrayPercentage(configState.grayPercentage);
+    }
     for(int i=0;i<3;i++) {
         static bool tmp[3];
         constexpr char axisName[] = {'X', 'Y', 'Z'};

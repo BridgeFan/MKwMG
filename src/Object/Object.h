@@ -30,6 +30,7 @@ namespace bf {
         static const Scene* scene;
 	public:
 		std::string name;
+        unsigned indestructibilityIndex=0u;
         static void initData(const ConfigState& cs, const Scene& s);
 		Object(const bf::Transform &t, const std::string &objName) : transform(t), name(objName) {}
 		explicit Object(const bf::Transform &t = bf::Transform::Default) : Object(t, "Object " + std::to_string(

@@ -32,6 +32,7 @@ namespace bf {
         glm::vec3 centre;
         void updateCentre();
 	public:
+        bool isForcedActive=false;
 		[[nodiscard]] std::size_t size() const {return objects.size();}
 		bf::Object& operator[](std::size_t index);
 		const bf::Object& operator[](std::size_t index) const;
@@ -63,7 +64,9 @@ namespace bf {
 		void addRef(Args&... args) {
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
 			ptr->postInit();
-			objects.emplace_back(std::move(ptr), false);
+            clearSelection(-1);
+            activeIndex=objects.size();
+			objects.emplace_back(std::move(ptr), true);
 		}
         void setActiveRedirector(bf::Object const* redirector=nullptr);
         int getActiveRedirector() const {return activeRedirector;}

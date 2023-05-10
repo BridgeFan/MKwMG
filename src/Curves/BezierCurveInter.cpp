@@ -4,16 +4,14 @@
 
 #include <algorithm>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "BezierCurveInter.h"
 #include "Object/ObjectArray.h"
-#include "src/Object/Point.h"
-#include "src/ImGui/ImGuiUtil.h"
-#include "imgui-master/imgui.h"
-#include "src/Shader/Shader.h"
+#include "ImGui/ImGuiUtil.h"
+#include "ImGui/imgui_include.h"
+#include "Shader/Shader.h"
 #include "Scene.h"
 #include "Util.h"
-#include "src/Shader/ShaderArray.h"
+#include "Shader/ShaderArray.h"
 
 int bf::BezierCurveInter::_index = 1;
 
@@ -101,16 +99,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
         pc[i]*=(di*di);
         pd[i]*=(di*di*di);
     }
-    ///debug polynomial - working
-    /*positions.clear();
-    for(int j=0;j<n-1;j++) {
-        for (int i = 0; i <= 16; i++) {
-            float t = static_cast<float>(i) / 16.f;
-            glm::vec3 p = pa[j] + pb[j] * t + pc[j] * t * t + pd[j] * t * t * t;
-            positions.push_back(p);
-        }
-    }*/
-    //convert to Bernstein base - working
+    //convert to Bernstein base
     bezier.points.resize(3*n-2);
     for(int i=0;i<n-1;i++) {
         bezier.points[3*i]=pa[i];
@@ -163,7 +152,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 void bf::BezierCurveInter::draw(const bf::ShaderArray &shaderArray) const {
 	if(pointIndices.size()>=2 && isPolygonVisible && shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-        shader.setVec3("color", 0.f,0.f,0.f);
+		shaderArray.setColor({0.f,.0f,.0f});
 		shader.setMat4("model", glm::mat4(1.f));
 		glBindVertexArray(lVAO);
 		glDrawElements(GL_LINES, positions.size() * 2 - 2, GL_UNSIGNED_INT, 0);

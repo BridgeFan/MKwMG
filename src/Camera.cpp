@@ -12,6 +12,8 @@ void bf::Camera::ObjectGui(bf::ConfigState& configState) {
 	bf::imgui::checkChanged("Position", position);
 	bf::imgui::checkChanged("Rotation", rotation);
 	bf::imgui::checkChanged("fov", configState.cameraFOV, 5.f, 120.f);
+    bf::imgui::checkChanged("near", configState.cameraNear, .01f, 5.f, .05f, .5f);
+    bf::imgui::checkChanged("far", configState.cameraFar, 5.f, 10000.f);
 }
 
 const glm::vec3 &bf::Camera::getFront() const {
@@ -57,5 +59,5 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
     return ret;
 }
 
-bf::Camera::Camera(float near, float far, glm::vec3 pos, glm::vec3 rot)
-        : Transform(pos, rot), zNear(near), zFar(far) {}
+bf::Camera::Camera(glm::vec3 pos, glm::vec3 rot)
+        : Transform(pos, rot) {}

@@ -2,12 +2,11 @@
 // Created by kamil-hp on 13.03.2022.
 //
 #include "ImGuiUtil.h"
-#include "imgui-master/imgui.h"
-#include "imgui-master/backends/imgui_impl_glfw.h"
-#include "imgui-master/backends/imgui_impl_opengl3.h"
+#define IMGUI_BACKEND
+#include "ImGui/imgui_include.h"
 #include <string>
 #include <algorithm>
-#include "imgui-master/misc/cpp/imgui_stdlib.h"
+#include <format>
 #include "Util.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -16,12 +15,13 @@
 
 
 ImGuiIO& init(GLFWwindow* window) {
-	IMGUI_CHECKVERSION();
+	//IMGUI_CHECKVERSION();
+    //TODO - make sure that used version is the same
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui_ImplOpenGL3_Init("#version 420 core");
 	return io;
 }
 
@@ -87,6 +87,12 @@ bool bf::imgui::checkChanged(const char* name, glm::vec2& values, const char* fo
     values.y = array[1];
     return true;
 }
+bool bf::imgui::checkChanged(const char* name, glm::vec<2,int>& values) {
+	int array[] = {values.x, values.y};
+	bool ret = ImGui::InputInt2(name, array);
+    values = {array[0], array[1]};
+    return ret;
+}
 
 bool bf::imgui::checkSliderChanged(const char* name, int& value, int min, int max) {
 	int oldVal = value;
@@ -102,8 +108,8 @@ bool bf::imgui::checkSliderChanged(const char* name, float& value, float min, fl
 	return !almostEqual(oldVal,value);
 }
 
-bool bf::imgui::checkSelectableChanged(const char* name, bool& selectable) {
-    bool wasChanged = ImGui::Selectable(name, selectable);
+bool bf::imgui::checkSelectableChanged(const char* name, int index, bool& selectable) {
+    bool wasChanged = ImGui::Selectable(std::format("{0}##{1}", name, index).c_str(), selectable);
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;

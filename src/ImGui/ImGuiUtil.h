@@ -16,7 +16,7 @@ namespace bf {
         class IO {
         public:
             ImGuiIO& io;
-            IO(GLFWwindow* window);
+            explicit IO(GLFWwindow* window);
             ~IO();
         };
         void preDraw();
@@ -27,10 +27,11 @@ namespace bf {
 		bool checkChanged(const char *name, int &value, int min, int max, int stepGreat = 10);
 		bool checkChanged(const char *name, glm::vec3 &values, bool isZeroInsurance = false);
 		bool checkChanged(const char *name, glm::vec2 &values, const char* format = nullptr);
+		bool checkChanged(const char *name, glm::vec<2,int> &values);
 		bool checkChanged(const char *name, std::string &value);
 		bool checkSliderChanged(const char *name, int &value, int min, int max);
 		bool checkSliderChanged(const char *name, float &value, float min, float max);
-		bool checkSelectableChanged(const char *name, bool &selectable);
+		bool checkSelectableChanged(const char *name, int index, bool &selectable);
 	}
 }
 

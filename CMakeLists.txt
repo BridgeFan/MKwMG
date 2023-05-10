@@ -1,52 +1,75 @@
 cmake_minimum_required(VERSION 3.21)
 project(MG1_zad2)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -Wall -Wextra -Wunused \
--Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel \
--Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override \
--Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference \
--Wcast-align -Wshadow -fno-common -Wfloat-equal -Wcast-qual \
--Wold-style-cast -Wuseless-cast -Wformat-signedness")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -fno-common -Wall -Wextra -Wunused -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference -Wcast-align -Wshadow -Wfloat-equal -Wcast-qual -Wold-style-cast -Wuseless-cast -Wformat-signedness")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "src")
-include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cpp/Serializer/include/Serializer")
-link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui-master")
-link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/Scene-Serializer-main/cpp/Serializer")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "/usr/include/imgui")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "/usr/include/jsoncpp")
+link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} ".")
 
-#add_compile_definitions(SERIALIZER_AVAILABLE)
 set(HEADER_FILES)
-
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(MG1_zad2
-        src/Camera.cpp
-        src/ImGui/ImGuiUtil.cpp
-        src/Window.cpp
-        src/Shader/Shader.cpp
-        src/Util.cpp
-        src/main.cpp
-        src/Object/Cursor.cpp
-        src/Object/Object.cpp
-        src/Object/Point.cpp
-        src/Solids/Solid.cpp
-        src/Solids/Torus.cpp
-        src/Object/Transform.cpp
-        src/Object/MultiCursor.cpp
-        src/Object/MultiCursor.h
-        src/Object/ObjectArray.cpp
-        src/Object/ObjectArray.h
-        src/Object/ObjectArrayListener.cpp
-        src/Object/ObjectArrayListener.h
-        src/Curves/BezierCurve0.cpp
-        src/Curves/BezierCurve0.h
-        src/Scene.cpp
-        src/Scene.h
-        src/Curves/BasicBezier.cpp
-        src/Curves/BasicBezier.h
-        src/Curves/BezierCurve2.cpp
-        src/Curves/BezierCommon.cpp
-        src/Curves/BezierCommon.h
-        src/Curves/BezierCurveInter.cpp src/Shader/ShaderArray.cpp src/Shader/ShaderArray.h src/FileLoading.h src/FileLoading.cpp src/Event.h src/ImGui/ImGuiPanel.h src/ImGui/ImGuiPanel.cpp src/ConfigState.cpp)
+add_executable(MG1_zad2 
+src/Solids/Solid.cpp
+src/Solids/Torus.cpp
+src/Util.cpp
+src/Curves/BezierCurve2.cpp
+src/Curves/BasicBezier.cpp
+src/Curves/BezierCurveInter.cpp
+src/Curves/BezierCurve0.cpp
+src/Curves/BezierCommon.cpp
+src/JsonUtil.cpp
+src/Shader/ShaderArray.cpp
+src/Shader/Shader.cpp
+src/Surfaces/BezierSurface0.cpp
+src/Surfaces/BezierSurfaceSegment0.cpp
+src/Camera.cpp
+src/Window.cpp
+src/ImGui/ImGuiPanel.cpp
+src/ImGui/ImGuiUtil.cpp
+src/Object/Point.cpp
+src/Object/Cursor.cpp
+src/Object/Object.cpp
+src/Object/ObjectArray.cpp
+src/Object/Transform.cpp
+src/Object/MultiCursor.cpp
+src/Object/ObjectArrayListener.cpp
+src/main.cpp
+src/FileLoading.cpp
+src/ConfigState.cpp
+src/Scene.cpp
+src/Event.h
+src/Solids/Torus.h
+src/Solids/Solid.h
+src/Curves/BezierCurve2.h
+src/Curves/BasicBezier.h
+src/Curves/BezierCurve0.h
+src/Curves/BezierCommon.h
+src/Curves/BezierCurveInter.h
+src/Shader/Shader.h
+src/Shader/ShaderArray.h
+src/Scene.h
+src/ConfigState.h
+src/FileLoading.h
+src/Camera.h
+src/Util.h
+src/Surfaces/BezierSurfaceSegment0.h
+src/Surfaces/BezierSurface0.h
+src/JsonUtil.h
+src/ImGui/ImGuiPanel.h
+src/ImGui/ImGuiUtil.h
+src/ImGui/imgui_include.h
+src/Object/MultiCursor.h
+src/Object/Transform.h
+src/Object/Object.h
+src/Object/ObjectArray.h
+src/Object/ObjectArrayListener.h
+src/Object/Point.h
+src/Object/Cursor.h
+src/Window.h
+)
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)
@@ -60,4 +83,4 @@ target_link_libraries(MG1_zad2 imgui_impl_glfw)
 target_link_libraries(MG1_zad2 imgui_impl_opengl3)
 target_link_libraries(MG1_zad2 imgui)
 target_link_libraries(MG1_zad2 jsoncpp)
-target_link_libraries(MG1_zad2 MGSerializer)
+

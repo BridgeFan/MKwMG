@@ -3,14 +3,11 @@
 //
 
 #include <algorithm>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "BezierCurve0.h"
 #include "Object/ObjectArray.h"
-#include "src/Object/Point.h"
-#include "src/ImGui/ImGuiUtil.h"
-#include "imgui-master/imgui.h"
-#include "src/Shader/Shader.h"
+#include "ImGui/ImGuiUtil.h"
+#include "ImGui/imgui_include.h"
+#include "Shader/Shader.h"
 #include "Scene.h"
 
 int bf::BezierCurve0::_index = 1;

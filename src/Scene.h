@@ -16,7 +16,8 @@ namespace bf {
 	class Scene {
 	private:
 		glm::mat4 projection, inverseProjection, view, inverseView;
-		bf::ShaderArray shaderArray;
+
+        void internalDraw(const ConfigState& configState);
 	public:
 		bf::ObjectArray objectArray;
 		bf::Cursor cursor;
@@ -27,14 +28,16 @@ namespace bf {
 		const glm::mat4 &getInverseProjection() const;
 		const glm::mat4 &getView() const;
 		const glm::mat4 &getInverseView() const;
-		Scene(const ConfigState& configState);
+		explicit Scene(const ConfigState& configState);
 		void draw(const ConfigState& configState);
         bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit, const bf::ConfigState& configState);
         bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit, const bf::ConfigState& configState);
         bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
         bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods, const bf::ConfigState& configState);
 		void onMouseMove(const glm::vec2& oldMousePos, const bf::ConfigState& configState);
-	};
+
+        bf::ShaderArray shaderArray;
+    };
 }
 
 

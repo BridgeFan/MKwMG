@@ -20,7 +20,11 @@ namespace bf {
 		bool isPolygonVisible, isCurveVisible, isLineDrawn;
 		std::size_t activeIndex;
 		std::vector<unsigned> pointIndices;
-		void recalculate();
+    public:
+        const std::vector<unsigned int> &getPointIndices() const;
+
+    protected:
+        void recalculate();
 		void recalculatePart(int index); //index of part
 		virtual void bezierOnAdd() = 0;
 		virtual void bezierOnRemove(unsigned index) = 0;
@@ -37,7 +41,7 @@ namespace bf {
 
 		bool addPoint(unsigned index) override;
 		bool removePoint(unsigned index);
-		virtual void draw(const ShaderArray &shaderArray) const override;
+		void draw(const ShaderArray &shaderArray) const override;
 		void ObjectGui() override;
 		[[nodiscard]] bool isMovable() const override {return false;}
 

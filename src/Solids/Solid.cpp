@@ -41,16 +41,16 @@ void bf::Solid::setBuffers() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], usage);
 }
 
-void bf::Solid::draw(const bf::ShaderArray& shaderArray) const {
+/*void bf::Solid::draw(const bf::ShaderArray& shaderArray) const {
     draw(shaderArray, Transform::Default);
-}
+}*/
 
-void bf::Solid::draw(const bf::ShaderArray& shaderArray, const bf::Transform& relativeTo) const {
+void bf::Solid::draw(const bf::ShaderArray& shaderArray/*, const bf::Transform& relativeTo*/) const {
     if(indices.empty() || vertices.empty() || shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
         return;
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);
-    shaderArray.getActiveShader().setMat4("model", getModelMatrix(relativeTo));
+    shaderArray.getActiveShader().setMat4("model", getModelMatrix(/*relativeTo*/));
     glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
                    reinterpret_cast<void*>(0)           // element array buffer offset
     );
@@ -68,8 +68,33 @@ bf::ShaderType bf::Solid::getShaderType() const {
     return BasicShader;
 }
 
+bf::Solid::Solid(bf::Solid &&solid) noexcept {
+    swapSolids(*this, solid);
+}
+
+void bf::Solid::swapSolids(bf::Solid &a, bf::Solid &b) {
+    if(&a==&b)
+        return;
+    std::swap(a.VAO, b.VAO);
+    std::swap(a.VBO, b.VBO);
+    std::swap(a.IBO, b.IBO);
+    std::swap(a.indices, b.indices);
+    std::swap(a.vertices, b.vertices);
+    std::swap(a.isDynamic, b.isDynamic);
+    std::swap(a.indestructibilityIndex, b.indestructibilityIndex);
+    std::swap(a.transform, b.transform);
+    std::swap(a.name, b.name);
+}
+
 bf::Vertex::Vertex(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 
 bf::Vertex::Vertex(const glm::vec3 &p): Vertex(p.x,p.y,p.z) {
 
+}
+
+bf::DummySolid::DummySolid(const std::string &solidName, bool dynamic) : Solid(solidName, dynamic) {}
+
+bf::DummySolid &bf::DummySolid::operator=(bf::DummySolid &&solid) noexcept {
+    swapSolids(*this, solid);
+    return *this;
 }

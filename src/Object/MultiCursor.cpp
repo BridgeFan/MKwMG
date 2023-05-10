@@ -6,29 +6,28 @@
 #include "src/Shader/ShaderArray.h"
 #include "src/ImGui/ImGuiUtil.h"
 #include "ConfigState.h"
-#include "imgui-master/imgui.h"
+#include "ImGui/imgui_include.h"
 
 constexpr glm::vec3 multiColor[3] = {{1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f}};
 
 void bf::MultiCursor::draw(const bf::ShaderArray &shaderArray, const bf::ConfigState& configState) {
     if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
         return;
-    const auto& shader = shaderArray.getActiveShader();
     for(int i=0;i<3;i++) {
         auto& line = lines[i];
         if((configState.isAxesLocked>>i)%2)
-            shader.setVec3("color", {.0f,.0f,.0f});
+			shaderArray.setColor({0.f,.0f,.0f});
         else
-            shader.setVec3("color",multiColor[i]);
+			shaderArray.setColor(multiColor[i]);
         line.setPosition(transform.position);
         line.setRotation(transform.rotation);
         line.setScale(transform.scale);
         line.draw(shaderArray);
     }
-    shader.setVec3("color",1.f,1.f,1.f);
+	shaderArray.setColor({1.f,1.f,1.f});
 }
 
-bf::MultiCursor::MultiCursor(const bf::Transform &t) : lines{Solid(""),Solid(""),Solid("")},
+bf::MultiCursor::MultiCursor(const bf::Transform &t) : lines{DummySolid(""),DummySolid(""),DummySolid("")},
                                                            transform(t) {
     initLines();
 }

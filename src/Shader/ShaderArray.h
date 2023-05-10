@@ -11,10 +11,16 @@
 #include "Shader.h"
 
 namespace bf {
+	enum class StereoscopicState: int {
+		None=0,
+		LeftEye,
+		RightEye
+	};
     enum ShaderType: int {
         BasicShader=0,
         BezierShader=1,
         PointShader=2,
+		BezierSurfaceShader=3,
         MultipleShaders
     };
     template<typename T>
@@ -27,9 +33,12 @@ namespace bf {
         int activeIndex=0;
         std::vector<bf::Shader> shaders;
 		unsigned FBOs, colorBuffers, RBOs;
+		StereoscopicState stereoscopicState=StereoscopicState::None;
         void addBasicShader(const std::string& path, bool isGeometric);
         void addTessellationShader(const std::string& path, bool isGeometric);
+        float grayPercentage=.0f;
     public:
+        void setGrayPercentage(float g);
         ShaderArray();
         [[nodiscard]] int getActiveIndex() const;
         const bf::Shader& getActiveShader() const;
@@ -58,6 +67,9 @@ namespace bf {
             return commonUniformMap.erase(name)>0;
         }
         bool changeShader(int n);
+		void setColor(const glm::vec3& vec) const;
+        void setColor(uint8_t r, uint8_t g, uint8_t b) const;
+		void setStereoscopicState(StereoscopicState state);
     };
 }
 

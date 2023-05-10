@@ -5,10 +5,11 @@
 #include "ObjectArray.h"
 #include "ConfigState.h"
 #include "Object.h"
-#include "imgui-master/imgui.h"
-#include "src/ImGui/ImGuiUtil.h"
+#include "ImGui/imgui_include.h"
+#include "ImGui/ImGuiUtil.h"
 #include <algorithm>
-#include "src/Shader/ShaderArray.h"
+#include <iostream>
+#include "Shader/ShaderArray.h"
 #include "Curves/BezierCurve0.h"
 #include "MultiCursor.h"
 
@@ -40,11 +41,12 @@ void bf::ObjectArray::add(bf::Object* object) {
 
 bool bf::ObjectArray::remove(std::size_t index) {
     activeRedirector=-1;
-	if(index>=objects.size())
+	if(index>=objects.size() || (isCorrect(index) && objects[index].first->indestructibilityIndex>0))
 		return false;
 	for(auto a: listeners)
 		if(a)
 			a->onRemoveObject(index);
+    isForcedActive=false;
 	for(std::size_t i=index+1;i<objects.size();i++)
 		std::swap(objects[i-1],objects[i]);
 	if(objects.back().second) {
@@ -67,14 +69,18 @@ bool bf::ObjectArray::isActive(std::size_t index) {
 }
 
 void bf::ObjectArray::removeActive() {
+    if(isForcedActive) {
+        return;
+    }
 	for(std::size_t i=0u;i<size();i++)
-		if(objects[i].second) {
-			remove(i);
+		if(objects[i].second && remove(i)) {
 			i--;
 		}
 }
 
 void bf::ObjectArray::clearSelection(std::size_t index) {
+    if(isForcedActive)
+        return;
     if(isCorrect(activeRedirector)) {
         if(activeRedirector==static_cast<int>(index)) {
             activeRedirector = -1;
@@ -127,7 +133,7 @@ bool bf::ObjectArray::isMultipleActive() const {
 }
 
 bool bf::ObjectArray::setActive(std::size_t index) {
-	if(!isCorrect(index))
+	if(!isCorrect(index) || isForcedActive)
 		return false;
     if(isCorrect(activeRedirector)) {
         if(operator[](activeRedirector).addPoint(index))
@@ -142,7 +148,7 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 	return true;
 }
 bool bf::ObjectArray::setUnactive(std::size_t index) {
-	if(!isCorrect(index)) {
+	if(!isCorrect(index) || isForcedActive) {
         return false;
     }
     if(static_cast<int>(index)==activeRedirector) {
@@ -190,7 +196,7 @@ bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& mult
 		return false;
 	}
 	bool val = isActive(index);
-	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(),val);
+	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(), index,val);
 	if(ret) {
         toggleActive(index);
         multiCursor.transform = bf::Transform();
@@ -211,9 +217,9 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& 
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
                 if (isActive(i))
-                    shaderArray.getActiveShader().setVec3("color", 1.f, .5f, .0f);
+					shaderArray.setColor({1.f,.5f,.0f});
                 else
-                    shaderArray.getActiveShader().setVec3("color", 1.f, 1.f, 1.f);
+					shaderArray.setColor({1.f,1.f,1.f});
                 objects[i].first->draw(shaderArray);
             }
         }

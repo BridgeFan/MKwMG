@@ -6,8 +6,7 @@
 #define MG1_ZAD2_EVENT_H
 #include <GLFW/glfw3.h>
 
-namespace bf {
-    namespace event {
+namespace bf::event {
         //taken from https://github.com/janekb04/glfwpp (MIT license, made by janekb04) with minor changes
         enum class Key : int {
             Unknown = GLFW_KEY_UNKNOWN,
@@ -167,7 +166,5 @@ namespace bf {
 #endif
         };
     }
-    //end of taken
-}
 
 #endif //MG1_ZAD2_EVENT_H

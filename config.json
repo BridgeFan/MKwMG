@@ -5,7 +5,7 @@
 	"camera" : 
 	{
 		"far" : 100.0,
-		"fov" : 32.0,
+		"fov" : 44.0,
 		"fov_max" : 120.0,
 		"fov_min" : 5.0,
 		"near" : 0.10000000149011612,
@@ -17,13 +17,15 @@
 		"rot_z" : 0.0
 	},
 	"division_num" : 8,
+	"gray_percentage" : 1.0,
 	"is_axes_locked" : 0,
-	"is_uniform_scaling" : true,
+	"is_uniform_scaling" : false,
 	"max_torus_fragments" : 60,
 	"movement_speed" : 2.5,
 	"point_radius" : 8.0,
 	"rotation_speed" : 20.0,
-	"screen_height" : 708,
-	"screen_width" : 1024,
+	"screen_height" : 770,
+	"screen_width" : 1034,
+	"stereoscopic" : true,
 	"total_division" : 4096
 }

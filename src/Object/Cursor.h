@@ -9,7 +9,7 @@
 namespace bf {
     class Cursor {
     private:
-        Solid lines[3];
+        DummySolid lines[3];
         void initLines();
     public:
         Transform transform;

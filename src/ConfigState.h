@@ -25,8 +25,6 @@ namespace bf {
 	private:
 		float cameraFOVmin = 5.f;
 		float cameraFOVmax = 120.f;
-		float cameraNear = .1f;
-		float cameraFar = 100.f;
 		glm::vec3 cameraInitPos = {0.0f, 0.0f, -10.0f};
 		glm::vec3 cameraInitRot = {0.0f, 0.0f, 0.0f};
 	public:
@@ -55,10 +53,12 @@ namespace bf {
 		uint8_t backgroundColorR = 64;
 		uint8_t backgroundColorG = 64;
 		uint8_t backgroundColorB = 51;
+        float cameraNear = .1f;
+        float cameraFar = 100.f;
+        bool stereoscopic = false;
+        float grayPercentage = .0f;
 		float getCameraFoVmax() const;
 		float getCameraFoVmin() const;
-		float getCameraNear() const;
-		float getCameraFar() const;
 		const glm::vec3 &getCameraInitPos() const;
 		const glm::vec3 &getCameraInitRot() const;
         void onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);

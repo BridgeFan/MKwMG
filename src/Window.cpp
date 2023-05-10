@@ -6,7 +6,7 @@
 #include "Window.h"
 #include "ConfigState.h"
 #include <array>
-#include "imgui-master/imgui.h"
+#include "ImGui/imgui_include.h"
 #include "Util.h"
 #ifdef USE_STD_FORMAT
 #include <format>
@@ -157,8 +157,10 @@ void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
 void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int mods) {
     //get data from pointer
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-    if(!ptr || ptr->io.io.WantCaptureKeyboard)
-        return;
+    if(!ptr) return;
+	//TODO - pass event to ImGui manually
+	if(ptr->io.io.WantCaptureKeyboard)
+		return;
     auto& s = *ptr;
     //cast data
     using namespace bf::event;

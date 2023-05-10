@@ -22,10 +22,14 @@ namespace bf {
 	protected:
 		void addVertex(const glm::vec3& p);
 		bool isDynamic = false;
+        static void swapSolids(bf::Solid& a, bf::Solid& b);
 	public:
-		virtual ~Solid() override;
+		virtual ~Solid()=0;
+        Solid(const Solid&)=delete;
+        Solid(Solid&&) noexcept;
 		Solid(const bf::Transform &t, const std::string &solidName, bool dynamic=false) : bf::Object(t, solidName),
 			isDynamic(dynamic) {}
+
 		explicit Solid(const bf::Transform &t = bf::Transform::Default, bool dynamic=false) : bf::Solid(t, "Solid " + std::to_string(
 				sindex),dynamic) { sindex++; }
 		explicit Solid(const std::string &solidName, bool dynamic=false) : Solid(Transform::Default, solidName,dynamic) {}
@@ -35,11 +39,18 @@ namespace bf {
 		void setBuffers();
 	public:
 		virtual void draw(const bf::ShaderArray &shader) const override;
-		virtual void draw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
+		//virtual void draw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
-
         ShaderType getShaderType() const override;
 
+    };
+    class DummySolid : public bf::Solid {
+    public:
+        DummySolid(const DummySolid&)=delete;
+        DummySolid(bf::DummySolid&& solid) noexcept : bf::Solid(std::move(solid)) {}
+        DummySolid& operator=(const DummySolid&)=delete;
+        DummySolid& operator=(bf::DummySolid&& solid) noexcept;
+        DummySolid(const std::string &solidName, bool dynamic=false);
     };
 }
 

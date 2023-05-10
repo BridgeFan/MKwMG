@@ -1,27 +1,27 @@
 //
 // Created by kamil-hp on 21.03.2022.
 //
-#include "imgui-master/imgui.h"
+#include "ImGui/imgui_include.h"
 #include "Cursor.h"
-#include "src/Shader/ShaderArray.h"
-#include "src/ImGui/ImGuiUtil.h"
+#include "Shader/ShaderArray.h"
+#include "ImGui/ImGuiUtil.h"
 #include "Util.h"
 
 void bf::Cursor::draw(const bf::ShaderArray &shaderArray) {
-    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
-        return;
-    const auto& shader = shaderArray.getActiveShader();
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+		return;
+	}
 	for(auto & line : lines) {
-			shader.setVec3("color",{1.0f,1.0f,.0f});
+		shaderArray.setColor({1.f,1.f,.0f});
 		line.setPosition(transform.position);
 		line.setRotation(glm::vec3(.0f));
 		line.setScale(glm::vec3(1.f));
 		line.draw(shaderArray);
 	}
-	shader.setVec3("color",1.f,1.f,1.f);
+	shaderArray.setColor({1.f,1.f,1.f});
 }
 
-bf::Cursor::Cursor(const Transform &t) : lines{Solid(""),Solid(""),Solid("")},
+bf::Cursor::Cursor(const Transform &t) : lines{DummySolid(""),DummySolid(""),DummySolid("")},
 transform(t) {
     initLines();
 }

@@ -14,25 +14,9 @@
 #include "Util.h"
 #include "FileLoading.h"
 
-void bf::Scene::draw(const ConfigState& configState) {
-	float clearColorR = static_cast<float>(configState.backgroundColorR)/255.f;
-	float clearColorG = static_cast<float>(configState.backgroundColorG)/255.f;
-	float clearColorB = static_cast<float>(configState.backgroundColorB)/255.f;
-	float clearColorA = static_cast<float>(255u)/255.f;
-	glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	shaderArray.changeShader(bf::ShaderType::BasicShader);
-	// pass projection matrix to shader (note that in this case it could change every frame)
-    float aspect = static_cast<float>(configState.screenWidth)/static_cast<float>(configState.screenHeight);
-	projection = bf::getProjectionMatrix(configState.cameraFOV, aspect, camera.zNear, camera.zFar);
-	inverseProjection = bf::getInverseProjectionMatrix(configState.cameraFOV, aspect, camera.zNear, camera.zFar);
-	shaderArray.addCommonUniform("projection", projection);
-	// camera/view transformation
-	view = camera.GetViewMatrix();
-	inverseView = camera.GetInverseViewMatrix(view);
-	shaderArray.addCommonUniform("view", view);
+void bf::Scene::internalDraw(const ConfigState& configState) {
 	//draw objects
-    std::vector<unsigned> indices;
+	std::vector<unsigned> indices;
 	if(objectArray.isMultipleActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();
 		multiCursor.draw(shaderArray, configState);
@@ -48,14 +32,49 @@ void bf::Scene::draw(const ConfigState& configState) {
 	objectArray.draw(shaderArray,configState);
 }
 
-bf::Scene::Scene(const ConfigState& configState) :
-	objectArray(), cursor(), multiCursor(), camera(configState.getCameraNear(),configState.getCameraFar(),
-		configState.getCameraInitPos(),configState.getCameraInitRot()) {
+void bf::Scene::draw(const ConfigState& configState) {
+	float clearColorR = static_cast<float>(configState.backgroundColorR)/255.f;
+	float clearColorG = static_cast<float>(configState.backgroundColorG)/255.f;
+	float clearColorB = static_cast<float>(configState.backgroundColorB)/255.f;
+	float clearColorA = static_cast<float>(255u)/255.f;
+	glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	shaderArray.changeShader(bf::ShaderType::BasicShader);
+	// pass projection matrix to shader (note that in this case it could change every frame)
     float aspect = static_cast<float>(configState.screenWidth)/static_cast<float>(configState.screenHeight);
-	projection = bf::getProjectionMatrix(configState.cameraFOV, aspect, camera.zNear, camera.zFar);
-	inverseProjection = bf::getInverseProjectionMatrix(configState.cameraFOV, aspect, camera.zNear, camera.zFar);
+	// camera/view transformation
 	view = camera.GetViewMatrix();
 	inverseView = camera.GetInverseViewMatrix(view);
+	shaderArray.addCommonUniform("view", view);
+	projection = bf::getProjectionMatrix(configState.cameraFOV, aspect,
+			configState.cameraNear, configState.cameraFar);
+	inverseProjection = bf::getInverseProjectionMatrix(configState.cameraFOV, aspect,
+			configState.cameraNear, configState.cameraFar);
+	if(!configState.stereoscopic) {
+		shaderArray.addCommonUniform("projection", projection);
+		shaderArray.setStereoscopicState(bf::StereoscopicState::None);
+		internalDraw(configState);
+	}
+	else {
+		//TODO - change GPU projection matrix
+		shaderArray.setStereoscopicState(bf::StereoscopicState::LeftEye);
+		internalDraw(configState);
+		//TODO - change GPU projection matrix
+		shaderArray.setStereoscopicState(bf::StereoscopicState::RightEye);
+		internalDraw(configState);
+	}
+}
+
+bf::Scene::Scene(const ConfigState& configState) :
+	objectArray(), cursor(), multiCursor(), camera(configState.getCameraInitPos(),configState.getCameraInitRot()) {
+    float aspect = static_cast<float>(configState.screenWidth)/static_cast<float>(configState.screenHeight);
+	projection = bf::getProjectionMatrix(configState.cameraFOV, aspect,
+                                         configState.cameraNear, configState.cameraFar);
+	inverseProjection = bf::getInverseProjectionMatrix(configState.cameraFOV, aspect,
+        configState.cameraNear, configState.cameraFar);
+	view = camera.GetViewMatrix();
+	inverseView = camera.GetInverseViewMatrix(view);
+    shaderArray.setGrayPercentage(configState.grayPercentage);
     bf::Point::initObjArrayRef(objectArray);
     bf::Object::initData(configState, *this);
     if(!bf::loadFromFile(objectArray)) {

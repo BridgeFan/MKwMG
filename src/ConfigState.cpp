@@ -3,50 +3,44 @@
 //
 #include "ConfigState.h"
 #include "Util.h"
-#include <jsoncpp/json/json.h>
 #include <fstream>
 #include "Event.h"
+#include "JsonUtil.h"
 
 constexpr const char* configPath = "../config.json";
 
 bf::ConfigState::ConfigState() {
     Json::Value value;
-    std::ifstream file(configPath);
-    if(!file.good())
-        return;
-    try {
-        file >> value;
-    }
-    catch(...) {
-        return;
-    }
-    file.close();
-    screenWidth = value.get("screen_width",screenWidth).asInt();
-    screenHeight = value.get("screen_height",screenHeight).asInt();
-    isUniformScaling = value.get("is_uniform_scaling",isUniformScaling).asBool();
-    isAxesLocked = value.get("is_axes_locked",isAxesLocked).asUInt();
-    divisionNum = value.get("division_num",divisionNum).asInt();
-    totalDivision = value.get("total_division",totalDivision).asInt();
-    maxTorusFragments = value.get("max_torus_fragments",maxTorusFragments).asInt();
-    movementSpeed = value.get("movement_speed",movementSpeed).asFloat();
-    rotationSpeed = value.get("rotation_speed",rotationSpeed).asFloat();
-	pointRadius = value.get("point_radius",pointRadius).asFloat();
-	backgroundColorR = value.get("background_color_r",backgroundColorR).asUInt();
-	backgroundColorG = value.get("background_color_g",backgroundColorG).asUInt();
-	backgroundColorB = value.get("background_color_b",backgroundColorB).asUInt();
+    if(!loadFromFile(value, configPath)) {return;}
+	load(value, screenWidth, "screen_width");
+	load(value, screenHeight, "screen_height");
+	load(value, isUniformScaling, "is_uniform_scaling");
+	load(value, isAxesLocked, "is_axes_locked");
+	load(value, divisionNum, "division_num");
+	load(value, totalDivision, "total_division");
+	load(value, maxTorusFragments, "max_torus_fragments");
+	load(value, movementSpeed, "movement_speed");
+	load(value, rotationSpeed, "rotation_speed");
+	load(value, pointRadius, "point_radius");
+	load(value, stereoscopic, "stereoscopic");
+	load(value, pointRadius, "point_radius");
+    load(value, grayPercentage, "gray_percentage");
+	load(value, backgroundColorR, "background_color_r");
+	load(value, backgroundColorG, "background_color_g");
+	load(value, backgroundColorB, "background_color_b");
 	if(value.isMember("camera") && value["camera"].isObject()) {
 		Json::Value cameraValue = value["camera"];
-		cameraFOV = cameraValue.get("fov",cameraFOV).asFloat();
-		cameraFOVmin = cameraValue.get("fov_min",cameraFOVmin).asFloat();
-		cameraFOVmax = cameraValue.get("fov_max",cameraFOVmax).asFloat();
-		cameraNear = cameraValue.get("near",cameraNear).asFloat();
-		cameraFar = cameraValue.get("far",cameraFar).asFloat();
-		cameraInitPos.x = cameraValue.get("pos_x",cameraInitPos.x).asFloat();
-		cameraInitPos.y = cameraValue.get("pos_y",cameraInitPos.y).asFloat();
-		cameraInitPos.z = cameraValue.get("pos_z",cameraInitPos.z).asFloat();
-		cameraInitRot.x = cameraValue.get("rot_x",cameraInitRot.x).asFloat();
-		cameraInitRot.y = cameraValue.get("rot_y",cameraInitRot.y).asFloat();
-		cameraInitRot.z = cameraValue.get("rot_z",cameraInitRot.z).asFloat();
+		load(cameraValue, cameraFOV, "fov");
+		load(cameraValue, cameraFOVmin, "fov_min");
+		load(cameraValue, cameraFOVmax, "fov_max");
+		load(cameraValue, cameraNear, "near");
+		load(cameraValue, cameraFar, "far");
+		load(cameraValue, cameraInitPos.x, "pos_x");
+		load(cameraValue, cameraInitPos.y, "pos_y");
+		load(cameraValue, cameraInitPos.z, "pos_z");
+		load(cameraValue, cameraInitRot.x, "rot_x");
+		load(cameraValue, cameraInitRot.y, "rot_y");
+		load(cameraValue, cameraInitRot.z, "rot_z");
 	}
 }
 
@@ -62,6 +56,8 @@ bf::ConfigState::~ConfigState() {
     value["movement_speed"]=movementSpeed;
     value["rotation_speed"]=rotationSpeed;
 	value["point_radius"]=pointRadius;
+    value["gray_percentage"]=grayPercentage;
+	value["stereoscopic"]=stereoscopic;
 	value["background_color_r"]=backgroundColorR;
 	value["background_color_g"]=backgroundColorG;
 	value["background_color_b"]=backgroundColorB;
@@ -150,14 +146,6 @@ float bf::ConfigState::getCameraFoVmax() const {
 
 float bf::ConfigState::getCameraFoVmin() const {
 	return cameraFOVmin;
-}
-
-float bf::ConfigState::getCameraNear() const {
-	return cameraNear;
-}
-
-float bf::ConfigState::getCameraFar() const {
-	return cameraFar;
 }
 
 const glm::vec3 &bf::ConfigState::getCameraInitPos() const {
