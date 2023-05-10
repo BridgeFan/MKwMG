@@ -18,8 +18,12 @@ namespace bf {
 		glm::mat4 projection, inverseProjection, view, inverseView;
 
         void internalDraw(const ConfigState& configState);
+        unsigned FBO=UINT_MAX, texture = UINT_MAX, RBO=UINT_MAX;
+        unsigned VBO=UINT_MAX, VAO=UINT_MAX, EBO=UINT_MAX;
 	public:
-		bf::ObjectArray objectArray;
+        virtual ~Scene();
+        void resizeFramebuffers(int x, int y) const;
+        bf::ObjectArray objectArray;
 		bf::Cursor cursor;
 		bf::MultiCursor multiCursor;
 		bf::Camera camera;

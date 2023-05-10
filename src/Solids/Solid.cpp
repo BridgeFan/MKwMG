@@ -41,8 +41,8 @@ void bf::Solid::setBuffers() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], usage);
 }
 
-/*void bf::Solid::draw(const bf::ShaderArray& shaderArray) const {
-    draw(shaderArray, Transform::Default);
+/*void bf::Solid::segmentDraw(const bf::ShaderArray& shaderArray) const {
+    bezierDraw(shaderArray, Transform::Default);
 }*/
 
 void bf::Solid::draw(const bf::ShaderArray& shaderArray/*, const bf::Transform& relativeTo*/) const {
@@ -61,7 +61,7 @@ void bf::Solid::ObjectGui() {
 }
 
 void bf::Solid::addVertex(const glm::vec3 &p) {
-	vertices.push_back(p);
+	vertices.emplace_back(p);
 }
 
 bf::ShaderType bf::Solid::getShaderType() const {
@@ -86,9 +86,9 @@ void bf::Solid::swapSolids(bf::Solid &a, bf::Solid &b) {
     std::swap(a.name, b.name);
 }
 
-bf::Vertex::Vertex(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+bf::Vertex::Vertex(float _x, float _y, float _z, float _tX, float _tY) : x(_x), y(_y), z(_z), tX(_tX), tY(_tY) {}
 
-bf::Vertex::Vertex(const glm::vec3 &p): Vertex(p.x,p.y,p.z) {
+bf::Vertex::Vertex(const glm::vec3 &p, const glm::vec2 &t): Vertex(p.x,p.y,p.z,t.x,t.y) {
 
 }
 

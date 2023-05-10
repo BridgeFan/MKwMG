@@ -20,9 +20,10 @@ namespace bf {
 		friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
 		static int _index;
         const bf::Cursor& cursor;
-		bool isWrappedX=false, isWrappedY=false;
         bool isPolygonVisible=false, isSurfaceVisible=true;
 	public:
+        bool isWrappedX=false, isWrappedY=false;
+        glm::vec<2,int> segs={3,3};
         ~BezierSurface0() override;
         glm::vec<2,int> samples;
 		std::vector<bf::BezierSurfaceSegment0> segments;

@@ -98,10 +98,10 @@ void bf::BezierCommon::postInit() {
 }
 
 void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
-	//draw points if active
+	//bezierDraw points if active
     if(shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-		shaderArray.setColor({.0f,.0f,.0f});
+		shaderArray.setColor(63,63,63);
         if (pointIndices.empty() || indices.empty() || vertices.empty()) {
             return;
         }
@@ -119,20 +119,21 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
         if (objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()] == this) {
             for (int i = 0; i < static_cast<int>(pointIndices.size()); i++) {
                 if (i == static_cast<int>(activeIndex))
-					shaderArray.setColor({1.f,.0f,.0f});
+					shaderArray.setColor(255,0,0);
                 else
-					shaderArray.setColor({0.f,1.f,.0f});
+					shaderArray.setColor(0,255,0);
                 objectArray[pointIndices[i]].draw(shaderArray);
             }
         }
     }
     bool isActive = objectArray.isCorrect(objectArray.getActiveIndex()) && &objectArray[objectArray.getActiveIndex()]==this;
     if(isActive)
-		shaderArray.setColor({1.f,.5f,.0f});
+		shaderArray.setColor(255,128,0);
     else
-		shaderArray.setColor({1.f,1.f,1.f});
+		shaderArray.setColor(255,255,255);
     if(isCurveVisible && scene && configState) {
-        bezier.draw(shaderArray,*scene,*configState,isTmpLineDrawn&&isPolygonVisible&&isActive,isTmpPointDrawn&&isActive);
+        bezier.bezierDraw(shaderArray, isTmpLineDrawn && isPolygonVisible && isActive,
+                          isTmpPointDrawn && isActive);
     }
 }
 

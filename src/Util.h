@@ -20,6 +20,7 @@
 #if defined(_MSC_VER) && _MSC_VER>=1929
 #define USE_STD_FORMAT
 #endif
+constexpr float PI = std::numbers::pi_v<float>;
 
 class ImGuiIO;
 namespace bf {

@@ -12,8 +12,10 @@ namespace bf {
         float x;
         float y;
         float z;
-        Vertex(float x, float y, float z);
-        Vertex(const glm::vec3& p);
+        float tX;
+        float tY;
+        Vertex(float x, float y, float z, float tX=.0f, float tY=.0f);
+        Vertex(const glm::vec3& p, const glm::vec2& t=glm::vec2(.0f));
     };
 	class Shader;
 	struct ConfigState;
@@ -38,8 +40,8 @@ namespace bf {
 		std::vector<unsigned> indices;
 		void setBuffers();
 	public:
-		virtual void draw(const bf::ShaderArray &shader) const override;
-		//virtual void draw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
+		void draw(const bf::ShaderArray &shader) const override;
+		//virtual void bezierDraw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
         ShaderType getShaderType() const override;
 

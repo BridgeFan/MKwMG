@@ -55,6 +55,7 @@ void bf::Window::run(bf::ConfigState &configState) {
 	if(!glfwStruct)
 		return;
 	auto& scene = glfwStruct->scene;
+    std::cout << "Running window\n";
 	while (!glfwWindowShouldClose(window))
 	{
 		configState.deltaTime = bf::getDeltaTime();
@@ -76,6 +77,7 @@ void bf::Window::run(bf::ConfigState &configState) {
 
 GLFWwindow* initWindow(const bf::ConfigState& configState)
 {
+    std::cout << "Init window begin\n";
 	GLFWwindow* window = glfwCreateWindow(configState.screenWidth, configState.screenHeight, "Project 2", nullptr, nullptr);
     if (window == nullptr)
 	{
@@ -115,6 +117,7 @@ GLFWwindow* initWindow(const bf::ConfigState& configState)
 	glEnable(GL_BLEND);
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    std::cout << "Init window end\n";
 	return window;
 }
 
@@ -124,8 +127,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
     if(!ptr)
         return;
-    ptr->configState.screenWidth=width;
-    ptr->configState.screenHeight=height;
+    auto& s = ptr->scene;
+    auto& c = ptr->configState;
+    if(c.screenWidth==width && c.screenHeight==height)
+        return;
+    c.screenWidth=width;
+    c.screenHeight=height;
+    s.resizeFramebuffers(width, height);
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -137,18 +145,26 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     //set differences
     s.configState.mouseX = static_cast<float>(xposIn);
     s.configState.mouseY = static_cast<float>(yposIn);
+    s.io.io.AddMousePosEvent(s.configState.mouseX, s.configState.mouseY);
+    if(s.io.io.WantCaptureMouse) {
+        return;
+    }
 	static glm::vec2 lastMousePos = {s.configState.mouseX, s.configState.mouseY};
     //events
 	s.scene.onMouseMove(lastMousePos, s.configState);
 	lastMousePos = {s.configState.mouseX, s.configState.mouseY};
 }
 
-void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     if(!ptr)
         return;
     auto& s = *ptr;
+    s.io.io.AddMouseWheelEvent(xoffset, yoffset);
+    if(s.io.io.WantCaptureMouse) {
+        return;
+    }
     auto yOffsetF = static_cast<float>(yoffset);
     s.configState.cameraFOV = std::max(std::min(s.configState.cameraFOV - yOffsetF, s.configState.getCameraFoVmax()),
 									   s.configState.getCameraFoVmin());
@@ -158,17 +174,18 @@ void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int m
     //get data from pointer
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
     if(!ptr) return;
-	//TODO - pass event to ImGui manually
-	if(ptr->io.io.WantCaptureKeyboard)
-		return;
     auto& s = *ptr;
     //cast data
     using namespace bf::event;
     auto key = static_cast<Key>(k);
     auto modKeyBit = static_cast<ModifierKeyBit>(mods);
     auto state = static_cast<KeyState>(action);
+    using namespace bf::event;
+    s.io.io.AddKeyEvent(toImGui(key),toImGui(state));
+    if(s.io.io.WantCaptureKeyboard)
+        return;
     //delegate event
-    if(state==bf::event::KeyState::Press) {
+    if(state==KeyState::Press) {
 		if (key == Key::Escape) {
 			glfwSetWindowShouldClose(window, true);
 		}
@@ -187,7 +204,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     //get data from pointer
     auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-    if(!ptr || ptr->io.io.WantCaptureMouse)
+    if(!ptr)
         return;
     auto& s = *ptr;
     //cast data
@@ -195,6 +212,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     auto mouseButton = static_cast<MouseButton>(button);
     auto modKeyBit = static_cast<ModifierKeyBit>(mods);
     auto state = static_cast<MouseButtonState>(action);
+    s.io.io.AddMouseButtonEvent(bf::event::toImGui(mouseButton),bf::event::toImGui(state));
+    if(s.io.io.WantCaptureMouse) {
+        return;
+    }
     //delegate event
 	if(state==bf::event::MouseButtonState::Press) {
 		if(s.scene.onMouseButtonPressed(mouseButton, modKeyBit, s.configState))

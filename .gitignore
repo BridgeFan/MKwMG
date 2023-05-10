@@ -1,7 +1,9 @@
 /cmake-build-debug/
 /imgui-master/
 /.idea/
-/lib/
-libimgui.a
-libimgui_impl_glfw.a
-libimgui_impl_opengl3.a
+/lib/bin
+/lib/CMakeFiles
+/lib/CMakeCache.txt
+/lib/Makefile
+/.vscode/
+

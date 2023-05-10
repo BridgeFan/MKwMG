@@ -5,7 +5,7 @@
 #ifndef MG1_ZAD2_EVENT_H
 #define MG1_ZAD2_EVENT_H
 #include <GLFW/glfw3.h>
-
+enum ImGuiKey: int;
 namespace bf::event {
         //taken from https://github.com/janekb04/glfwpp (MIT license, made by janekb04) with minor changes
         enum class Key : int {
@@ -165,6 +165,11 @@ namespace bf::event {
             ModNumLock = GLFW_MOD_NUM_LOCK
 #endif
         };
+        bool toImGui(MouseButtonState state);
+        bool toImGui(KeyState state);
+        ImGuiKey toImGui(Key key);
+        int toImGui(MouseButton button);
+        int toImGui(ModifierKeyBit bit);
     }
 
 #endif //MG1_ZAD2_EVENT_H

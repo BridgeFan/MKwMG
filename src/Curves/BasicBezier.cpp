@@ -38,23 +38,23 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
     }
 }
 
-void bf::BasicBezier::draw(const bf::ShaderArray &shaderArray, const bf::Scene &,
-                           const bf::ConfigState& cState, bool isLineDrawn, bool isPointDrawn) const {
+void bf::BasicBezier::bezierDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isPointDraw) const {
 	auto& shader = shaderArray.getActiveShader();
-	if(VAO==UINT_MAX)
+	if(VAO==UINT_MAX || !configState)
 		return;
+    auto& cState = *configState;
 	if(shaderArray.getActiveIndex()==BasicShader) {
 		glBindVertexArray(VAO);
-		shaderArray.setColor({1.f,.0f,1.f});
+		shaderArray.setColor(255,0,255);
 		if(isLineDrawn) {
 			glDrawElements(GL_LINE_STRIP, vertices.size(), GL_UNSIGNED_INT, 0);
 		}
 	}
     else if(shaderArray.getActiveIndex()==PointShader) {
         glBindVertexArray(VAO);
-		shaderArray.setColor({1.f,.0f,1.f});
+		shaderArray.setColor(255,0,255);
         shader.setVec3("position", 0.f,0.f,0.f);
-        if(isPointDrawn) {
+        if(isPointDraw) {
             glDrawElements(GL_POINTS, vertices.size(), GL_UNSIGNED_INT, 0);
         }
     }

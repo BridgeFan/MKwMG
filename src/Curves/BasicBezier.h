@@ -18,8 +18,7 @@ namespace bf {
         virtual ~BasicBezier()=default;
         BasicBezier();
         std::vector<glm::vec3> points;
-        virtual void draw(const bf::ShaderArray& shaderArray,
-                          const bf::Scene& scene, const bf::ConfigState&, bool isLineDrawn, bool isPointDraw) const;
+        virtual void bezierDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isPointDraw) const;
         void recalculate(bool wasSizeChanged=true);
     };
 	std::vector<glm::vec3> bezier2ToBezier0(const std::vector<glm::vec3>& points);

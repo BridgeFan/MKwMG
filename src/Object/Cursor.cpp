@@ -12,13 +12,13 @@ void bf::Cursor::draw(const bf::ShaderArray &shaderArray) {
 		return;
 	}
 	for(auto & line : lines) {
-		shaderArray.setColor({1.f,1.f,.0f});
+		shaderArray.setColor(255,255,0);
 		line.setPosition(transform.position);
 		line.setRotation(glm::vec3(.0f));
 		line.setScale(glm::vec3(1.f));
 		line.draw(shaderArray);
 	}
-	shaderArray.setColor({1.f,1.f,1.f});
+	shaderArray.setColor(255,255,255);
 }
 
 bf::Cursor::Cursor(const Transform &t) : lines{DummySolid(""),DummySolid(""),DummySolid("")},

@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 #include "src/Shader/ShaderArray.h"
 #include "ObjectArray.h"
+#include "Solids/Solid.h"
+
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
 unsigned bf::Point::VBO = UINT_MAX;
@@ -34,10 +36,10 @@ void bf::Point::Init() {
 
 	glBindVertexArray(VAO);
 
-	float vert[] = {.0f,.0f,.0f};
+	bf::Vertex vert = {.0f,.0f,.0f};
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, vert, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(bf::Vertex), &vert, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
 	glEnableVertexAttribArray(0);
 }

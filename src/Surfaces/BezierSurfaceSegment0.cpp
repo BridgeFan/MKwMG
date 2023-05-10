@@ -7,13 +7,12 @@
 #include "BezierSurfaceSegment0.h"
 #include "Object/ObjectArray.h"
 #include "Shader/ShaderArray.h"
-#include <iostream>
 
 void bf::BezierSurfaceSegment0::initGL(const bf::ObjectArray &objectArray) {
     vertices.clear();
     indices.clear();
     for(auto i: pointIndices) {
-        vertices.push_back(objectArray[i].getPosition());
+        vertices.emplace_back(objectArray[i].getPosition());
     }
     //first part has size 16
     for(int i=0;i<16;i++)
@@ -37,19 +36,18 @@ void bf::BezierSurfaceSegment0::initGL(const bf::ObjectArray &objectArray) {
 }
 
 
-void bf::BezierSurfaceSegment0::draw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn) const {
+void bf::BezierSurfaceSegment0::segmentDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn) const {
     if(indices.empty() || vertices.empty())
         return;
-    //TODO - draw
-    if(shaderArray.getActiveIndex()==BasicShader && isLineDrawn) {
-        shaderArray.setColor(0, 0, 0);
+    if(shaderArray.getActiveIndex() == BasicShader && isLineDrawn) {
+        shaderArray.setColor(63, 63, 63);
         //function assumes set projection and view matrices
         glBindVertexArray(VAO);
         glDrawElements(GL_LINES, 48, GL_UNSIGNED_INT,   // type
                        reinterpret_cast<void*>(16*sizeof(unsigned))           // element array buffer offset
         );
     }
-    else if(shaderArray.getActiveIndex()==BezierSurfaceShader && isSurfaceDrawn) {
+    else if(shaderArray.getActiveIndex() == BezierSurfaceShader && isSurfaceDrawn) {
         glPatchParameteri( GL_PATCH_VERTICES, 16);
         const auto& shader = shaderArray.getActiveShader();
         shader.setInt("SegmentsX",samples.x);

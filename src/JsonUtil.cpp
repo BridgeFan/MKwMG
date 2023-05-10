@@ -7,6 +7,7 @@
 #include "Object/Point.h"
 #include "Solids/Torus.h"
 #include "Curves/BezierCommon.h"
+#include "Surfaces/BezierSurface0.h"
 void bf::load(const Json::Value &value, std::string &a, const std::string &name) {
     if(!value.isMember(name) || !value[name].isString()) return;
     a = value[name].asString();
@@ -115,6 +116,7 @@ Json::Value bf::saveValue(const bf::BezierCommon &bezier, unsigned int id, const
     Json::Value value;
     value["name"]=bezier.name;
     value["id"]=id;
+    value["id"]=id;
     Json::Value cPts=Json::arrayValue;
     auto& pts = bezier.getPointIndices();
     cPts.resize(pts.size());
@@ -124,6 +126,44 @@ Json::Value bf::saveValue(const bf::BezierCommon &bezier, unsigned int id, const
         cPts[i]=val;
     }
     value[ptName]=cPts;
+    value["objectType"]=typeName;
+    return value;
+}
+
+Json::Value bf::saveValue(const bf::BezierSurface0 &surface, unsigned int id, const std::string &typeName,
+                          const std::string &ptName, unsigned& idTmp) {Json::Value value;
+    value["name"]=surface.name;
+    value["id"]=id;
+    value["parameterWrapped"]=Json::objectValue;
+    value["parameterWrapped"]["u"]=surface.isWrappedX;
+    value["parameterWrapped"]["v"]=surface.isWrappedY;
+    value["size"]=Json::objectValue;
+    value["size"]["x"]=surface.segs.x;
+    value["size"]["y"]=surface.segs.y;
+    Json::Value cPts=Json::arrayValue;
+    auto& s = surface.segments;
+    cPts.resize(s.size());
+    for(unsigned i=0u;i<s.size();i++) {
+        const auto& segment = s[i];
+        //TODO - set ID of BezierSegment
+        Json::Value val;
+        val["id"]=idTmp;
+        idTmp++;
+        val["name"]=segment.name;
+        val["objectType"]=ptName;
+        val["samples"]=Json::objectValue;
+        val["samples"]["x"]=segment.samples.x;
+        val["samples"]["y"]=segment.samples.y;
+        val["controlPoints"]=Json::arrayValue;
+        val["controlPoints"].resize(16);
+        for(int j=0;j<16;j++) {
+            Json::Value pValue = Json::objectValue;
+            pValue["id"]=segment.pointIndices[j];
+            val["controlPoints"][j]=pValue;
+        }
+        cPts[i]=val;
+    }
+    value["patches"]=cPts;
     value["objectType"]=typeName;
     return value;
 }

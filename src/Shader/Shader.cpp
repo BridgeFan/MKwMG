@@ -64,6 +64,7 @@ bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPat
 	glDeleteShader(fragment);
 	if(isGeometryShaderUsed)
 		glDeleteShader(geometry);
+    std::cout << std::format("Shader {} {} loaded successfully\n",vertexPath,fragmentPath);
 }
 void bf::Shader::use() const
 {
@@ -148,6 +149,7 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     glDeleteShader(tessEval);
     if(isGeometryShaderUsed)
         glDeleteShader(geometry);
+    std::cout << std::format("Tessellation Shader {} {} loaded successfully\n",vertexPath,fragmentPath);
 
 }
 

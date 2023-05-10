@@ -9,18 +9,18 @@
 #include "Object/ObjectArray.h"
 #include "Object/Cursor.h"
 #include "Object/Point.h"
+#include "Util.h"
 
 int bf::BezierSurface0::_index = 1;
 
 void bf::BezierSurface0::draw(const bf::ShaderArray& shaderArray) const {
     for(const auto& s: segments) {
-        s.draw(shaderArray, isPolygonVisible, isSurfaceVisible);
+        s.segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible);
     }
 }
 
 void bf::BezierSurface0::ObjectGui() {
 	bf::imgui::checkChanged("Bezier surface name", name);
-    static glm::vec<2, int> segs={3,3};
     static glm::vec2 totalSize={5.f,5.f};
     static bool isCylinder=false;
     if(segments.empty()) {
@@ -53,7 +53,6 @@ void bf::BezierSurface0::ObjectGui() {
                         objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
                     }
                 }
-                //TODO - set segments for cylinder
                 for (int i = 0; i < segs.y; i++) {
                     int S = segs.x * 3 + 1;
                     for (int j = 0; j < segs.x; j++) {
@@ -61,15 +60,39 @@ void bf::BezierSurface0::ObjectGui() {
                         segments.back().samples = samples;
                         for (int k = 0; k < 4; k++) {
                             for (int l = 0; l < 4; l++) {
-                                segments.back().pointIndices[4 * k + l] = P + 3 * i + l + S * (3 * j + k);
+                                segments.back().pointIndices[4 * k + l] = P + 3 * j + l + S * (3 * i + k);
                             }
                         }
-                        segments.back().initGL(objectArray);
                     }
                 }
             }
             else {
-                //TODO - set segments for cylinder
+                float dt = 2.f * PI / (3.f * static_cast<float>(segs.x));
+                float dy = totalSize.y / static_cast<float>(segs.y) / 3.f;
+                for (int i = 0; i <= 3 * segs.y; i++) {
+                    for (int j = 0; j < 3 * segs.x; j++) {
+                        bf::Transform t = cursor.transform;
+                        glm::vec3 v(.0f);
+                        v.x = std::cos(dt * (static_cast<float>(j)));
+                        v.z = std::sin(dt * (static_cast<float>(j)));
+                        v.y = dy * (static_cast<float>(i));
+                        t.position += v;
+                        objectArray.add<bf::Point>(t);
+                        objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
+                    }
+                }
+                for (int i = 0; i < segs.y; i++) {
+                    int S = segs.x * 3;
+                    for (int j = 0; j < segs.x; j++) {
+                        segments.emplace_back();
+                        segments.back().samples = samples;
+                        for (int k = 0; k < 4; k++) {
+                            for (int l = 0; l < 4; l++) {
+                                segments.back().pointIndices[4 * k + l] = P + (3 * i + l)%S + S * (3 * j + k);
+                            }
+                        }
+                    }
+                }
             }
             objectArray.isForcedActive=false;
         }
@@ -103,8 +126,8 @@ bf::BezierSurface0::BezierSurface0(bf::ObjectArray &objArray, const bf::Cursor& 
 		{_index++;}
 
 void bf::BezierSurface0::postInit() {
-	//TODO
-	Object::postInit();
+    for(auto& s: segments)
+        s.initGL(objectArray);
 }
 
 void bf::BezierSurface0::onRemoveObject(unsigned int index) {
@@ -117,7 +140,6 @@ void bf::BezierSurface0::onMoveObject(unsigned int index) {
     for(auto& s: segments) {
         s.onPointMove(objectArray, index);
     }
-	//TODO
 }
 
 bf::BezierSurface0::~BezierSurface0() {

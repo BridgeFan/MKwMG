@@ -4,14 +4,20 @@
 #include "ConfigState.h"
 #include "Util.h"
 #include <fstream>
+#include <iostream>
 #include "Event.h"
 #include "JsonUtil.h"
 
 constexpr const char* configPath = "../config.json";
 
 bf::ConfigState::ConfigState() {
+    std::cout << "Config loading begin\n";
     Json::Value value;
-    if(!loadFromFile(value, configPath)) {return;}
+    if(!loadFromFile(value, configPath)) {
+        std::cout << "Config file not found\n";
+        return;
+    }
+    std::cout << "Config file found\n";
 	load(value, screenWidth, "screen_width");
 	load(value, screenHeight, "screen_height");
 	load(value, isUniformScaling, "is_uniform_scaling");
@@ -42,6 +48,7 @@ bf::ConfigState::ConfigState() {
 		load(cameraValue, cameraInitRot.y, "rot_y");
 		load(cameraValue, cameraInitRot.z, "rot_z");
 	}
+    std::cout << "Config loading finished\n";
 }
 
 bf::ConfigState::~ConfigState() {

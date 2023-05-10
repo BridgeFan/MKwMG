@@ -4,6 +4,7 @@
 
 #include <GL/glew.h>
 #include <array>
+#include <iostream>
 #include "Scene.h"
 #include "ConfigState.h"
 #include "src/Shader/Shader.h"
@@ -15,7 +16,7 @@
 #include "FileLoading.h"
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
-	//draw objects
+	//bezierDraw objects
 	std::vector<unsigned> indices;
 	if(objectArray.isMultipleActive()) {
 		multiCursor.transform.position+=objectArray.getCentre();
@@ -51,17 +52,31 @@ void bf::Scene::draw(const ConfigState& configState) {
 	inverseProjection = bf::getInverseProjectionMatrix(configState.cameraFOV, aspect,
 			configState.cameraNear, configState.cameraFar);
 	if(!configState.stereoscopic) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		shaderArray.addCommonUniform("projection", projection);
 		shaderArray.setStereoscopicState(bf::StereoscopicState::None);
 		internalDraw(configState);
 	}
 	else {
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+        shaderArray.addCommonUniform("projection", projection);
 		//TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::LeftEye);
 		internalDraw(configState);
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO+1);
 		//TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::RightEye);
 		internalDraw(configState);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture+1);
+        shaderArray.changeShader(LinkShader);
+        shaderArray.getActiveShader().setInt("texture1", 0);
+        shaderArray.getActiveShader().setInt("texture2", 1);
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
 	}
 }
 
@@ -77,8 +92,53 @@ bf::Scene::Scene(const ConfigState& configState) :
     shaderArray.setGrayPercentage(configState.grayPercentage);
     bf::Point::initObjArrayRef(objectArray);
     bf::Object::initData(configState, *this);
+    //add framebuffers
+    glGenFramebuffers(2, &FBO);
+    glGenTextures(2, &texture);
+    glGenRenderbuffers(2, &RBO);
+    for(int i=0;i<2;i++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO+i);
+        glBindTexture(GL_TEXTURE_2D, texture+i);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, configState.screenWidth, configState.screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture+i, 0);
+        glBindRenderbuffer(GL_RENDERBUFFER, RBO+i);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, configState.screenWidth, configState.screenHeight); // use a single renderbuffer object for both a depth AND stencil buffer.
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO+i);
+    }
+    const float vertices[] = {
+            // positions        // texture coords
+            1.f, 1.f, 0.0f,   1.0f, 1.0f,   // top right
+            1.f, -1.f, 0.0f,   1.0f, 0.0f,   // bottom right
+            -1.f, -1.f, 0.0f,0.0f, 0.0f,   // bottom left
+            -1.f,  1.f, 0.0f,0.0f, 1.0f    // top left
+    };
+    const unsigned int indices[] = {
+            0, 1, 3, // first triangle
+            1, 2, 3  // second triangle
+    };
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
+    glEnableVertexAttribArray(0);
+    // texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     if(!bf::loadFromFile(objectArray)) {
-        objectArray.add<bf::Torus>(); //initial
+        objectArray.add<bf::Torus>(); //initial configuration
     }
 }
 
@@ -274,4 +334,22 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 			}
 		}
 	}
+}
+
+bf::Scene::~Scene() {
+    if(FBO<UINT_MAX) glDeleteFramebuffers(2, &FBO);
+    if(texture<UINT_MAX) glDeleteTextures(2, &texture);
+    if(RBO<UINT_MAX) glDeleteRenderbuffers(2, &RBO);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
+void bf::Scene::resizeFramebuffers(int x, int y) const {
+    for(int i=0;i<2;i++) {
+        glNamedRenderbufferStorage(RBO+i, GL_DEPTH_COMPONENT, x, y);
+        glBindTexture(GL_TEXTURE_2D, texture+i);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -217,9 +217,9 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& 
         for (std::size_t i = 0; i < objects.size(); i++) {
             if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
                 if (isActive(i))
-					shaderArray.setColor({1.f,.5f,.0f});
+					shaderArray.setColor(255,128,0);
                 else
-					shaderArray.setColor({1.f,1.f,1.f});
+					shaderArray.setColor(255,255,255);
                 objects[i].first->draw(shaderArray);
             }
         }

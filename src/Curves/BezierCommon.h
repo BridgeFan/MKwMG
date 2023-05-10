@@ -41,6 +41,7 @@ namespace bf {
 
 		bool addPoint(unsigned index) override;
 		bool removePoint(unsigned index);
+        using bf::Solid::draw;
 		void draw(const ShaderArray &shaderArray) const override;
 		void ObjectGui() override;
 		[[nodiscard]] bool isMovable() const override {return false;}

@@ -62,7 +62,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 	int n=pointIndices.size();
     if(n<=1) {
         positions.clear();
-        bezier.points = bf::bezier2ToBezier0(positions);
+        bezier.points.clear();
         bezier.recalculate(wasSizeChanged);
         return;
     }
@@ -108,11 +108,14 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
         if(i==n-2)
             bezier.points[3*i+3]=pa[i]+pb[i]+pc[i]+pd[i];
     }
-    positions=bf::bezier0ToBezier2(bezier.points);
+    auto bezier2 = bf::bezier0ToBezier2(bezier.points);
+    for(const auto& be: bezier2) {
+        positions.emplace_back(be);
+    }
 	bezier.recalculate(wasSizeChanged);
 	//update GPU data
 	if(!wasSizeChanged) {
-		glNamedBufferSubData(lVBO, 0, positions.size() * sizeof(glm::vec3), positions.data());
+		glNamedBufferSubData(lVBO, 0, positions.size() * sizeof(Vertex), positions.data());
 	}
 	else {
 		if(lVAO<UINT_MAX)
@@ -139,7 +142,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 		glBindVertexArray(lVAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, lVBO);
-		glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(Vertex), positions.data(), GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 		glEnableVertexAttribArray(0);
 
@@ -152,7 +155,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 void bf::BezierCurveInter::draw(const bf::ShaderArray &shaderArray) const {
 	if(pointIndices.size()>=2 && isPolygonVisible && shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-		shaderArray.setColor({0.f,.0f,.0f});
+		shaderArray.setColor(63,63,63);
 		shader.setMat4("model", glm::mat4(1.f));
 		glBindVertexArray(lVAO);
 		glDrawElements(GL_LINES, positions.size() * 2 - 2, GL_UNSIGNED_INT, 0);

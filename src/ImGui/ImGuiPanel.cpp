@@ -46,6 +46,7 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
     ImGui::Text("Hold CTRL and click to select multiple items.");
     ImGui::Checkbox("Uniform scalng", &configState.isUniformScaling);
 	ImGui::Checkbox("Stereoscopic", &configState.stereoscopic);
+    bf::imgui::checkSliderChanged("Point half size", configState.pointRadius, 1.f, 16.f);
     if(bf::imgui::checkSliderChanged("Gray percentage", configState.grayPercentage, .0f, 1.f)) {
         scene.shaderArray.setGrayPercentage(configState.grayPercentage);
     }

@@ -24,7 +24,7 @@ void bf::MultiCursor::draw(const bf::ShaderArray &shaderArray, const bf::ConfigS
         line.setScale(transform.scale);
         line.draw(shaderArray);
     }
-	shaderArray.setColor({1.f,1.f,1.f});
+	shaderArray.setColor(255,255,255);
 }
 
 bf::MultiCursor::MultiCursor(const bf::Transform &t) : lines{DummySolid(""),DummySolid(""),DummySolid("")},

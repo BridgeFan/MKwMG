@@ -21,6 +21,7 @@ namespace bf {
         BezierShader=1,
         PointShader=2,
 		BezierSurfaceShader=3,
+        LinkShader=4,
         MultipleShaders
     };
     template<typename T>

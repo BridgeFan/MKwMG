@@ -20,7 +20,8 @@ bool bf::ShaderArray::changeShader(int n) {
         case BezierSurfaceShader:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
             break;
-        case MultipleShaders:   break;
+        case LinkShader:
+        case MultipleShaders: break;
     }
 	activeIndex=n;
     type = static_cast<bf::ShaderType>(activeIndex);
@@ -35,12 +36,15 @@ bool bf::ShaderArray::changeShader(int n) {
             glPatchParameteri( GL_PATCH_VERTICES, 16);
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
             break;
-        case MultipleShaders:   break;
+        case LinkShader:
+        case MultipleShaders: break;
     }
     shaders[n].use();
-	for (auto &&[name, v]: commonUniformMap) {
-		setUniform(name, v);
-	}
+    if(n<static_cast<int>(LinkShader)) {
+        for (auto &&[name, v]: commonUniformMap) {
+            setUniform(name, v);
+        }
+    }
     return true;
 }
 
@@ -74,7 +78,7 @@ int bf::ShaderArray::getActiveIndex() const {
 
 const bf::Shader &bf::ShaderArray::getActiveShader() const {return shaders[activeIndex];}
 
-int bf::ShaderArray::getSize() const {return shaders.size();}
+int bf::ShaderArray::getSize() const {return static_cast<int>(shaders.size())-1;}
 
 void bf::ShaderArray::addBasicShader(const std::string &path, bool isGeometric) {
     if(isGeometric)
@@ -96,6 +100,7 @@ bf::ShaderArray::ShaderArray() {
     addTessellationShader(SHADER_PATH+"bezierShader", false);
     addBasicShader(SHADER_PATH+"pointShader", false);
     addTessellationShader(SHADER_PATH+"surfaceShader", false);
+    addBasicShader(SHADER_PATH+"linkShader", false);
 }
 
 glm::vec3 getGray(const glm::vec3& vec) {
@@ -119,6 +124,7 @@ void bf::ShaderArray::setColor(const glm::vec3 &vec) const {
 }
 
 void bf::ShaderArray::setStereoscopicState(bf::StereoscopicState state) {
+    changeShader(BasicShader);
 	stereoscopicState = state;
 }
 

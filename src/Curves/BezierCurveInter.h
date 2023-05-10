@@ -15,7 +15,7 @@ namespace bf {
 	private:
 		unsigned lVAO=UINT_MAX, lVBO=UINT_MAX, lIBO=UINT_MAX;
 		static int _index;
-		std::vector<glm::vec3> positions;
+		std::vector<Vertex> positions;
 		void bezierOnAdd() override;
 		void bezierOnRemove(unsigned int index) override;
 		void bezierOnSwap(unsigned int index1, unsigned int index2) override;
