@@ -109,6 +109,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
             bezier.points[3*i+3]=pa[i]+pb[i]+pc[i]+pd[i];
     }
     auto bezier2 = bf::bezier0ToBezier2(bezier.points);
+    positions.clear();
     for(const auto& be: bezier2) {
         positions.emplace_back(be);
     }
@@ -118,13 +119,6 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 		glNamedBufferSubData(lVBO, 0, positions.size() * sizeof(Vertex), positions.data());
 	}
 	else {
-		if(lVAO<UINT_MAX)
-			glDeleteVertexArrays(1, &lVAO);
-		if(lVBO<UINT_MAX)
-			glDeleteBuffers(1, &lVBO);
-		if(lIBO<UINT_MAX)
-			glDeleteBuffers(1, &lIBO);
-		//set buffers
 		if(positions.empty()) {
 			return;
 		}
@@ -135,20 +129,27 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 				tmpIndices.emplace_back(i);
 			tmpIndices.emplace_back(i);
 		}
-
-		glGenVertexArrays(1, &lVAO);
-		glGenBuffers(1, &lVBO);
-
-		glBindVertexArray(lVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, lVBO);
-		glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(Vertex), positions.data(), GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-		glEnableVertexAttribArray(0);
-
-		glGenBuffers(1, &lIBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lIBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, tmpIndices.size() * sizeof(unsigned), &tmpIndices[0], GL_STATIC_DRAW);
+        if(VAO==UINT_MAX) {
+            if(indices.empty() || vertices.empty()) {
+                return;
+            }
+            glGenVertexArrays(1, &VAO);
+            glGenBuffers(1, &VBO);
+            glBindVertexArray(VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+            glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(Vertex), positions.data(), usage);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+            glEnableVertexAttribArray(0);
+            glGenBuffers(1, &IBO);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, tmpIndices.size() * sizeof(unsigned), tmpIndices.data(), usage);
+        }
+        else {
+            int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+            glNamedBufferData(VBO, positions.size() * sizeof(Vertex), positions.data(), usage);
+            glNamedBufferData(IBO, tmpIndices.size() * sizeof(unsigned), tmpIndices.data(), usage);
+        }
 	}
 }
 

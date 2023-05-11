@@ -22,7 +22,7 @@
 #include "Surfaces/BezierSurface0.h"
 #include "JsonUtil.h"
 #include "Surfaces/BezierSurfaceSegment0.h"
-#include "Object/Cursor.h"
+#include "src/Gizmos/Cursor.h"
 
 
 const std::string schemaStr = R"_JSON_({

@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 27.03.23.
 //
@@ -90,7 +91,8 @@ namespace bf {
         bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods);
         bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
         bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
-		void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos); //return if event should not be checked after
+		void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos, const bf::ConfigState& configState,
+                         const glm::mat4& view, const glm::mat4& projection); //return if event should not be checked after
 	};
 }
 

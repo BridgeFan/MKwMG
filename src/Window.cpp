@@ -8,10 +8,8 @@
 #include <array>
 #include "ImGui/imgui_include.h"
 #include "Util.h"
-#ifdef USE_STD_FORMAT
-#include <format>
-#endif
 #include <iostream>
+#include <format>
 #include "Event.h"
 #include "ImGui/ImGuiUtil.h"
 #include "ImGui/ImGuiPanel.h"
@@ -98,22 +96,13 @@ GLFWwindow* initWindow(const bf::ConfigState& configState)
 	{
 		/* Problem: glewInit failed, something is seriously wrong. */
 		std::string str = reinterpret_cast<const char*>(glewGetErrorString(err));
-#ifdef USE_STD_FORMAT
 		std::cerr << std::format("Error: {}\n", str);
-#else
-        std::cerr << "Error: " << str << "\n";
-#endif
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 	std::string str = reinterpret_cast<const char*>(glewGetString(GLEW_VERSION));
-#ifdef USE_STD_FORMAT
 	std::cout <<  std::format("Status: Using GLEW {}\n", str);
-#else
-    std::cout << "Status: Using GLEW " << str << "\n";
-#endif
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_STENCIL_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -124,9 +113,11 @@ GLFWwindow* initWindow(const bf::ConfigState& configState)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	auto* ptr = static_cast<bf::GlfwStruct*>(glfwGetWindowUserPointer(window));
-	glViewport(0, 0, width, height);
     if(!ptr)
         return;
+    if(ptr->configState.stereoscopic)
+        return;
+    glViewport(0, 0, width, height);
     auto& s = ptr->scene;
     auto& c = ptr->configState;
     if(c.screenWidth==width && c.screenHeight==height)
@@ -260,11 +251,6 @@ MessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei
 		case GL_DEBUG_SEVERITY_NOTIFICATION:return; //should not be shown
 		default:							severityStr="?????";
 	}
-#ifdef USE_STD_FORMAT
 	std::cerr << std::format("GL CALLBACK: id={}, source = {}, type = {}, severity = {}, message = {}\n",
 							 id, sourceStr, typeStr, severityStr, message );
-#else
-	std::cerr << "GL CALLBACK: id=" << id << ", source = " << sourceStr << ", type = " << typeStr << ", severity = " <<
-        severityStr << ", message = " << message << "\n";
-#endif
 }

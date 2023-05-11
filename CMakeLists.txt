@@ -31,11 +31,11 @@ src/Window.cpp
 src/ImGui/ImGuiPanel.cpp
 src/ImGui/ImGuiUtil.cpp
 src/Object/Point.cpp
-src/Object/Cursor.cpp
+        src/Gizmos/Cursor.cpp
 src/Object/Object.cpp
 src/Object/ObjectArray.cpp
 src/Object/Transform.cpp
-src/Object/MultiCursor.cpp
+        src/Gizmos/MultiCursor.cpp
 src/Object/ObjectArrayListener.cpp
 src/main.cpp
 src/FileLoading.cpp
@@ -62,13 +62,13 @@ src/JsonUtil.h
 src/ImGui/ImGuiPanel.h
 src/ImGui/ImGuiUtil.h
 src/ImGui/imgui_include.h
-src/Object/MultiCursor.h
+        src/Gizmos/MultiCursor.h
 src/Object/Transform.h
 src/Object/Object.h
 src/Object/ObjectArray.h
 src/Object/ObjectArrayListener.h
 src/Object/Point.h
-src/Object/Cursor.h
+        src/Gizmos/Cursor.h
 src/Window.h
 src/Event.cpp)
 

@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 20.03.2022.
 //
@@ -33,6 +34,8 @@ namespace bf {
     glm::mat4 getInverseRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c);
     glm::mat4 getProjectionMatrix(float fov, float aspect, float near = .1f, float far = 100.f);
     glm::mat4 getInverseProjectionMatrix(float fov, float aspect, float near = .1f, float far = 100.f);
+    glm::mat4 getLeftProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD);
+    glm::mat4 getRightProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD);
     Transform decomposeModelMatrix(const glm::mat4 &matrix);
     glm::mat4 getInverseRotateMatrix(const glm::vec3 &rot);
 }

@@ -34,6 +34,8 @@ bf::ConfigState::ConfigState() {
 	load(value, backgroundColorR, "background_color_r");
 	load(value, backgroundColorG, "background_color_g");
 	load(value, backgroundColorB, "background_color_b");
+    load(value, convergence, "convergence");
+    load(value, IOD, "iod");
 	if(value.isMember("camera") && value["camera"].isObject()) {
 		Json::Value cameraValue = value["camera"];
 		load(cameraValue, cameraFOV, "fov");
@@ -68,6 +70,8 @@ bf::ConfigState::~ConfigState() {
 	value["background_color_r"]=backgroundColorR;
 	value["background_color_g"]=backgroundColorG;
 	value["background_color_b"]=backgroundColorB;
+    value["convergence"]=convergence;
+    value["iod"]=IOD;
 	//camera
 	Json::Value cameraValue;
 	cameraValue["fov"]=cameraFOV;
@@ -117,6 +121,16 @@ void bf::ConfigState::onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit
             break;
         case Key::U:
             isUniformScaling = !isUniformScaling;
+            break;
+        case Key::S:
+            stereoscopic = !stereoscopic;
+            break;
+        case Key::B:
+            if(!isBoxSelect) {
+                boxMouseX = mouseX;
+                boxMouseY = mouseY;
+            }
+            isBoxSelect = !isBoxSelect;
             break;
         default:
             ;

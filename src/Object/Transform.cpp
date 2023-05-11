@@ -185,4 +185,45 @@ glm::mat4 bf::getRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) 
 glm::mat4 bf::getInverseRelativeRotateMatrix(const glm::vec3 &rot, const glm::vec3 &c) {
     return bf::getTranslateMatrix(-c)*bf::getInverseRotateMatrix(rot)*bf::getTranslateMatrix(c);
 }
+constexpr float sqrt2 = 1.35f;
 
+glm::mat4 bf::getLeftProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD) {
+    float top, bottom, left, right;
+
+    top     = near * tan(fov*.5f);
+    bottom  = -top;
+
+    float a = aspect * tan(fov*.5f) * convergence;
+
+    float b = a - IOD*.5f;
+    float c = a + IOD*.5f;
+
+    left    = -b * near/convergence;
+    right   =  c * near/convergence;
+    glm::mat4 ret = {{2.f*sqrt2*near/(right-left),0,0,0},
+                     {0,2.f*sqrt2*near/(top-bottom),0,0},
+                     {sqrt2*(right+left)/(right-left),sqrt2*(top+bottom)/(top-bottom),-(far+near)/(far-near),-1.f},
+                     {0,0,(-2.f*far*near)/(far-near),0}};
+    return ret;
+}
+
+glm::mat4 bf::getRightProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD) {
+    float top, bottom, left, right;
+
+    top     = near * tan(fov*.5f);
+    bottom  = -top;
+
+    float a = aspect * tan(fov*.5f) * convergence;
+
+    float b = a - IOD*.5f;
+    float c = a + IOD*.5f;
+
+    left    = -c * near/convergence;
+    right   =  b * near/convergence;
+
+    glm::mat4 ret = {{2.f*sqrt2*near/(right-left),0,0,0},
+                     {0,2.f*sqrt2*near/(top-bottom),0,0},
+                     {sqrt2*(right+left)/(right-left),sqrt2*(top+bottom)/(top-bottom),-(far+near)/(far-near),-1.f},
+                     {0,0,(-2.f*far*near)/(far-near),0}};
+    return ret;
+}

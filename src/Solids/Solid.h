@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 16.03.2022.
 //
@@ -16,6 +17,8 @@ namespace bf {
         float tY;
         Vertex(float x, float y, float z, float tX=.0f, float tY=.0f);
         Vertex(const glm::vec3& p, const glm::vec2& t=glm::vec2(.0f));
+        void setPosition(const glm::vec3& p) noexcept;
+        void setTexturePosition(const glm::vec2& t) noexcept;
     };
 	class Shader;
 	struct ConfigState;
@@ -43,6 +46,7 @@ namespace bf {
 		void draw(const bf::ShaderArray &shader) const override;
 		//virtual void bezierDraw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
+        void glUpdateVertices() const;
         ShaderType getShaderType() const override;
 
     };

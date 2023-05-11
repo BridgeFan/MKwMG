@@ -11,9 +11,13 @@
 #include <iostream>
 #include "Shader/ShaderArray.h"
 #include "Curves/BezierCurve0.h"
-#include "MultiCursor.h"
+#include "src/Gizmos/MultiCursor.h"
+#include "Point.h"
+#include "Util.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
+std::vector<bool> activeBefore;
+bool isBoxSelectActive=false;
 
 bf::Object &bf::ObjectArray::operator[](std::size_t index) {
 	if(index >= objects.size())
@@ -37,6 +41,7 @@ bool bf::ObjectArray::isCorrect(std::size_t index) const {
 
 void bf::ObjectArray::add(bf::Object* object) {
 	objects.emplace_back(object, false);
+    activeBefore.push_back(false);
 }
 
 bool bf::ObjectArray::remove(std::size_t index) {
@@ -76,6 +81,8 @@ void bf::ObjectArray::removeActive() {
 		if(objects[i].second && remove(i)) {
 			i--;
 		}
+    activeBefore.resize(objects.size());
+    std::fill(activeBefore.begin(), activeBefore.end(), false);
 }
 
 void bf::ObjectArray::clearSelection(std::size_t index) {
@@ -93,8 +100,10 @@ void bf::ObjectArray::clearSelection(std::size_t index) {
 	for(std::size_t i=0;i<objects.size();i++)
 		if(i!=index)
 			objects[i].second=false;
+    std::fill(activeBefore.begin(), activeBefore.end(), false);
 	if(isCorrect(index)) {
 		objects[index].second=true;
+        activeBefore[index]=true;
 		activeIndex = static_cast<int>(index);
 		countActive = 1;
 	}
@@ -144,6 +153,8 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 	if(countActive==1)
 		activeIndex=index;
 	objects[index].second=true;
+    if(!isBoxSelectActive)
+        activeBefore[index]=true;
     updateCentre();
 	return true;
 }
@@ -161,6 +172,8 @@ bool bf::ObjectArray::setUnactive(std::size_t index) {
         activeIndex = std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin();
     }
 	objects[index].second=false;
+    if(!isBoxSelectActive)
+        activeBefore[index]=false;
     updateCentre();
 	return true;
 }
@@ -280,11 +293,44 @@ bool bf::ObjectArray::onMouseButtonReleased(bf::event::MouseButton button, bf::e
 	return false;
 }
 
-void bf::ObjectArray::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos) {
-	for(auto&& [o, b]: objects) {
-		if(b)
-			o->onMouseMove(oldPos, newPos);
-	}
+bool isBetween(const glm::vec2& v, const glm::vec2& pos1, const glm::vec2& pos2) {
+    glm::vec2 m = {std::min(pos1.x,pos2.x),std::min(pos1.y,pos2.y)};
+    glm::vec2 M = {std::max(pos1.x,pos2.x),std::max(pos1.y,pos2.y)};
+    return v.x>=m.x && v.x<=M.x && v.y>=m.y && v.y<=M.y;
+}
+
+void bf::ObjectArray::onMouseMove(const glm::vec2 &oldPos, const glm::vec2 &newPos, const bf::ConfigState& configState,
+const glm::mat4& view, const glm::mat4& projection) {
+    isBoxSelectActive=configState.isBoxSelect;
+    if(configState.isBoxSelect) {
+        for(unsigned i=0;i<objects.size();i++) {
+            auto& o = objects[i].first;
+            if(o && typeid(*o)==typeid(bf::Point)) {
+                auto screenPos = bf::toScreenPos(configState.screenWidth,configState.screenHeight,
+                                                 o->getPosition(), view, projection);
+                if(screenPos==bf::outOfWindow)
+                    continue;
+                if(isBetween(screenPos, newPos, {configState.boxMouseX, configState.boxMouseY})) {
+                    setActive(i);
+                }
+                else if(i>=activeBefore.size() || !activeBefore[i]){
+                    setUnactive(i);
+                }
+            }
+            else {
+                setUnactive(i);
+            }
+        }
+    }
+    else {
+        activeBefore.resize(objects.size());
+        for(unsigned i=0;i<objects.size();i++) {
+            activeBefore[i]=objects[i].second;
+            if(!objects[i].first) continue;
+            if(objects[i].second)
+                objects[i].first->onMouseMove(oldPos, newPos);
+        }
+    }
 }
 
 void bf::ObjectArray::removeAll() {

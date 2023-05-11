@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 03.03.2022.
 //
@@ -35,6 +36,8 @@ namespace bf {
         bool isCtrlPressed = false;
         bool isAltPressed = false;
         bool isShiftPressed = false;
+        bool isBoxSelect = false;
+        float boxMouseX = 0.f, boxMouseY = 0.f;
         float mouseX = 0.f;
         float mouseY = 0.f;
         float deltaTime = 0.f;
@@ -65,6 +68,8 @@ namespace bf {
         void onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);
         void onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
         void onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
+        float IOD = .2f;
+        float convergence = 0.f;
     };
 }
 

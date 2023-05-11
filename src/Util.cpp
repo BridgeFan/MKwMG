@@ -9,9 +9,6 @@
 #include "Util.h"
 #include "ConfigState.h"
 #include "Scene.h"
-#ifdef USE_STD_FORMAT
-#include <format>
-#endif
 
 std::string toString(const glm::vec3& v) {
 	return "("+std::to_string(v.x)+","+std::to_string(v.y)+", "+std::to_string(v.z)+")";
@@ -24,11 +21,7 @@ std::string toString(const glm::vec4& v) {
 std::string readWholeFile(const std::string& path) {
     std::ifstream t(path);
     if(t.bad()) {
-#ifdef USE_STD_FORMAT
         std::cerr << std::format("{} not found!\n", path);
-#else
-        std::cerr << path << "not found!\n";
-#endif
         return "";
     }
     std::stringstream buffer;

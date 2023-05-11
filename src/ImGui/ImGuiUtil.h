@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 13.03.2022.
 //
@@ -9,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#define U8(_S) reinterpret_cast<const char*>(u8##_S)
 class ImGuiIO;
 struct GLFWwindow;
 namespace bf {

@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 23.03.2022.
 //
@@ -10,16 +11,6 @@
 #include <vector>
 #include <memory>
 #include <glm/mat4x4.hpp>
-
-#if defined(__clang__) && __clang_major__>=14
-#define USE_STD_FORMAT
-#endif
-#if defined(__GNUC__) && __GNUC_PREREQ(13,0)
-#define USE_STD_FORMAT
-#endif
-#if defined(_MSC_VER) && _MSC_VER>=1929
-#define USE_STD_FORMAT
-#endif
 constexpr float PI = std::numbers::pi_v<float>;
 
 class ImGuiIO;

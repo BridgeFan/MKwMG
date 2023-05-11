@@ -7,7 +7,7 @@
 #include "Shader/ShaderArray.h"
 #include "ImGui/ImGuiUtil.h"
 #include "Object/ObjectArray.h"
-#include "Object/Cursor.h"
+#include "src/Gizmos/Cursor.h"
 #include "Object/Point.h"
 #include "Util.h"
 

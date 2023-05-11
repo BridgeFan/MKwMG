@@ -4,7 +4,6 @@
 
 #include <GL/glew.h>
 #include <array>
-#include <iostream>
 #include "Scene.h"
 #include "ConfigState.h"
 #include "src/Shader/Shader.h"
@@ -31,9 +30,37 @@ void bf::Scene::internalDraw(const ConfigState& configState) {
 	}
 	cursor.draw(shaderArray);
 	objectArray.draw(shaderArray,configState);
+    //draw box select
+    if(configState.isBoxSelect) {
+        shaderArray.changeShader(BasicShader);
+        shaderArray.getActiveShader().setMat4("view", glm::mat4(1.f));
+        shaderArray.getActiveShader().setMat4("projection", glm::mat4(1.f));
+        shaderArray.setColor(255u, 255u, 0u);
+        boxRectangle.draw(shaderArray);
+        shaderArray.changeShader(BasicShader);
+    }
 }
 
 void bf::Scene::draw(const ConfigState& configState) {
+    //box select update
+    static glm::vec2 oldMousePos = {configState.mouseX, configState.mouseY};
+    static bool wasBoxSelect = configState.isBoxSelect;
+    if(configState.isBoxSelect) {
+        if(!wasBoxSelect || !almostEqual(oldMousePos.x,configState.mouseX) || !almostEqual(oldMousePos.y,configState.mouseY)) {
+            float bx = 2.f * configState.boxMouseX / configState.screenWidth - 1.f;
+            float by = -2.f * configState.boxMouseY / configState.screenHeight + 1.f;
+            float mx = 2.f * configState.mouseX / configState.screenWidth - 1.f;
+            float my = -2.f * configState.mouseY / configState.screenHeight + 1.f;
+            boxRectangle.vertices[0].setPosition({bx, by, 0.f});
+            boxRectangle.vertices[1].setPosition({mx, by, 0.f});
+            boxRectangle.vertices[2].setPosition({mx, my, 0.f});
+            boxRectangle.vertices[3].setPosition({bx, my, 0.f});
+            boxRectangle.glUpdateVertices();
+        }
+    }
+    oldMousePos = {configState.mouseX, configState.mouseY};
+    wasBoxSelect = configState.isBoxSelect;
+    //prepare color for draw
 	float clearColorR = static_cast<float>(configState.backgroundColorR)/255.f;
 	float clearColorG = static_cast<float>(configState.backgroundColorG)/255.f;
 	float clearColorB = static_cast<float>(configState.backgroundColorB)/255.f;
@@ -59,15 +86,29 @@ void bf::Scene::draw(const ConfigState& configState) {
 	}
 	else {
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-        shaderArray.addCommonUniform("projection", projection);
-		//TODO - change GPU projection matrix
+        glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::LeftEye);
-		internalDraw(configState);
+        camera.position-=camera.getRight()*configState.IOD*.5f;
+        shaderArray.addCommonUniform("view", camera.GetViewMatrix());
+        shaderArray.addCommonUniform("projection", bf::getLeftProjectionMatrix(configState.cameraFOV,
+               aspect, configState.cameraNear, configState.cameraFar, configState.convergence, configState.IOD));
+        internalDraw(configState);
         glBindFramebuffer(GL_FRAMEBUFFER, FBO+1);
+        glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::RightEye);
-		internalDraw(configState);
+        camera.position+=camera.getRight()*configState.IOD;
+        shaderArray.addCommonUniform("view", camera.GetViewMatrix());
+        shaderArray.addCommonUniform("projection", bf::getRightProjectionMatrix(configState.cameraFOV,
+            aspect, configState.cameraNear, configState.cameraFar, configState.convergence, configState.IOD));
+        internalDraw(configState);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        camera.position-=camera.getRight()*configState.IOD*.5f;
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE1);
@@ -81,7 +122,8 @@ void bf::Scene::draw(const ConfigState& configState) {
 }
 
 bf::Scene::Scene(const ConfigState& configState) :
-	objectArray(), cursor(), multiCursor(), camera(configState.getCameraInitPos(),configState.getCameraInitRot()) {
+	objectArray(), cursor(), multiCursor(), camera(configState.getCameraInitPos(),configState.getCameraInitRot()),
+    boxRectangle("",true) {
     float aspect = static_cast<float>(configState.screenWidth)/static_cast<float>(configState.screenHeight);
 	projection = bf::getProjectionMatrix(configState.cameraFOV, aspect,
                                          configState.cameraNear, configState.cameraFar);
@@ -98,6 +140,9 @@ bf::Scene::Scene(const ConfigState& configState) :
     glGenRenderbuffers(2, &RBO);
     for(int i=0;i<2;i++) {
         glBindFramebuffer(GL_FRAMEBUFFER, FBO+i);
+        glEnable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindTexture(GL_TEXTURE_2D, texture+i);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, configState.screenWidth, configState.screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -107,6 +152,7 @@ bf::Scene::Scene(const ConfigState& configState) :
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, configState.screenWidth, configState.screenHeight); // use a single renderbuffer object for both a depth AND stencil buffer.
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO+i);
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     const float vertices[] = {
             // positions        // texture coords
             1.f, 1.f, 0.0f,   1.0f, 1.0f,   // top right
@@ -134,11 +180,17 @@ bf::Scene::Scene(const ConfigState& configState) :
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
     // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    //set box drawing
+    boxRectangle.vertices.resize(4, {glm::vec3(.0f)});
+    boxRectangle.indices = {0, 1, 1, 2, 2, 3, 3, 0};
+    boxRectangle.setBuffers();
+
+    //load initial configuration
     if(!bf::loadFromFile(objectArray)) {
-        objectArray.add<bf::Torus>(); //initial configuration
+        objectArray.add<bf::Torus>();
     }
 }
 
@@ -249,12 +301,15 @@ void deAlmostZero(glm::vec3& v, const glm::vec3& diffV) {
 }
 
 void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState &configState) {
-	objectArray.onMouseMove(oldMousePos,{configState.mouseX,configState.mouseY});
+	objectArray.onMouseMove(oldMousePos,{configState.mouseX,configState.mouseY}, configState, view, projection);
+    if(configState.isBoxSelect) {
+        return;
+    }
 	//other operations
 	float speed = configState.movementSpeed * configState.deltaTime;
 	float rotSpeed = configState.rotationSpeed * configState.deltaTime;
 	float scaleSpeed = .5f * configState.deltaTime;
-	if(configState.state != bf::None) {
+	if(configState.state != bf::None && !configState.isBoxSelect) {
 		float myVec[] = {.0f,.0f,.0f};
 		if(configState.isAltPressed)
 			myVec[2] = configState.mouseX - oldMousePos.x;
@@ -267,7 +322,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 		auto rotatedGlmVec = bf::rotate(glmVec, camera.rotation);
 		auto blockedPosVec = blockAxes(rotatedGlmVec, configState.isAxesLocked);
 		auto blockedRotVec = blockAxes({myVec[1], myVec[0], myVec[2]}, configState.isAxesLocked); //swapped X and Y
-		if (configState.isCtrlPressed) {
+        if (configState.isCtrlPressed) {
 			//camera movement
 			if(configState.state == bf::MiddleClick) {
 				camera.position += bf::rotate(speed * glmVec, camera.rotation);
@@ -347,9 +402,9 @@ bf::Scene::~Scene() {
 
 void bf::Scene::resizeFramebuffers(int x, int y) const {
     for(int i=0;i<2;i++) {
-        glNamedRenderbufferStorage(RBO+i, GL_DEPTH_COMPONENT, x, y);
         glBindTexture(GL_TEXTURE_2D, texture+i);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        glNamedRenderbufferStorage(RBO+i, GL_DEPTH_COMPONENT, x, y);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 }

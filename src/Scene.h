@@ -1,3 +1,4 @@
+#pragma once
 //
 // Created by kamil-hp on 28.03.23.
 //
@@ -5,8 +6,8 @@
 #ifndef MG1_ZAD2_SCENE_H
 #define MG1_ZAD2_SCENE_H
 
-#include "src/Object/Cursor.h"
-#include "src/Object/MultiCursor.h"
+#include "src/Gizmos/Cursor.h"
+#include "src/Gizmos/MultiCursor.h"
 #include "Camera.h"
 #include "Object/ObjectArray.h"
 #include "Shader/ShaderArray.h"
@@ -27,6 +28,7 @@ namespace bf {
 		bf::Cursor cursor;
 		bf::MultiCursor multiCursor;
 		bf::Camera camera;
+        bf::DummySolid boxRectangle;
 
 		const glm::mat4 &getProjection() const;
 		const glm::mat4 &getInverseProjection() const;

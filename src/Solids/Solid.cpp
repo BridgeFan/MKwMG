@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include "src/Shader/ShaderArray.h"
 int bf::Solid::sindex = 1;
+unsigned oldVerticesSize = 0;
 
 bf::Solid::~Solid() {
 	glDeleteVertexArrays(1, &VAO);
@@ -14,36 +15,30 @@ bf::Solid::~Solid() {
 }
 
 void bf::Solid::setBuffers() {
+    oldVerticesSize = vertices.size();
 	//remove old ones
-	if(VAO<UINT_MAX)
-		glDeleteVertexArrays(1, &VAO);
-	if(VBO<UINT_MAX)
-		glDeleteBuffers(1, &VBO);
-	if(IBO<UINT_MAX)
-		glDeleteBuffers(1, &IBO);
-	//set buffers
-    if(indices.empty() || vertices.empty()) {
-        return;
+    if(VAO==UINT_MAX) {
+        if(indices.empty() || vertices.empty()) {
+            return;
+        }
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), usage);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
+        glEnableVertexAttribArray(0);
+        glGenBuffers(1, &IBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], usage);
     }
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), usage);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &IBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], usage);
+    else {
+        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+        glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), usage);
+        glNamedBufferData(IBO, indices.size() * sizeof(unsigned), indices.data(), usage);
+    }
 }
-
-/*void bf::Solid::segmentDraw(const bf::ShaderArray& shaderArray) const {
-    bezierDraw(shaderArray, Transform::Default);
-}*/
 
 void bf::Solid::draw(const bf::ShaderArray& shaderArray/*, const bf::Transform& relativeTo*/) const {
     if(indices.empty() || vertices.empty() || shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
@@ -86,10 +81,29 @@ void bf::Solid::swapSolids(bf::Solid &a, bf::Solid &b) {
     std::swap(a.name, b.name);
 }
 
+void bf::Solid::glUpdateVertices() const {
+    if(oldVerticesSize!=vertices.size()) {
+        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+        glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), usage);
+        oldVerticesSize=vertices.size();
+    }
+    else {
+        glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
+    }
+}
+
 bf::Vertex::Vertex(float _x, float _y, float _z, float _tX, float _tY) : x(_x), y(_y), z(_z), tX(_tX), tY(_tY) {}
 
 bf::Vertex::Vertex(const glm::vec3 &p, const glm::vec2 &t): Vertex(p.x,p.y,p.z,t.x,t.y) {
 
+}
+
+void bf::Vertex::setPosition(const glm::vec3 &p) noexcept {
+    x = p.x; y = p.y; z = p.z;
+}
+
+void bf::Vertex::setTexturePosition(const glm::vec2 &t) noexcept {
+    tX = t.x; tY = t.y;
 }
 
 bf::DummySolid::DummySolid(const std::string &solidName, bool dynamic) : Solid(solidName, dynamic) {}
