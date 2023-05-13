@@ -3,7 +3,7 @@
 //
 #include "ImGuiUtil.h"
 #define IMGUI_BACKEND
-#include "ImGui/imgui_include.h"
+#include "imgui_include.h"
 #include <string>
 #include <algorithm>
 #include <format>
@@ -16,7 +16,6 @@
 
 ImGuiIO& init(GLFWwindow* window) {
 	//IMGUI_CHECKVERSION();
-    //TODO - make sure that used version is the same
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();

@@ -3,7 +3,6 @@
 //
 
 #include "Torus.h"
-#include <glm/glm.hpp>
 #include "ImGui/ImGuiUtil.h"
 #include <numbers>
 #include "ConfigState.h"

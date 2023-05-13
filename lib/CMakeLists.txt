@@ -11,10 +11,14 @@ include(CMakeImplFiles.cmake)
 # Setup (change imgui version according to your needs)
 ##################################################################################################################
 project(imgui
-        VERSION 1.71
+        VERSION 1.89.5
         LANGUAGES CXX
         DESCRIPTION "ImGui library."
 )
+
+#added
+set(IMGUI_IMPL_GL3)
+set(IMGUI_IMPL_GLFW)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>)

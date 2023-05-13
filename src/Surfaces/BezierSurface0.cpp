@@ -81,9 +81,9 @@ void bf::BezierSurface0::ObjectGui() {
                         objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
                     }
                 }
-                for (int i = 0; i < segs.y; i++) {
+                for (int i = 0; i < segs.x; i++) {
                     int S = segs.x * 3;
-                    for (int j = 0; j < segs.x; j++) {
+                    for (int j = 0; j < segs.y; j++) {
                         segments.emplace_back();
                         segments.back().samples = samples;
                         for (int k = 0; k < 4; k++) {
@@ -95,6 +95,7 @@ void bf::BezierSurface0::ObjectGui() {
                 }
             }
             objectArray.isForcedActive=false;
+			postInit();
         }
     }
     else {

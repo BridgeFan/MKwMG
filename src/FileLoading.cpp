@@ -2,7 +2,7 @@
 // Created by kamil-hp on 22.04.23.
 //
 #include <iostream>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include <memory>
 #include <valijson/adapters/jsoncpp_adapter.hpp>
 #include <valijson/utils/jsoncpp_utils.hpp>

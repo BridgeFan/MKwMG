@@ -1,7 +1,7 @@
 {
-	"background_color_b" : 51,
-	"background_color_g" : 64,
-	"background_color_r" : 64,
+	"background_color_b" : 0,
+	"background_color_g" : 0,
+	"background_color_r" : 0,
 	"camera" : 
 	{
 		"far" : 100.0,
@@ -16,18 +16,18 @@
 		"rot_y" : 0.0,
 		"rot_z" : 0.0
 	},
-	"convergence" : 25.944000244140625,
+	"convergence" : 3.627000093460083,
 	"division_num" : 8,
 	"gray_percentage" : 0.0,
-	"iod" : 0.5429999828338623,
+	"iod" : 0.38699999451637268,
 	"is_axes_locked" : 0,
 	"is_uniform_scaling" : true,
 	"max_torus_fragments" : 60,
 	"movement_speed" : 2.5,
 	"point_radius" : 6.3359999656677246,
 	"rotation_speed" : 20.0,
-	"screen_height" : 761,
-	"screen_width" : 1051,
+	"screen_height" : 769,
+	"screen_width" : 1276,
 	"stereoscopic" : false,
 	"total_division" : 4096
 }

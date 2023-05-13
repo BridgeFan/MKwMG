@@ -4,9 +4,7 @@
 
 #include "Camera.h"
 #include "src/ImGui/ImGuiUtil.h"
-#include "Util.h"
 #include "ConfigState.h"
-#include <glm/gtc/matrix_inverse.hpp>
 
 void bf::Camera::ObjectGui(bf::ConfigState& configState) {
 	bf::imgui::checkChanged("Position", position);
@@ -54,8 +52,7 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
                         0.f,0.f,-1.f);
     const glm::mat3 invMatrix = glm::mat3(bf::getRotateMatrix(rotation))*m3;
     auto ret = glm::mat4(invMatrix);
-    ret[3]=tmp[3]; //TODO
-    //ret[3] = {invMatrix * tmpVec, 1.f};
+    ret[3]=tmp[3];
     return ret;
 }
 

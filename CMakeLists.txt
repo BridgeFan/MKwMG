@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.21)
 project(MG1_zad2)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -fno-common -Wall -Wextra -Wunused -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference -Wcast-align -Wshadow -Wfloat-equal -Wcast-qual -Wold-style-cast -Wuseless-cast -Wformat-signedness")
-include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "src")
-include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "/usr/include/jsoncpp")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/valijson/include")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/jsoncpp/include")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/jsoncpp/src/lib_json")
+include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/glm")
 link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/bin")
-link_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} ".")
 
 set(HEADER_FILES)
 set(CMAKE_CXX_STANDARD 20)
@@ -61,7 +62,7 @@ src/Surfaces/BezierSurface0.h
 src/JsonUtil.h
 src/ImGui/ImGuiPanel.h
 src/ImGui/ImGuiUtil.h
-src/ImGui/imgui_include.h
+        src/ImGui/imgui_include.h
         src/Gizmos/MultiCursor.h
 src/Object/Transform.h
 src/Object/Object.h
@@ -71,6 +72,7 @@ src/Object/Point.h
         src/Gizmos/Cursor.h
 src/Window.h
 src/Event.cpp)
+set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)

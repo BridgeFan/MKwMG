@@ -38,11 +38,11 @@ cmake_dependent_option(IMGUI_IMPL_GL2
     "IMGUI_WITH_IMPL" ON
 )
 cmake_dependent_option(IMGUI_IMPL_GL3
-    "Set to ON to include implementation files." OFF 
+    "Set to ON to include implementation files." ON 
     "IMGUI_WITH_IMPL" ON
 )
 cmake_dependent_option(IMGUI_IMPL_GLFW
-    "Set to ON to include implementation files." OFF 
+    "Set to ON to include implementation files." ON 
     "IMGUI_WITH_IMPL" ON
 )
 cmake_dependent_option(IMGUI_IMPL_GLUT

@@ -17,3 +17,9 @@ Shift - scaling
 Creating object:
 P - point
 T - torus
+
+Required libraries:
+OpenGL 4.3+
+GLFW 3
+GLEW
+and their depedencies

@@ -88,7 +88,6 @@ void bf::Scene::draw(const ConfigState& configState) {
         glBindFramebuffer(GL_FRAMEBUFFER, FBO);
         glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::LeftEye);
         camera.position-=camera.getRight()*configState.IOD*.5f;
         shaderArray.addCommonUniform("view", camera.GetViewMatrix());
@@ -98,7 +97,6 @@ void bf::Scene::draw(const ConfigState& configState) {
         glBindFramebuffer(GL_FRAMEBUFFER, FBO+1);
         glClearColor(clearColorR * clearColorA, clearColorG * clearColorA, clearColorB * clearColorA, clearColorA);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//TODO - change GPU projection matrix
 		shaderArray.setStereoscopicState(bf::StereoscopicState::RightEye);
         camera.position+=camera.getRight()*configState.IOD;
         shaderArray.addCommonUniform("view", camera.GetViewMatrix());

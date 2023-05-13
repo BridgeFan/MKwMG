@@ -145,7 +145,6 @@ Json::Value bf::saveValue(const bf::BezierSurface0 &surface, unsigned int id, co
     cPts.resize(s.size());
     for(unsigned i=0u;i<s.size();i++) {
         const auto& segment = s[i];
-        //TODO - set ID of BezierSegment
         Json::Value val;
         val["id"]=idTmp;
         idTmp++;
