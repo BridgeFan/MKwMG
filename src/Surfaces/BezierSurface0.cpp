@@ -99,13 +99,16 @@ void bf::BezierSurface0::ObjectGui() {
         }
     }
     else {
+        ImGui::Text("Visible: ");
+        ImGui::SameLine();
+        ImGui::Checkbox("Polygon", &isPolygonVisible);
+        ImGui::SameLine();
+        ImGui::Checkbox("Surface", &isSurfaceVisible);
         if(bf::imgui::checkChanged("Samples", samples)) {
             for(auto& s: segments) {
                 s.samples=samples;
             }
         }
-        ImGui::Checkbox("Polygon visible", &isPolygonVisible);
-        ImGui::Checkbox("Curve visible", &isSurfaceVisible);
     }
 }
 

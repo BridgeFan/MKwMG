@@ -101,7 +101,7 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
 	//bezierDraw points if active
     if(shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-		shaderArray.setColor(63,63,63);
+		shaderArray.setColor(64,64,192);
         if (pointIndices.empty() || indices.empty() || vertices.empty()) {
             return;
         }
@@ -139,8 +139,14 @@ void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {
 
 void bf::BezierCommon::ObjectGui() {
 	bf::imgui::checkChanged("Curve name", name);
+    ImGui::Text("Visible: ");
+    ImGui::SameLine();
+    ImGui::Checkbox("Polygon", &isPolygonVisible);
+    ImGui::SameLine();
+    ImGui::Checkbox("Curve", &isCurveVisible);
 	if (ImGui::Button("Delete point"))
 		removePoint(activeIndex);
+    ImGui::SameLine();
 	int ari = objectArray.getActiveRedirector();
 	bool isRedirected = objectArray.isCorrect(ari);
 	if (isRedirected) {
@@ -175,8 +181,6 @@ void bf::BezierCommon::ObjectGui() {
 		}
 		ImGui::EndTable();
 	}
-	ImGui::Checkbox("Polygon visible", &isPolygonVisible);
-	ImGui::Checkbox("Curve visible", &isCurveVisible);
 	ImGui::Text("List of points");
 	for(unsigned i=0u; i < pointIndices.size(); i++) {
 		if(!objectArray.isCorrect(pointIndices[i]))

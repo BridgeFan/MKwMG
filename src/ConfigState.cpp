@@ -8,7 +8,7 @@
 #include "Event.h"
 #include "JsonUtil.h"
 
-constexpr const char* configPath = "config.json";
+constexpr const char* configPath = "config.cfg";
 
 bf::ConfigState::ConfigState() {
     std::cout << "Config loading begin\n";

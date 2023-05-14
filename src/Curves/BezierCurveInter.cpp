@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <GL/glew.h>
+#include <iostream>
 #include "BezierCurveInter.h"
 #include "Object/ObjectArray.h"
 #include "ImGui/ImGuiUtil.h"
@@ -108,15 +109,18 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
         if(i==n-2)
             bezier.points[3*i+3]=pa[i]+pb[i]+pc[i]+pd[i];
     }
+    bezier.recalculate(wasSizeChanged);
     auto bezier2 = bf::bezier0ToBezier2(bezier.points);
     positions.clear();
     for(const auto& be: bezier2) {
         positions.emplace_back(be);
     }
-	bezier.recalculate(wasSizeChanged);
 	//update GPU data
 	if(!wasSizeChanged) {
-		glNamedBufferSubData(lVBO, 0, positions.size() * sizeof(Vertex), positions.data());
+        //TODO - improve glNamedBufferSubData
+        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+        glNamedBufferData(VBO, positions.size() * sizeof(Vertex), positions.data(), usage);
+		//glNamedBufferSubData(VBO, 0, positions.size() * sizeof(Vertex), positions.data());
 	}
 	else {
 		if(positions.empty()) {
@@ -156,16 +160,16 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 void bf::BezierCurveInter::draw(const bf::ShaderArray &shaderArray) const {
 	if(pointIndices.size()>=2 && isPolygonVisible && shaderArray.getActiveIndex()==bf::ShaderType::BasicShader) {
         const Shader& shader = shaderArray.getActiveShader();
-		shaderArray.setColor(63,63,63);
+		shaderArray.setColor(64,64,192);
 		shader.setMat4("model", glm::mat4(1.f));
-		glBindVertexArray(lVAO);
+		glBindVertexArray(VAO);
 		glDrawElements(GL_LINES, positions.size() * 2 - 2, GL_UNSIGNED_INT, 0);
 	}
     BezierCommon::draw(shaderArray);
 }
 
 bf::BezierCurveInter::~BezierCurveInter() {
-	glDeleteVertexArrays(1, &lVAO);
-	glDeleteBuffers(1, &lVBO);
-	glDeleteBuffers(1, &lIBO);
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &IBO);
 }

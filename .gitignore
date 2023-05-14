@@ -7,4 +7,5 @@
 /lib/jsoncpp-build
 /lib/Makefile
 /.vscode/
-
+MG1_zad2
+imgui.ini

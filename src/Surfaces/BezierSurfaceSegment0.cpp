@@ -40,7 +40,7 @@ void bf::BezierSurfaceSegment0::segmentDraw(const bf::ShaderArray &shaderArray, 
     if(indices.empty() || vertices.empty())
         return;
     if(shaderArray.getActiveIndex() == BasicShader && isLineDrawn) {
-        shaderArray.setColor(63, 63, 63);
+        shaderArray.setColor(64, 64, 128);
         //function assumes set projection and view matrices
         glBindVertexArray(VAO);
         glDrawElements(GL_LINES, 48, GL_UNSIGNED_INT,   // type
