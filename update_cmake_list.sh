@@ -7,7 +7,7 @@ project(MG1_zad2)
 
 set(CMAKE_CXX_FLAGS \"\${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -fno-common \
 -Wall -Wextra -Wunused \
--Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel \
+-Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wstrict-null-sentinel \
 -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override \
 -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference \
 -Wcast-align -Wshadow -Wfloat-equal -Wcast-qual \
@@ -26,6 +26,7 @@ find src -name "*.cpp"
 find src -name "*.h"
 
 echo ")
+set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 target_link_libraries(MG1_zad2 dl)
 target_link_libraries(MG1_zad2 Xi)
