@@ -59,7 +59,7 @@ void bf::Window::run(bf::ConfigState &configState) {
 		configState.deltaTime = bf::getDeltaTime();
 		///IMGUI
 		bf::imgui::preDraw();
-		bf::imgui::createObjectPanel(scene);
+		bf::imgui::createObjectPanel(scene,configState);
 		bf::imgui::listOfObjectsPanel(scene,configState);
 		bf::imgui::modifyObjectPanel(scene,configState);
 		bf::imgui::cameraInfoPanel(scene, configState);

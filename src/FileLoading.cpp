@@ -2,13 +2,9 @@
 // Created by kamil-hp on 22.04.23.
 //
 #include <iostream>
-#include <json/json.h>
 #include <memory>
-#include <valijson/adapters/jsoncpp_adapter.hpp>
-#include <valijson/utils/jsoncpp_utils.hpp>
-#include <valijson/schema.hpp>
-#include <valijson/schema_parser.hpp>
-#include <valijson/validator.hpp>
+#define VALIJSON
+#include "library_include.h"
 #include <format>
 #include "FileLoading.h"
 #include "Object/ObjectArray.h"
@@ -292,29 +288,111 @@ std::pair<unsigned, T*> loadBezier(Json::Value& bezierValue, bf::ObjectArray& oa
     return {id, bezier};
 }
 
-std::pair<unsigned, bf::BezierSurface0*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& oa) {
+struct Segment {
+    glm::vec<2, int> samples;
+    std::string name;
+    bf::pArray pointIndices;
+};
+
+std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segments,
+        const glm::vec<2,int>& size, bool wrappedX, bool wrappedY) {
+	std::map<unsigned, std::array<unsigned, 4> > pointCount;
+	//count points
+	for(unsigned i=0;i<segments.size();i++) {
+		const auto& s = segments[i];
+		constexpr std::array indices = {0,3,12,15};
+		for(unsigned k=0;k<4;k++) {
+			unsigned j = indices[k];
+			if(!pointCount.contains(s.pointIndices[j]))
+				pointCount[s.pointIndices[j]] = {UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX};
+			pointCount[s.pointIndices[j]][k] = i;
+		}
+	}
+	unsigned leftBottomIndex;
+	for(auto&& [key, values]: pointCount) {
+		if(values[1]==values[2] && values[2]==values[3] && values[3]==UINT_MAX) {
+			leftBottomIndex=values[0];
+			break;
+		}
+		if(wrappedX || wrappedY) {
+			int cnt = 0;
+			cnt = values[1]==UINT_MAX ? cnt+1 : cnt;
+			cnt = values[2]==UINT_MAX ? cnt+1 : cnt;
+			cnt = values[3]==UINT_MAX ? cnt+1 : cnt;
+			if(cnt==1) {
+				leftBottomIndex=values[0];
+				break;
+			}
+		}
+	}
+	std::vector<std::vector<Segment> > ret;
+	for(int i=0;i<size.y;i++) {
+		std::vector<Segment> retRow;
+		if(i==0) {
+			retRow.emplace_back(std::move(segments[leftBottomIndex]));
+		}
+		else {
+			unsigned index = pointCount[ret.back()[0].pointIndices[12]][0];
+			retRow.emplace_back(std::move(segments[index]));
+		}
+		for(int j=1;j<size.x;j++) {
+			unsigned index = pointCount[retRow.back().pointIndices[3]][0];
+			retRow.emplace_back(std::move(segments[index]));
+		}
+		ret.emplace_back(std::move(retRow));
+	}
+	return ret;
+}
+
+template<bf::child<bf::BezierSurfaceCommon> T>
+std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& oa) {
     unsigned id = bezierValue["id"].asUInt();
     bf::BezierSurface0* surface;
     static bf::Cursor cursor;
     if(bezierValue.isMember("name"))
-        surface = new bf::BezierSurface0(oa, bezierValue["name"].asString(), cursor);
+        surface = new T(oa, bezierValue["name"].asString(), cursor);
     else
-        surface = new bf::BezierSurface0(oa, cursor);
+        surface = new T(oa, cursor);
     auto& cPts = bezierValue["patches"];
     surface->segs = bf::loadVec2i(bezierValue["size"]);
-    for(unsigned i=0u;i<cPts.size();i++) {
-        bf::BezierSurfaceSegment0 segment;
-        auto& patch = cPts[i];
+    surface->isWrappedX = bezierValue["parameterWrapped"]["u"].asBool();
+    surface->isWrappedY = bezierValue["parameterWrapped"]["v"].asBool();
+    std::vector<Segment> segments;
+    if(static_cast<int>(cPts.size())!=surface->segs.x*surface->segs.y) {
+    	std::cerr << std::format("Bezier surface with index {} has incorrect size!\n", id);
+    	return {id, nullptr};
+    }
+    //PHASE 1: prepare points
+    for(auto& patch : cPts) {
+        Segment segment;
+        segment.samples=bf::loadVec2i(patch["samples"]);
         if(bezierValue.isMember("name"))
             segment.name=patch["name"].asString();
         segment.samples=bf::loadVec2i(patch["samples"]);
         auto& sPts = patch["controlPoints"];
         for(unsigned j=0u;j<sPts.size();j++) {
             segment.pointIndices[j]=sPts[j]["id"].asUInt();
-        }
-        segment.initGL(oa);
-        surface->segments.emplace_back(std::move(segment));
+            oa[sPts[j]["id"].asUInt()].indestructibilityIndex=1u;
+		}
+		segments.emplace_back(std::move(segment));
     }
+    //PHASE 2: recoginze segments
+    auto newSegments = recognizeSegments(std::move(segments), surface->segs,
+    	surface->isWrappedX, surface->isWrappedY);
+    std::vector<std::vector<std::string> > segmentNames(newSegments.size());
+    std::vector<std::vector<glm::vec<2,int> > > segmentSamples(newSegments.size());
+    surface->pointIndices.resize(newSegments.size());
+    for(unsigned i=0;i<newSegments.size();i++) {
+        segmentNames[i].resize(newSegments[i].size());
+        segmentSamples[i].resize(newSegments[i].size());
+        surface->pointIndices[i].resize(newSegments[i].size());
+        for(unsigned j=0;j<newSegments[i].size();j++) {
+            surface->pointIndices[i][j] = std::move(newSegments[i][j].pointIndices);
+            segmentNames[i][j] = std::move(newSegments[i][j].name);
+            segmentSamples[i][j] = std::move(newSegments[i][j].samples);
+        }
+    }
+    surface->initSegments(std::move(segmentNames),std::move(segmentSamples));
     oa.isForcedActive=false;
     return {id, surface};
 }
@@ -379,7 +457,7 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
             emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurveInter>(gValue, objectArray, "controlPoints"));
         }
         else if(gValue["objectType"]=="bezierSurfaceC0") {
-            emplaceToObjectArray(objectArray.objects,loadSurface(gValue, objectArray));
+            emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface0>(gValue, objectArray));
         }
         else {
             std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());

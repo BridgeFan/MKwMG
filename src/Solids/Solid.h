@@ -15,8 +15,8 @@ namespace bf {
         float z;
         float tX;
         float tY;
-        Vertex(float x, float y, float z, float tX=.0f, float tY=.0f);
-        Vertex(const glm::vec3& p, const glm::vec2& t=glm::vec2(.0f));
+        Vertex(float x, float y, float z, float tX=.0f, float tY=.0f) noexcept;
+        Vertex(const glm::vec3& p, const glm::vec2& t=glm::vec2(.0f)) noexcept;
         void setPosition(const glm::vec3& p) noexcept;
         void setTexturePosition(const glm::vec2& t) noexcept;
     };

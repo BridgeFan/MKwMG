@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 project(MG1_zad2)
+set(CMAKE_CXX_COMPILER g++-13)
+set(CMAKE_C_COMPILER gcc-13)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -fno-common -Wall -Wextra -Wunused -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wnoexcept -Wstrict-null-sentinel -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference -Wcast-align -Wshadow -Wfloat-equal -Wcast-qual -Wold-style-cast -Wuseless-cast -Wformat-signedness")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lGLEW -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -fno-common -Wall -Wextra -Wunused -Wsuggest-attribute=format -Wduplicated-cond -Wundef -Wstrict-null-sentinel -Wctor-dtor-privacy -Wnon-virtual-dtor -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override -Wformat-overflow -Wformat-security -Wextra-semi -Wredundant-decls -Wnull-dereference -Wcast-align -Wshadow -Wfloat-equal -Wcast-qual -Wold-style-cast -Wuseless-cast -Wformat-signedness")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/imgui")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "src")
 include_directories(MG1_zad2 ${PROJECT_SOURCE_DIR} "lib/valijson/include")
@@ -71,7 +73,7 @@ src/Object/ObjectArrayListener.h
 src/Object/Point.h
         src/Gizmos/Cursor.h
 src/Window.h
-src/Event.cpp)
+src/Event.cpp src/Surfaces/BezierSurfaceCommon.cpp src/Surfaces/BezierSurfaceCommon.h src/library_include.h)
 set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 target_link_libraries(MG1_zad2 dl)

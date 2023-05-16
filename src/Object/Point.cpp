@@ -7,6 +7,7 @@
 #include "src/Shader/ShaderArray.h"
 #include "ObjectArray.h"
 #include "Solids/Solid.h"
+#include "glm/gtc/epsilon.hpp"
 
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
@@ -69,21 +70,21 @@ void notify(bf::ObjectArray* objectArray, bf::Point* tis) {
 }
 
 void bf::Point::setPosition(const glm::vec3 &pos) {
-	if(pos==transform.position)
+	if(glm::all(glm::epsilonEqual(pos,transform.position,1e-6f)))
 		return;
 	Object::setPosition(pos);
 	notify(objectArray, this);
 }
 
 void bf::Point::setTransform(const bf::Transform &t) {
-	if(getTransform().position==t.position)
+    if(glm::all(glm::epsilonEqual(t.position,transform.position,1e-6f)))
 		return;
 	Object::setTransform(t);
 	notify(objectArray, this);
 }
 
 void bf::Point::setTransform(bf::Transform &&t) {
-	if(getTransform().position==t.position)
+	if(glm::all(glm::epsilonEqual(t.position,transform.position,1e-6f)))
 		return;
 	Object::setTransform(t);
 	notify(objectArray, this);

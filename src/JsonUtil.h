@@ -5,7 +5,8 @@
 
 #ifndef MG1_ZAD2_JSONUTIL_H
 #define MG1_ZAD2_JSONUTIL_H
-#include <json/json.h>
+#define JSON
+#include "library_include.h"
 #include <glm/vec3.hpp>
 
 namespace bf {

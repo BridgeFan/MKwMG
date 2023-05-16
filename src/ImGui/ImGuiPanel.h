@@ -9,7 +9,7 @@ namespace bf {
     class Scene;
     class ConfigState;
     namespace imgui {
-        void createObjectPanel(Scene& scene);
+        void createObjectPanel(Scene& scene, const bf::ConfigState& configState);
         void listOfObjectsPanel(Scene& scene, bf::ConfigState& configState);
         void modifyObjectPanel(Scene& scene, const bf::ConfigState& configState);
         void cameraInfoPanel(Scene& scene, bf::ConfigState& configState);

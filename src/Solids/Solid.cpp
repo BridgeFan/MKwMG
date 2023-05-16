@@ -92,9 +92,9 @@ void bf::Solid::glUpdateVertices() const {
     }
 }
 
-bf::Vertex::Vertex(float _x, float _y, float _z, float _tX, float _tY) : x(_x), y(_y), z(_z), tX(_tX), tY(_tY) {}
+bf::Vertex::Vertex(float _x, float _y, float _z, float _tX, float _tY) noexcept : x(_x), y(_y), z(_z), tX(_tX), tY(_tY) {}
 
-bf::Vertex::Vertex(const glm::vec3 &p, const glm::vec2 &t): Vertex(p.x,p.y,p.z,t.x,t.y) {
+bf::Vertex::Vertex(const glm::vec3 &p, const glm::vec2 &t) noexcept : Vertex(p.x,p.y,p.z,t.x,t.y) {
 
 }
 

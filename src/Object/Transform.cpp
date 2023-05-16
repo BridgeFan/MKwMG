@@ -95,9 +95,10 @@ bf::Transform bf::decomposeModelMatrix(const glm::mat4& matrix) {
 
 bf::Transform::Transform(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& sc): position(pos), rotation(rot), scale(sc) {}
 
+
 glm::mat4 bf::Transform::CalculateMatrix(const Transform &relativeTo) const {
     glm::mat4 ret;
-    if(relativeTo.rotation==Default.rotation && relativeTo.position==Default.position && relativeTo.scale == Default.scale)
+    if(relativeTo==Default)
         ret = glm::mat4(1.f);
     else
         ret = CalculateMatrix(relativeTo);
@@ -106,7 +107,7 @@ glm::mat4 bf::Transform::CalculateMatrix(const Transform &relativeTo) const {
 }
 glm::mat4 bf::Transform::CalculateInverseMatrix(const Transform &relativeTo) const {
     glm::mat4 ret;
-    if(relativeTo.rotation==Default.rotation && relativeTo.position==Default.position && relativeTo.scale == Default.scale)
+    if(relativeTo==Default)
         ret = glm::mat4(1.f);
     else
         ret = CalculateInverseMatrix(relativeTo);
@@ -136,7 +137,9 @@ glm::vec3 bf::Transform::CalculateRelativeFront(const glm::vec3 &pos) const
 }
 
 bool bf::operator==(const bf::Transform &t1, const bf::Transform &t2) {
-    return t1.position==t2.position && t1.rotation==t2.rotation && t1.scale==t2.scale;
+    return glm::all(glm::epsilonEqual(t1.position,t2.position,1e-6f)) &&
+        glm::all(glm::epsilonEqual(t1.rotation,t2.rotation,1e-6f)) &&
+        glm::all(glm::epsilonEqual(t1.scale,t2.scale,1e-6f));
 }
 
 glm::vec3 bf::rotate(const glm::vec3 &pos, const glm::vec3 &rot) {

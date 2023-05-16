@@ -1,10 +1,4 @@
 #pragma once
-//
-// Created by kamil-hp on 09.05.23.
-//
-
-#ifndef MG1_ZAD2_IMGUI_INCLUDE_H
-#define MG1_ZAD2_IMGUI_INCLUDE_H
 #pragma GCC diagnostic ignored "-Wformat-signedness"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -26,11 +20,15 @@
 #pragma GCC diagnostic ignored "-Wundef"
 #pragma GCC diagnostic ignored "-Wduplicated-cond"
 
-#include "lib/imgui/imgui.h"
-#include "lib/imgui/misc/cpp/imgui_stdlib.h"
-#ifdef IMGUI_BACKEND
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+#if defined(VALIJSON) || defined(JSON)
+#include <json/json.h>
+#endif
+#ifdef VALIJSON
+#include <valijson/adapters/jsoncpp_adapter.hpp>
+#include <valijson/utils/jsoncpp_utils.hpp>
+#include <valijson/schema.hpp>
+#include <valijson/schema_parser.hpp>
+#include <valijson/validator.hpp>
 #endif
 
 #pragma GCC diagnostic warning "-Wformat-signedness"
@@ -53,4 +51,3 @@
 #pragma GCC diagnostic warning "-Wstrict-null-sentinel"
 #pragma GCC diagnostic warning "-Wundef"
 #pragma GCC diagnostic warning "-Wduplicated-cond"
-#endif //MG1_ZAD2_IMGUI_INCLUDE_H

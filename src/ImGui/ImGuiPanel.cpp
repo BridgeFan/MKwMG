@@ -26,8 +26,23 @@ enum class SpecialPanel: short {
 };
 SpecialPanel activeSpecialPanel = SpecialPanel::None;
 
-void bf::imgui::createObjectPanel(Scene &scene) {
-    ImGui::Begin("Create object");
+ImU32 ImCol32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+    return IM_COL32(r,g,b,a);
+#pragma GCC diagnostic warning "-Wold-style-cast"
+}
+ImVec2 toImgui(const glm::vec2& v) {
+    return {v.x, v.y};
+}
+
+void setNextPanelAlignment(const glm::vec2& panelSize, const glm::vec2& screenSize, const glm::vec2& t, const glm::vec2& modPos={0,0}) {
+    ImGui::SetNextWindowSize(toImgui(panelSize));
+    ImGui::SetNextWindowPos(toImgui((screenSize-panelSize)*t+modPos));
+}
+
+void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configState) {
+    setNextPanelAlignment({155, 192}, {configState.screenWidth, configState.screenHeight}, {1.f,0.f},{0,175});
+    ImGui::Begin("Create object",nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
     if(ImGui::Button("Torus")) {
@@ -52,13 +67,17 @@ void bf::imgui::createObjectPanel(Scene &scene) {
 	if(ImGui::Button("Bézier surface 0")) {
 		scene.objectArray.addRef<bf::BezierSurface0>(scene.cursor);
 	}
+    if(ImGui::Button("TODO: BezSuf2")) {
+        //TODO: Bézier surface 2
+    }
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::EndDisabled();
     ImGui::End();
 }
 
 void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configState) {
-    ImGui::Begin("List of objects");
+    setNextPanelAlignment({275, 520}, {configState.screenWidth, configState.screenHeight}, {0.f,.5f});
+    ImGui::Begin("List of objects", nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
     ImGui::Text("Hold CTRL and click to select multiple items.");
@@ -89,11 +108,15 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
                 configState.isAxesLocked -= 0x1 << i;
         }
     }
-    if(ImGui::Button("Delete")) {
+    if(ImGui::Button("Delete selected")) {
         scene.objectArray.removeActive();
     }
+    ImGui::SameLine();
     if(ImGui::Button("Clear selection"))
         scene.objectArray.clearSelection(-1);
+    ImGui::BeginChild("Objects", ImVec2(ImGui::GetContentRegionAvail().x, 260), true);
+    if(activeSpecialPanel!=SpecialPanel::None)
+        ImGui::BeginDisabled();
     for (std::size_t n = 0u; n < scene.objectArray.size(); n++)
     {
         if(!scene.objectArray.isCorrect(n)) {
@@ -101,7 +124,7 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
             continue;
         }
 		if(scene.objectArray[n].indestructibilityIndex>0)
-			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,255,0,255));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImCol32(255,255,0,255));
         if (scene.objectArray.imGuiCheckChanged(n, scene.multiCursor))
         {
             scene.multiCursor.transform = bf::Transform::Default;
@@ -114,11 +137,15 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
     }
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::EndDisabled();
+    ImGui::EndChild();
+    if(activeSpecialPanel!=SpecialPanel::None)
+        ImGui::EndDisabled();
     ImGui::End();
 }
 
 void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& configState) {
-    ImGui::Begin("Modify object panel");
+    setNextPanelAlignment({300, 305}, {configState.screenWidth, configState.screenHeight}, {1.f,1.f});
+    ImGui::Begin("Modify object panel", nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
     if(scene.objectArray.getActiveIndex()!=-1 && !scene.objectArray.isMultipleActive())
@@ -158,6 +185,8 @@ void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& confi
 }
 
 int getTypeValue(const std::filesystem::path& p) {
+    if(p.empty())
+        return INT_MAX;
     if(is_directory(p))
         return 0;
     else if(is_regular_file(p))
@@ -170,28 +199,119 @@ void initPath(std::filesystem::path& path, std::vector<std::filesystem::path>& f
     std::filesystem::directory_iterator b(path), e;
     std::vector<std::filesystem::path> paths(b, e);
     files = std::move(paths);
-    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-        return getTypeValue(a)<getTypeValue(b);
+    int countBad=0;
+    for(auto& subpath: files) {
+        if(is_directory(subpath)) {
+            try{
+                std::filesystem::directory_iterator c(subpath);
+            }
+            catch(...) {
+                countBad++;
+                subpath=std::filesystem::path();
+            }
+        }
+    }
+    std::sort(files.begin(), files.end(), [&](const auto& a, const auto& b2) {
+        if(getTypeValue(a)!=getTypeValue(b2))
+            return getTypeValue(a)<getTypeValue(b2);
+        return a.string()<b2.string();
     });
+    for(int i=0;i<countBad;i++)
+        files.pop_back();
 }
 
 void changePath(std::filesystem::path& path, std::vector<std::filesystem::path>& files, const std::filesystem::path *change) {
+    auto oldPath = path;
     if(!change && path.has_parent_path()) {
         path = path.parent_path();
     }
     else if(change){
         path = *change;
     }
-    initPath(path, files);
+    try {
+        initPath(path, files);
+    }
+    catch(...) {
+        std::cerr << "File cannot be read\n";
+        path=oldPath;
+    }
+}
+
+static std::string name = "";
+static auto path = std::filesystem::current_path();
+static auto namePath = std::filesystem::current_path();
+static std::vector<std::filesystem::path> files;
+
+void fileLoadSavePanel(bool isLoading, bf::Scene& scene, const bf::ConfigState& cs, bool& wasPathChosen) {
+    setNextPanelAlignment({350, 280}, {cs.screenWidth, cs.screenHeight}, {.5f, .5f});
+    ImGui::SetNextWindowSize(ImVec2(350, 280));
+    ImGui::Begin("Choose file", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
+    ImGui::Text("%s", path.c_str());
+    ImGui::BeginChild("Objects", ImVec2(ImGui::GetContentRegionAvail().x, 180), true);
+    if(ImGui::Selectable(".."))
+        changePath(path,files,nullptr);
+    for (const auto & entry : files) {
+        if(is_directory(entry)) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImCol32(255,127,0,255));
+            if(ImGui::Selectable(entry.filename().c_str())) {
+                changePath(path,files,&entry);
+                ImGui::PopStyleColor();
+                break;
+            }
+            ImGui::PopStyleColor();
+        }
+        else if(entry.extension()==".json"){
+            if(ImGui::Selectable(entry.filename().c_str())) {
+                auto tmp = entry.filename();
+                if(!isLoading)
+                    tmp.replace_extension("");
+                name = tmp.string();
+                namePath = path;
+                wasPathChosen=true;
+                break;
+            }
+        }
+    }
+    ImGui::EndChild();
+    if(isLoading) {
+        auto txtPath = std::filesystem::relative(namePath, path);
+        ImGui::Text("Chosen path: %s", (txtPath.string() + "/" + name).c_str());
+    }
+    else {
+        if(bf::imgui::checkChanged("File path (+.json)", name))
+            wasPathChosen = !name.empty();
+    }
+    if(!wasPathChosen)
+        ImGui::BeginDisabled();
+    if(ImGui::Button(isLoading ? "Load" : "Save")) {
+        if(isLoading) {
+            if(!bf::loadFromFile(scene.objectArray, namePath.string()+"/"+name))
+                activeSpecialPanel = SpecialPanel::FileFailPanel;
+            else
+                activeSpecialPanel = SpecialPanel::None;
+        }
+        else {
+            if(std::filesystem::exists(path.string() + "/" + name + ".json"))
+                activeSpecialPanel = SpecialPanel::FileSaveMakeSurePanel;
+            else if (bf::saveToFile(scene.objectArray, path.string() + "/" + name + ".json"))
+                activeSpecialPanel = SpecialPanel::None;
+            else
+                activeSpecialPanel = SpecialPanel::FileFailPanel;
+        }
+    }
+    if(!wasPathChosen)
+        ImGui::EndDisabled();
+    ImGui::SameLine();
+    if(ImGui::Button("Cancel"))
+        activeSpecialPanel=SpecialPanel::None;
+    ImGui::End();
 }
 
 void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) {
     static bool isLoading = false;
     static bool wasPathChosen = false;
-    static std::string name = "";
-    static auto path = std::filesystem::current_path();
-    static std::vector<std::filesystem::path> files;
-    ImGui::Begin("Camera info");
+    setNextPanelAlignment({275, 170}, {configState.screenWidth, configState.screenHeight}, {1.f,.0f});
+    ImGui::Begin("Camera info", nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
     scene.camera.ObjectGui(configState);
@@ -214,71 +334,18 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     }
     ImGui::End();
     if(activeSpecialPanel==SpecialPanel::FileLoadSavePanel) {
-        ImGui::Begin("Choose file");
-        ImGui::Text("%s", path.c_str());
-        if(ImGui::Selectable(".."))
-            changePath(path,files,nullptr);
-        for (const auto & entry : files) {
-            if(is_directory(entry)) {
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,127,0,255));
-                if(ImGui::Selectable(entry.filename().c_str())) {
-                    changePath(path,files,&entry);
-                    ImGui::PopStyleColor();
-                    break;
-                }
-                ImGui::PopStyleColor();
-            }
-            else if(entry.extension()==".json"){
-                if(ImGui::Selectable(entry.filename().c_str())) {
-                    auto tmp = entry.filename();
-                    if(!isLoading)
-                        tmp.replace_extension("");
-                    name = tmp.string();
-                    wasPathChosen=true;
-                    break;
-                }
-            }
-        }
-        if(isLoading) {
-            ImGui::Text("Chosen path: %s", (path.string() + "/" + name).c_str());
-        }
-        else {
-            if(bf::imgui::checkChanged("File path (+.json)", name))
-                wasPathChosen = !name.empty();
-        }
-        if(!wasPathChosen)
-            ImGui::BeginDisabled();
-        if(ImGui::Button(isLoading ? "Load" : "Save")) {
-            if(isLoading) {
-                if(!bf::loadFromFile(scene.objectArray, path.string()+"/"+name))
-                    activeSpecialPanel = SpecialPanel::FileFailPanel;
-                else
-                    activeSpecialPanel = SpecialPanel::None;
-            }
-            else {
-                if(std::filesystem::exists(path.string() + "/" + name + ".json"))
-                    activeSpecialPanel = SpecialPanel::FileSaveMakeSurePanel;
-                else if (bf::saveToFile(scene.objectArray, path.string() + "/" + name + ".json"))
-                    activeSpecialPanel = SpecialPanel::FileFailPanel;
-                else
-                    activeSpecialPanel = SpecialPanel::None;
-            }
-        }
-        if(!wasPathChosen)
-            ImGui::EndDisabled();
-        if(ImGui::Button("Cancel"))
-            activeSpecialPanel=SpecialPanel::None;
-        ImGui::End();
+        fileLoadSavePanel(isLoading, scene, configState, wasPathChosen);
     }
     else if(activeSpecialPanel==SpecialPanel::FileSaveMakeSurePanel) {
-        ImGui::Begin("File2");
+        setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f,.5f});
+        ImGui::Begin("File2", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
         std::string makeSureText = std::format("Are you sure you want to override file {}?", name + ".json");
         ImGui::Text("%s", makeSureText.c_str());
         if(ImGui::Button("Yes")) {
             if (bf::saveToFile(scene.objectArray, path.string() + "/" + name + ".json"))
-                activeSpecialPanel = SpecialPanel::FileFailPanel;
-            else
                 activeSpecialPanel = SpecialPanel::None;
+            else
+                activeSpecialPanel = SpecialPanel::FileFailPanel;
         }
         ImGui::SameLine();
         if(ImGui::Button("No"))
@@ -287,7 +354,8 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
 
     }
     else if(activeSpecialPanel==SpecialPanel::FileFailPanel) {
-        ImGui::Begin("File2");
+        setNextPanelAlignment({350, 75}, {configState.screenWidth, configState.screenHeight}, {.5f,.5f});
+        ImGui::Begin("File2", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
         std::string failText = std::format("Failed to {} file {}!", isLoading ? "load" : "save", name);
 		ImGui::TextColored({255,0,0,255},"%s", failText.c_str());
         if(ImGui::Button("OK"))

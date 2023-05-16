@@ -13,6 +13,7 @@
 #include "Event.h"
 #include "Util.h"
 #include "FileLoading.h"
+#include "glm/gtc/epsilon.hpp"
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
 	//bezierDraw objects
@@ -251,7 +252,7 @@ bool bf::Scene::onMouseButtonPressed(bf::event::MouseButton button, bf::event::M
                 continue;
             auto screenPos = bf::toScreenPos(configState.screenWidth,configState.screenHeight,
                                              objectArray[i].getTransform().position, getView(), getProjection());
-            if(screenPos==bf::outOfWindow)
+            if(glm::all(glm::epsilonEqual(screenPos,bf::outOfWindow, 1e-6f)))
                 continue;
             float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
             if(d<=sqrDist && actualZ>screenPos.z) {

@@ -14,6 +14,7 @@
 #include "src/Gizmos/MultiCursor.h"
 #include "Point.h"
 #include "Util.h"
+#include "glm/gtc/epsilon.hpp"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 std::vector<bool> activeBefore;
@@ -308,7 +309,7 @@ const glm::mat4& view, const glm::mat4& projection) {
             if(o && typeid(*o)==typeid(bf::Point)) {
                 auto screenPos = bf::toScreenPos(configState.screenWidth,configState.screenHeight,
                                                  o->getPosition(), view, projection);
-                if(screenPos==bf::outOfWindow)
+                if(glm::all(glm::epsilonEqual(screenPos,bf::outOfWindow, 1e-6f)))
                     continue;
                 if(isBetween(screenPos, newPos, {configState.boxMouseX, configState.boxMouseY})) {
                     setActive(i);

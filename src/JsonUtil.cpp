@@ -142,25 +142,29 @@ Json::Value bf::saveValue(const bf::BezierSurface0 &surface, unsigned int id, co
     value["size"]["y"]=surface.segs.y;
     Json::Value cPts=Json::arrayValue;
     auto& s = surface.segments;
-    cPts.resize(s.size());
-    for(unsigned i=0u;i<s.size();i++) {
-        const auto& segment = s[i];
-        Json::Value val;
-        val["id"]=idTmp;
-        idTmp++;
-        val["name"]=segment.name;
-        val["objectType"]=ptName;
-        val["samples"]=Json::objectValue;
-        val["samples"]["x"]=segment.samples.x;
-        val["samples"]["y"]=segment.samples.y;
-        val["controlPoints"]=Json::arrayValue;
-        val["controlPoints"].resize(16);
-        for(int j=0;j<16;j++) {
-            Json::Value pValue = Json::objectValue;
-            pValue["id"]=segment.pointIndices[j];
-            val["controlPoints"][j]=pValue;
+    cPts.resize(surface.segs.x*surface.segs.y);
+    int tmp=0;
+    for(int i=0;i<surface.segs.y;i++) {
+        for(int j=0;j<surface.segs.x;j++) {
+            const auto& segment = s[i][j];
+            Json::Value val;
+            val["id"]=idTmp;
+            idTmp++;
+            val["name"]=segment.name;
+            val["objectType"]=ptName;
+            val["samples"]=Json::objectValue;
+            val["samples"]["x"]=segment.samples.x;
+            val["samples"]["y"]=segment.samples.y;
+            val["controlPoints"]=Json::arrayValue;
+            val["controlPoints"].resize(16);
+            for(int k=0;k<16;k++) {
+                Json::Value pValue = Json::objectValue;
+                pValue["id"]=segment.pointIndices[k];
+                val["controlPoints"][k]=pValue;
+            }
+            cPts[tmp]=val;
+            tmp++;
         }
-        cPts[i]=val;
     }
     value["patches"]=cPts;
     value["objectType"]=typeName;

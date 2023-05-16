@@ -181,7 +181,7 @@ void bf::BezierCommon::ObjectGui() {
 		}
 		ImGui::EndTable();
 	}
-	ImGui::Text("List of points");
+    ImGui::BeginChild("List of points", ImVec2(ImGui::GetContentRegionAvail().x, 170), true);
 	for(unsigned i=0u; i < pointIndices.size(); i++) {
 		if(!objectArray.isCorrect(pointIndices[i]))
 			ImGui::Text("_");
@@ -191,6 +191,7 @@ void bf::BezierCommon::ObjectGui() {
 			activeIndex=i;
 		}
 	}
+    ImGui::EndChild();
 }
 
 void bf::BezierCommon::recalculate() {
