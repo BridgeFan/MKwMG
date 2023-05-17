@@ -7,7 +7,7 @@
 #include "Object/Point.h"
 #include "Solids/Torus.h"
 #include "Curves/BezierCommon.h"
-#include "Surfaces/BezierSurface0.h"
+#include "Surfaces/BezierSurfaceCommon.h"
 void bf::load(const Json::Value &value, std::string &a, const std::string &name) {
     if(!value.isMember(name) || !value[name].isString()) return;
     a = value[name].asString();
@@ -130,7 +130,7 @@ Json::Value bf::saveValue(const bf::BezierCommon &bezier, unsigned int id, const
     return value;
 }
 
-Json::Value bf::saveValue(const bf::BezierSurface0 &surface, unsigned int id, const std::string &typeName,
+Json::Value bf::saveValue(const bf::BezierSurfaceCommon &surface, unsigned int id, const std::string &typeName,
                           const std::string &ptName, unsigned& idTmp) {Json::Value value;
     value["name"]=surface.name;
     value["id"]=id;

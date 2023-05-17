@@ -17,6 +17,7 @@
 #include "Curves/BezierCurveInter.h"
 #include "FileLoading.h"
 #include "Surfaces/BezierSurface0.h"
+#include "Surfaces/BezierSurface2.h"
 #include "lib/ImGui-Addons/FileBrowser/ImGuiFileBrowser.h"
 
 enum class SpecialPanel: short {
@@ -67,8 +68,8 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
 	if(ImGui::Button("Bézier surface 0")) {
 		scene.objectArray.addRef<bf::BezierSurface0>(scene.cursor);
 	}
-    if(ImGui::Button("TODO: BezSuf2")) {
-        //TODO: Bézier surface 2
+    if(ImGui::Button("Bézier surface 2")) {
+        scene.objectArray.addRef<bf::BezierSurface2>(scene.cursor);
     }
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::EndDisabled();

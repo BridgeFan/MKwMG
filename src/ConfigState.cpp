@@ -20,6 +20,7 @@ bf::ConfigState::ConfigState() {
     std::cout << "Config file found\n";
 	load(value, screenWidth, "screen_width");
 	load(value, screenHeight, "screen_height");
+    load(value, screenFullscreen, "screen_fullscreen");
 	load(value, isUniformScaling, "is_uniform_scaling");
 	load(value, isAxesLocked, "is_axes_locked");
 	load(value, divisionNum, "division_num");
@@ -36,6 +37,7 @@ bf::ConfigState::ConfigState() {
 	load(value, backgroundColorB, "background_color_b");
     load(value, convergence, "convergence");
     load(value, IOD, "iod");
+    load(value, fontPath, "font_path");
 	if(value.isMember("camera") && value["camera"].isObject()) {
 		Json::Value cameraValue = value["camera"];
 		load(cameraValue, cameraFOV, "fov");
@@ -57,6 +59,7 @@ bf::ConfigState::~ConfigState() {
     Json::Value value;
     value["screen_width"]=screenWidth;
     value["screen_height"]=screenHeight;
+    value["screen_fullscreen"]=screenFullscreen;
     value["is_uniform_scaling"]=isUniformScaling;
     value["is_axes_locked"]=isAxesLocked;
     value["division_num"]=divisionNum;
@@ -72,6 +75,7 @@ bf::ConfigState::~ConfigState() {
 	value["background_color_b"]=backgroundColorB;
     value["convergence"]=convergence;
     value["iod"]=IOD;
+    value["font_path"]=fontPath;
 	//camera
 	Json::Value cameraValue;
 	cameraValue["fov"]=cameraFOV;
@@ -85,6 +89,7 @@ bf::ConfigState::~ConfigState() {
 	cameraValue["rot_x"]=cameraInitRot.x;
 	cameraValue["rot_y"]=cameraInitRot.y;
 	cameraValue["rot_z"]=cameraInitRot.z;
+    cameraValue["font_path"]=fontPath;
 	value["camera"]=cameraValue;
     std::ofstream file(configPath);
     if(!file.good())
@@ -175,4 +180,8 @@ const glm::vec3 &bf::ConfigState::getCameraInitPos() const {
 
 const glm::vec3 &bf::ConfigState::getCameraInitRot() const {
 	return cameraInitRot;
+}
+
+const std::string &bf::ConfigState::getFontPath() const {
+    return fontPath;
 }

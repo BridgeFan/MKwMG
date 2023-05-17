@@ -8,13 +8,14 @@
 #include <algorithm>
 #include <format>
 #include "Util.h"
+#include "ConfigState.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
 
 
-ImGuiIO& init(GLFWwindow* window) {
+ImGuiIO& init(GLFWwindow* window, const bf::ConfigState& configState) {
 	//IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -125,7 +126,32 @@ void bf::imgui::postDraw() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-bf::imgui::IO::IO(GLFWwindow *window) : io(init(window)) {}
+bf::imgui::IO::IO(GLFWwindow *window, const bf::ConfigState& configState) : io(init(window, configState)) {
+    io.Fonts->GetGlyphRangesDefault();
+    if(!configState.getFontPath().empty()) {
+        ImVector<ImWchar> ranges;
+        std::vector<ImWchar> myRanges =
+                {
+                        0x0020, 0x00FF, // Basic Latin + Latin Supplement
+                        0x0100, 0x024F, // Latin Extended-A + Latin Extended-B
+                        0x0250, 0x02FF, // IPA Extensions + Spacing Modifying Letters
+                        0x0370, 0x03FF, // Greek and Coptic
+                        0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
+                        0x0591, 0x05F4, // Hebrew
+                        0x1e00, 0x1eff, // Latin Extended Additional
+                        0,
+                };
+        ImFontGlyphRangesBuilder builder;
+        builder.AddRanges(myRanges.data());
+        builder.BuildRanges(&ranges);
+        auto font = io.Fonts->AddFontFromFileTTF(configState.getFontPath().c_str(), 13.f, nullptr, ranges.Data);
+        io.Fonts->Build();
+        if(font) {
+            io.FontDefault = font;
+        }
+
+    }
+}
 
 bf::imgui::IO::~IO() {
     destroy();

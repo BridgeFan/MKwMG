@@ -14,11 +14,12 @@
 class ImGuiIO;
 struct GLFWwindow;
 namespace bf {
+    class ConfigState;
 	namespace imgui {
         class IO {
         public:
             ImGuiIO& io;
-            explicit IO(GLFWwindow* window);
+            IO(GLFWwindow* window, const bf::ConfigState& configState);
             ~IO();
         };
         void preDraw();

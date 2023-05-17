@@ -24,7 +24,7 @@ void key_callback(GLFWwindow*, int key, int /*scancode*/, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void GLAPIENTRY MessageCallback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei, const GLchar* message, const void* );
 
-bf::GlfwStruct::GlfwStruct(bf::ConfigState &configState1, GLFWwindow* window) : configState(configState1), io(window), scene(configState1) {}
+bf::GlfwStruct::GlfwStruct(bf::ConfigState &configState1, GLFWwindow* window) : configState(configState1), io(window, configState1), scene(configState1) {}
 
 bf::Window::~Window() {
 	glfwDestroyWindow(window);
@@ -76,7 +76,13 @@ void bf::Window::run(bf::ConfigState &configState) {
 GLFWwindow* initWindow(const bf::ConfigState& configState)
 {
     std::cout << "Init window begin\n";
-	GLFWwindow* window = glfwCreateWindow(configState.screenWidth, configState.screenHeight, "Project 2", nullptr, nullptr);
+    GLFWwindow* window;
+    if(configState.screenFullscreen) {
+        window = glfwCreateWindow(configState.screenWidth, configState.screenHeight, "Project 2", glfwGetPrimaryMonitor(), nullptr);
+    }
+    else {
+        window = glfwCreateWindow(configState.screenWidth, configState.screenHeight, "Project 2", nullptr, nullptr);
+    }
     if (window == nullptr)
 	{
         std::cerr << "Failed to create GLFW window\n";

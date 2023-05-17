@@ -16,6 +16,7 @@
 #include "Object/Object.h"
 #include "Shader/ShaderArray.h"
 #include "Surfaces/BezierSurface0.h"
+#include "Surfaces/BezierSurface2.h"
 #include "JsonUtil.h"
 #include "Surfaces/BezierSurfaceSegment0.h"
 #include "src/Gizmos/Cursor.h"
@@ -273,7 +274,7 @@ void loadValidator() {
     wasValidatorLoaded=true;
 }
 
-template<bf::child<bf::BezierCommon> T>
+template<std::derived_from<bf::BezierCommon> T>
 std::pair<unsigned, T*> loadBezier(Json::Value& bezierValue, bf::ObjectArray& oa, const std::string& ptName) {
     unsigned id = bezierValue["id"].asUInt();
     T* bezier;
@@ -344,10 +345,10 @@ std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segm
 	return ret;
 }
 
-template<bf::child<bf::BezierSurfaceCommon> T>
+template<std::derived_from<bf::BezierSurfaceCommon> T>
 std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& oa) {
     unsigned id = bezierValue["id"].asUInt();
-    bf::BezierSurface0* surface;
+    T* surface;
     static bf::Cursor cursor;
     if(bezierValue.isMember("name"))
         surface = new T(oa, bezierValue["name"].asString(), cursor);
@@ -397,7 +398,7 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
     return {id, surface};
 }
 
-template<bf::child<bf::Object> T>
+template<std::derived_from<bf::Object> T>
 void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool> >& objects, std::pair<unsigned, T*> o) {
     for(unsigned j=objects.size();j<=o.first;j++) {
         objects.emplace_back(nullptr, false);
@@ -443,7 +444,6 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
     }
     Json::Value& geometry = value["geometry"];
     for(auto& gValue: geometry) {
-        //TODO - surfacesC2
         if(gValue["objectType"]=="torus") {
             emplaceToObjectArray(objectArray.objects,loadTorus(gValue));
         }
@@ -458,6 +458,9 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
         }
         else if(gValue["objectType"]=="bezierSurfaceC0") {
             emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface0>(gValue, objectArray));
+        }
+        else if(gValue["objectType"]=="bezierSurfaceC2") {
+            emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface2>(gValue, objectArray));
         }
         else {
             std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
@@ -501,6 +504,10 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
         else if(typeid(*&o)==typeid(bf::BezierSurface0)) {
             const auto s = dynamic_cast<const bf::BezierSurface0*>(&o);
             gValue.append(bf::saveValue(*s, i, "bezierSurfaceC0", "bezierPatchC0", idTmp));
+        }
+        else if(typeid(*&o)==typeid(bf::BezierSurface2)) {
+            const auto s = dynamic_cast<const bf::BezierSurface2*>(&o);
+            gValue.append(bf::saveValue(*s, i, "bezierSurfaceC2", "bezierPatchC0", idTmp));
         }
 		else {
 			std::cout << "Not implemented type\n";

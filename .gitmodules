@@ -1,15 +1,9 @@
 [submodule "lib/valijson"]
 	path = lib/valijson
 	url = https://github.com/tristanpenman/valijson
-[submodule "lib/jsoncpp"]
-	path = lib/jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp
 [submodule "lib/imgui"]
 	path = lib/imgui
 	url = https://github.com/ocornut/imgui
-[submodule "lib/glm"]
-	path = lib/glm
-	url = https://github.com/g-truc/glm
 [submodule "lib/ImGui-Addons"]
 	path = lib/ImGui-Addons
 	url = https://github.com/gallickgunner/ImGui-Addons

@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <glm/vec3.hpp>
+#include <string>
 
 namespace bf {
     namespace event {
@@ -28,7 +29,8 @@ namespace bf {
 		float cameraFOVmax = 120.f;
 		glm::vec3 cameraInitPos = {0.0f, 0.0f, -10.0f};
 		glm::vec3 cameraInitRot = {0.0f, 0.0f, 0.0f};
-	public:
+        std::string fontPath;
+    public:
         ConfigState();
         ~ConfigState();
         //state of program
@@ -44,6 +46,7 @@ namespace bf {
         //state set from UI / config
         int screenWidth = 1024;
         int screenHeight = 768;
+        bool screenFullscreen = false;
         bool isUniformScaling = true;
         uint8_t isAxesLocked = 0x0; //-----ZYX
         int divisionNum = 8;
@@ -64,6 +67,7 @@ namespace bf {
 		float getCameraFoVmin() const;
 		const glm::vec3 &getCameraInitPos() const;
 		const glm::vec3 &getCameraInitRot() const;
+        const std::string &getFontPath() const;
         void onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);
         void onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit modKeyBit);
         void onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
