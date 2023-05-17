@@ -124,7 +124,7 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
     ImGui::BeginChild("Objects", ImVec2(ImGui::GetContentRegionAvail().x, 260), true);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
-    for (unsigned n = 0u; n < scene.objectArray.size(); n++)
+    for (std::size_t n = 0u; n < scene.objectArray.size(); n++)
     {
         if(!scene.objectArray.isCorrect(n)) {
             ImGui::Text("Empty unique pointer");
@@ -160,7 +160,7 @@ void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& confi
     else {
         bool isAny = false;
         if (scene.objectArray.isMultipleActive()) {
-            for (unsigned i = 0u; i < scene.objectArray.size(); i++) {
+            for (std::size_t i = 0u; i < scene.objectArray.size(); i++) {
                 if (scene.objectArray.isCorrect(i) && scene.objectArray.isActive(i)) {
                     isAny=true;
                     break;
@@ -173,7 +173,7 @@ void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& confi
                 tmp = bf::imgui::checkChanged("Object rotation", scene.multiCursor.transform.rotation) || tmp;
                 tmp = bf::imgui::checkChanged("Object scale", scene.multiCursor.transform.scale, true) || tmp;
                 if (tmp) {
-                    for (unsigned i = 0; i < scene.objectArray.size(); i++) {
+                    for (std::size_t i = 0; i < scene.objectArray.size(); i++) {
                         if (scene.objectArray.isCorrect(i) && scene.objectArray.isActive(i)) {
                             scene.objectArray[i].setNewTransform(scene.objectArray.getCentre(), oldTransform, scene.multiCursor.transform);
                         }

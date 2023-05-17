@@ -157,12 +157,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     if(!ptr)
         return;
     auto& s = *ptr;
-    auto xOffsetF = static_cast<float>(xoffset);
-    auto yOffsetF = static_cast<float>(yoffset);
-    s.io.io.AddMouseWheelEvent(xOffsetF, yOffsetF);
+    s.io.io.AddMouseWheelEvent(xoffset, yoffset);
     if(s.io.io.WantCaptureMouse) {
         return;
     }
+    auto yOffsetF = static_cast<float>(yoffset);
     s.configState.cameraFOV = std::max(std::min(s.configState.cameraFOV - yOffsetF, s.configState.getCameraFoVmax()),
 									   s.configState.getCameraFoVmin());
 }

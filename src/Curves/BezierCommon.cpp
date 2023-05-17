@@ -60,7 +60,7 @@ bool bf::BezierCommon::removePoint(unsigned index) {
 }
 
 void bf::BezierCommon::onRemoveObject(unsigned index) {
-	auto oldN = static_cast<unsigned>(pointIndices.size());
+	unsigned oldN = pointIndices.size();
 	//remove object from list if it is removed by ObjectArray
 	for(unsigned i=0u; i < pointIndices.size(); i++) {
 		if(pointIndices[i] == index) {
@@ -89,7 +89,7 @@ bf::BezierCommon::BezierCommon(bf::ObjectArray &array):
 }
 
 void bf::BezierCommon::postInit() {
-	for(unsigned i=0;i<objectArray.size();i++) {
+	for(std::size_t i=0;i<objectArray.size();i++) {
 		if(objectArray.isActive(i) && typeid(objectArray[i])==typeid(bf::Point)) {
 			pointIndices.push_back(i);
 			bezierOnAdd();
@@ -221,7 +221,7 @@ void bf::BezierCommon::recalculatePart(int) {
 		const auto& o = objectArray[pointIndices[i]];
 		addVertex(o.getPosition());
 	}
-	bf::gl::namedBufferSubData(VBO, vertices, 0, static_cast<unsigned>(vertices.size()));
+	bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
 	//update Bezier
 	bezier.recalculate(false);
 }

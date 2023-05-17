@@ -60,7 +60,7 @@ bf::BezierCurveInter::BezierCurveInter(bf::ObjectArray &array, const std::string
 }
 
 void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
-	auto n=static_cast<int>(pointIndices.size());
+	int n=pointIndices.size();
     if(n<=1) {
         positions.clear();
         bezier.points.clear();
@@ -149,6 +149,7 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, tmpIndices.size() * sizeof(unsigned), tmpIndices.data(), usage);
         }
         else {
+            int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
             bf::gl::namedBufferData(VBO, positions, isDynamic);
             bf::gl::namedBufferData(IBO, tmpIndices, isDynamic);
         }
@@ -161,7 +162,7 @@ void bf::BezierCurveInter::draw(const bf::ShaderArray &shaderArray) const {
 		shaderArray.setColor(64,64,192);
 		shader.setMat4("model", glm::mat4(1.f));
 		glBindVertexArray(VAO);
-		glDrawElements(GL_LINES, static_cast<GLsizei>(positions.size()) * 2 - 2, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_LINES, positions.size() * 2 - 2, GL_UNSIGNED_INT, 0);
 	}
     BezierCommon::draw(shaderArray);
 }

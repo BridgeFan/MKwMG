@@ -119,7 +119,7 @@ Json::Value bf::saveValue(const bf::BezierCommon &bezier, unsigned int id, const
     value["id"]=id;
     Json::Value cPts=Json::arrayValue;
     auto& pts = bezier.getPointIndices();
-    cPts.resize(static_cast<Json::Value::ArrayIndex>(pts.size()));
+    cPts.resize(pts.size());
     for(unsigned i=0u;i<pts.size();i++) {
         Json::Value val;
         val["id"]=pts[i];
