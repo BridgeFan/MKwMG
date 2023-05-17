@@ -11,10 +11,10 @@
 #include <vector>
 
 #define U8(_S) reinterpret_cast<const char*>(u8##_S)
-class ImGuiIO;
+struct ImGuiIO;
 struct GLFWwindow;
 namespace bf {
-    class ConfigState;
+    struct ConfigState;
 	namespace imgui {
         class IO {
         public:

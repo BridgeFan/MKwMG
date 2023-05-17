@@ -12,8 +12,8 @@
 
 namespace bf {
     class Scene;
-    class ConfigState;
-	class ShaderArray;
+    struct ConfigState;
+	struct ShaderArray;
     class BasicBezier: bf::Solid {
     public:
         virtual ~BasicBezier()=default;

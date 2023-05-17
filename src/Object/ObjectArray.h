@@ -10,29 +10,30 @@
 #include <memory>
 #include <vector>
 #include <glm/vec3.hpp>
-#include <unordered_set>
 #include "ObjectArrayListener.h"
 #include "Object.h"
+#include <map>
 
 template<class T, class U>
 concept Derived = std::is_base_of<U, T>::value;
 
 namespace bf {
-	class ConfigState;
-	class ShaderArray;
-    class MultiCursor;
+	struct ConfigState;
+	struct ShaderArray;
+	class MultiCursor;
 	class ObjectArray {
-		friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
 	private:
         int addToIndex = -1;
         int activeIndex = -1;
 		int countActive = 0;
         int activeRedirector = -1;
 		std::vector<std::pair<std::unique_ptr<bf::Object>, bool> > objects;
-		std::unordered_set<bf::ObjectArrayListener*> listeners;
+		std::map<intptr_t, bf::ObjectArrayListener*> listeners;
         glm::vec3 centre;
         void updateCentre();
+		friend bool loadFromFile(bf::ObjectArray& objectArray, const std::string& path);
 	public:
+		~ObjectArray();
         bool isForcedActive=false;
 		[[nodiscard]] std::size_t size() const {return objects.size();}
 		bf::Object& operator[](std::size_t index);

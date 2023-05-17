@@ -9,6 +9,7 @@
 #include "Scene.h"
 #include "src/Shader/ShaderArray.h"
 #include "ConfigState.h"
+#include <OpenGLUtil.h>
 
 bf::BasicBezier::BasicBezier() {}
 
@@ -34,7 +35,7 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
         setBuffers();
     }
     else if (VBO<UINT_MAX){
-        glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
+        bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
     }
 }
 
@@ -115,7 +116,7 @@ std::vector<glm::vec3> bf::bezier0ToBezier2(const std::vector<glm::vec3> &p) {
 	if(p.size()%3!=1 || p.size()<4)
 		return {};
 	std::vector<glm::vec3> retPoints(p.size()/3+3);
-    for(unsigned i=1u;i<retPoints.size()-1;i++) {
+    for(unsigned i=1u;i<retPoints.size()-3;i++) {
         auto inter = getIntersection(p[3*i-2],p[3*i-1],p[3*i+1],p[3*i+2]);
         if(inter)
             retPoints[i+1]=*inter;

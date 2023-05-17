@@ -9,7 +9,7 @@
 #include <climits>
 #include "Solid.h"
 namespace bf {
-	class Shader;
+	struct Shader;
 	class ObjectArray;
 	class Torus : public bf::Solid {
 		static int index;

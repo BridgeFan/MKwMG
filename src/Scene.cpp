@@ -14,6 +14,7 @@
 #include "Util.h"
 #include "FileLoading.h"
 #include "glm/gtc/epsilon.hpp"
+#include <OpenGLUtil.h>
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
 	//bezierDraw objects
@@ -403,7 +404,7 @@ void bf::Scene::resizeFramebuffers(int x, int y) const {
     for(int i=0;i<2;i++) {
         glBindTexture(GL_TEXTURE_2D, texture+i);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-        glNamedRenderbufferStorage(RBO+i, GL_DEPTH_COMPONENT, x, y);
+        bf::gl::namedRenderbufferStorage(RBO + i, GL_DEPTH_COMPONENT, x, y);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 }

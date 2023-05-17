@@ -13,7 +13,7 @@
 #include "Shader/ShaderArray.h"
 
 namespace bf {
-	class ConfigState;
+	struct ConfigState;
 	class Scene {
 	private:
 		glm::mat4 projection, inverseProjection, view, inverseView;

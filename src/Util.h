@@ -11,9 +11,10 @@
 #include <vector>
 #include <memory>
 #include <glm/mat4x4.hpp>
+#include <numbers>
 constexpr float PI = std::numbers::pi_v<float>;
 
-class ImGuiIO;
+struct ImGuiIO;
 namespace bf {
 	template<typename T>
 	concept arithmetic = std::is_arithmetic<T>::value;
@@ -98,4 +99,5 @@ namespace  bf {
     bool isInBounds(int screenWidth, int screenHeight, const glm::vec3& mousePos);
     float getDeltaTime();
 }
+
 #endif //MG1_ZAD2_UTIL_H

@@ -7,7 +7,7 @@
 #define MG1_ZAD2_IMGUIPANEL_H
 namespace bf {
     class Scene;
-    class ConfigState;
+    struct ConfigState;
     namespace imgui {
         void createObjectPanel(Scene& scene, const bf::ConfigState& configState);
         void listOfObjectsPanel(Scene& scene, bf::ConfigState& configState);

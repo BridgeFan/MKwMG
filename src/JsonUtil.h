@@ -12,7 +12,7 @@
 namespace bf {
     class Point;
     class Torus;
-    class Transform;
+    struct Transform;
     class BezierCommon;
     class BezierSurfaceCommon;
     template<std::integral T>

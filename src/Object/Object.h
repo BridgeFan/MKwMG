@@ -19,7 +19,7 @@ namespace bf {
     enum ShaderType: int;
 	struct ConfigState;
 	class ObjectArray;
-    class ShaderArray;
+    struct ShaderArray;
     class Scene;
 	class Object {
 	private:

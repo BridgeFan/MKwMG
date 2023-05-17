@@ -7,6 +7,7 @@
 #include "BezierSurfaceSegment0.h"
 #include "Object/ObjectArray.h"
 #include "Shader/ShaderArray.h"
+#include <OpenGLUtil.h>
 
 void bf::BezierSurfaceSegment0::initGL(const bf::ObjectArray &objectArray) {
     vertices.clear();
@@ -66,7 +67,7 @@ void bf::BezierSurfaceSegment0::onPointMove(const bf::ObjectArray &objectArray, 
     if(it!=pointIndices.end()) {
         unsigned itIndex = it - pointIndices.begin();
         vertices[itIndex]=objectArray[index].getPosition();
-        glNamedBufferSubData(VBO, sizeof(Vertex) * itIndex, sizeof(Vertex), &(vertices[itIndex]));
+        bf::gl::namedBufferSubData(VBO, vertices, itIndex, 1);
     }
 }
 

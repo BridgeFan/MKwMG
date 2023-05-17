@@ -5,6 +5,7 @@
 #include "Solid.h"
 #include <GL/glew.h>
 #include "src/Shader/ShaderArray.h"
+#include <OpenGLUtil.h>
 int bf::Solid::sindex = 1;
 unsigned oldVerticesSize = 0;
 
@@ -34,9 +35,8 @@ void bf::Solid::setBuffers() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], usage);
     }
     else {
-        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-        glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), usage);
-        glNamedBufferData(IBO, indices.size() * sizeof(unsigned), indices.data(), usage);
+        bf::gl::namedBufferData(VBO, vertices, isDynamic);
+        bf::gl::namedBufferData(IBO, indices, isDynamic);
     }
 }
 
@@ -83,12 +83,11 @@ void bf::Solid::swapSolids(bf::Solid &a, bf::Solid &b) {
 
 void bf::Solid::glUpdateVertices() const {
     if(oldVerticesSize!=vertices.size()) {
-        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-        glNamedBufferData(VBO, vertices.size() * sizeof(Vertex), vertices.data(), usage);
+        bf::gl::namedBufferData(VBO, vertices, isDynamic);
         oldVerticesSize=vertices.size();
     }
     else {
-        glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
+        bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
     }
 }
 

@@ -3,7 +3,7 @@
 //
 
 #include <algorithm>
-#include <GL/glew.h>
+#include "OpenGLUtil.h"
 #include <iostream>
 #include "BezierCurveInter.h"
 #include "Object/ObjectArray.h"
@@ -117,9 +117,8 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
     }
 	//update GPU data
 	if(!wasSizeChanged) {
+        bf::gl::namedBufferData(VBO, positions, isDynamic);
         //TODO - improve glNamedBufferSubData
-        int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-        glNamedBufferData(VBO, positions.size() * sizeof(Vertex), positions.data(), usage);
 		//glNamedBufferSubData(VBO, 0, positions.size() * sizeof(Vertex), positions.data());
 	}
 	else {
@@ -151,8 +150,8 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
         }
         else {
             int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
-            glNamedBufferData(VBO, positions.size() * sizeof(Vertex), positions.data(), usage);
-            glNamedBufferData(IBO, tmpIndices.size() * sizeof(unsigned), tmpIndices.data(), usage);
+            bf::gl::namedBufferData(VBO, positions, isDynamic);
+            bf::gl::namedBufferData(IBO, tmpIndices, isDynamic);
         }
 	}
 }

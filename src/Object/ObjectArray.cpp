@@ -49,9 +49,9 @@ bool bf::ObjectArray::remove(std::size_t index) {
     activeRedirector=-1;
 	if(index>=objects.size() || (isCorrect(index) && objects[index].first->indestructibilityIndex>0))
 		return false;
-	for(auto a: listeners)
-		if(a)
-			a->onRemoveObject(index);
+	for(auto&& [key, ptr]: listeners)
+		if(ptr)
+			ptr->onRemoveObject(index);
     isForcedActive=false;
 	for(std::size_t i=index+1;i<objects.size();i++)
 		std::swap(objects[i-1],objects[i]);
@@ -135,6 +135,11 @@ void bf::ObjectArray::updateCentre() {
         centre = {};
 }
 
+bf::ObjectArray::~ObjectArray() {
+    listeners.clear();
+    objects.clear();
+}
+
 bool bf::ObjectArray::isAnyActive() const {
 	return countActive>0;
 }
@@ -187,10 +192,12 @@ bool bf::ObjectArray::toggleActive(std::size_t index) {
 }
 
 void bf::ObjectArray::addListener(bf::ObjectArrayListener &listener) {
-	listeners.insert(&listener);
+	listeners[reinterpret_cast<intptr_t>(&listener)]=&listener;
 }
 void bf::ObjectArray::removeListener(bf::ObjectArrayListener &listener) {
-	listeners.erase(&listener);
+    auto p = reinterpret_cast<intptr_t>(&listener);
+    if(listeners.contains(p))
+	    listeners.erase(p);
 }
 
 bool bf::ObjectArray::isMovable(std::size_t index) {
@@ -241,9 +248,9 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& 
 }
 
 void bf::ObjectArray::onMove(std::size_t index) {
-	for(auto a: listeners)
-		if(a)
-			a->onMoveObject(index);
+	for(auto&& [key, ptr]: listeners)
+		if(ptr)
+            ptr->onMoveObject(index);
 }
 
 int bf::ObjectArray::getAddToIndex() const {
@@ -337,3 +344,4 @@ const glm::mat4& view, const glm::mat4& projection) {
 void bf::ObjectArray::removeAll() {
 	objects.clear();
 }
+

@@ -1,4 +1,5 @@
 #pragma once
+#ifdef GVV
 #pragma GCC diagnostic ignored "-Wformat-signedness"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -19,7 +20,7 @@
 #pragma GCC diagnostic ignored "-Wstrict-null-sentinel"
 #pragma GCC diagnostic ignored "-Wundef"
 #pragma GCC diagnostic ignored "-Wduplicated-cond"
-
+#endif
 #if defined(VALIJSON) || defined(JSON)
 #include <json/json.h>
 #endif
@@ -31,6 +32,7 @@
 #include <valijson/validator.hpp>
 #endif
 
+#ifdef GCC
 #pragma GCC diagnostic warning "-Wformat-signedness"
 #pragma GCC diagnostic warning "-Wuseless-cast"
 #pragma GCC diagnostic warning "-Wold-style-cast"
@@ -51,3 +53,4 @@
 #pragma GCC diagnostic warning "-Wstrict-null-sentinel"
 #pragma GCC diagnostic warning "-Wundef"
 #pragma GCC diagnostic warning "-Wduplicated-cond"
+#endif

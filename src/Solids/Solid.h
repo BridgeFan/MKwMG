@@ -20,7 +20,7 @@ namespace bf {
         void setPosition(const glm::vec3& p) noexcept;
         void setTexturePosition(const glm::vec2& t) noexcept;
     };
-	class Shader;
+	struct Shader;
 	struct ConfigState;
 	class Solid : public bf::Object {
 		static int sindex;

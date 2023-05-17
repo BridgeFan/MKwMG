@@ -13,7 +13,7 @@
 
 namespace bf {
     class ObjectArray;
-    class ShaderArray;
+    struct ShaderArray;
     class BezierSurfaceSegment0: public bf::Solid {
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
         void swapSegments(BezierSurfaceSegment0& a, BezierSurfaceSegment0& b);

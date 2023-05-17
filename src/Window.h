@@ -10,7 +10,7 @@
 #include "Scene.h"
 #include "ImGui/ImGuiUtil.h"
 
-class ImGuiIO;
+struct ImGuiIO;
 struct GLFWwindow;
 namespace bf {
     struct ConfigState;

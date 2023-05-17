@@ -9,7 +9,7 @@
 #include "src/Solids/Solid.h"
 
 namespace bf {
-	class ShaderArray;
+	struct ShaderArray;
 	struct ConfigState;
     class MultiCursor {
         bf::DummySolid lines[3];

@@ -4,6 +4,7 @@
 #include "ConfigState.h"
 #include "Util.h"
 #include <fstream>
+#include <string>
 #include <iostream>
 #include "Event.h"
 #include "JsonUtil.h"

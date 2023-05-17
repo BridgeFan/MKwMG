@@ -12,6 +12,7 @@
 #include "Scene.h"
 #include "BezierCommon.h"
 #include "Event.h"
+#include <OpenGLUtil.h>
 
 int bf::BezierCommon::_index = 1;
 
@@ -220,7 +221,7 @@ void bf::BezierCommon::recalculatePart(int) {
 		const auto& o = objectArray[pointIndices[i]];
 		addVertex(o.getPosition());
 	}
-	glNamedBufferSubData(VBO, 0, vertices.size() * sizeof(Vertex), vertices.data());
+	bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
 	//update Bezier
 	bezier.recalculate(false);
 }
