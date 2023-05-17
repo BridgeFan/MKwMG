@@ -35,13 +35,13 @@ namespace bf {
 	public:
 		~ObjectArray();
         bool isForcedActive=false;
-		[[nodiscard]] std::size_t size() const {return objects.size();}
-		bf::Object& operator[](std::size_t index);
-		const bf::Object& operator[](std::size_t index) const;
-		bf::Object* getPtr(std::size_t index) {return objects[index].first.get();}
-		[[nodiscard]] bool isCorrect(std::size_t index) const;
+		[[nodiscard]] unsigned size() const {return static_cast<unsigned>(objects.size());}
+		bf::Object& operator[](unsigned index);
+		const bf::Object& operator[](unsigned index) const;
+		bf::Object* getPtr(unsigned index) {return objects[index].first.get();}
+		[[nodiscard]] bool isCorrect(unsigned index) const;
 		void add(bf::Object* object);
-		bool remove(std::size_t index);
+		bool remove(unsigned index);
 		void removeActive();
 		void addListener(bf::ObjectArrayListener& listener);
 		void removeListener(bf::ObjectArrayListener& listener);
@@ -67,25 +67,25 @@ namespace bf {
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
 			ptr->postInit();
             clearSelection(-1);
-            activeIndex=objects.size();
+            activeIndex=static_cast<int>(objects.size());
 			objects.emplace_back(std::move(ptr), true);
 		}
         void setActiveRedirector(bf::Object const* redirector=nullptr);
         int getActiveRedirector() const {return activeRedirector;}
-		bool toggleActive(std::size_t index);
-		bool isActive(std::size_t index);
-		bool setActive(std::size_t index);
-		bool setUnactive(std::size_t index);
+		bool toggleActive(unsigned index);
+		bool isActive(unsigned index);
+		bool setActive(unsigned index);
+		bool setUnactive(unsigned index);
 		[[nodiscard]] bool isAnyActive() const;
 		[[nodiscard]] bool isMultipleActive() const;
-		void clearSelection(std::size_t index=-1);
+		void clearSelection(int index=-1);
 		glm::vec3 getCentre();
 		void removeAll();
-		void onMove(std::size_t index);
-		bool isMovable(std::size_t index);
+		void onMove(unsigned index);
+		bool isMovable(unsigned index);
         int getAddToIndex() const;
         void setAddToIndex(int addToIndex);
-		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor);
+		bool imGuiCheckChanged(unsigned index, MultiCursor& multiCursor);
 		[[nodiscard]] int getActiveIndex() const;
 		void draw(bf::ShaderArray& shaderArray, const bf::ConfigState& configState);
         bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);

@@ -35,7 +35,7 @@ void bf::BasicBezier::recalculate(bool wasSizeChanged) {
         setBuffers();
     }
     else if (VBO<UINT_MAX){
-        bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
+        bf::gl::namedBufferSubData(VBO, vertices, 0, static_cast<unsigned>(vertices.size()));
     }
 }
 
@@ -48,7 +48,7 @@ void bf::BasicBezier::bezierDraw(const bf::ShaderArray &shaderArray, bool isLine
 		glBindVertexArray(VAO);
 		shaderArray.setColor(255,0,255);
 		if(isLineDrawn) {
-			glDrawElements(GL_LINE_STRIP, vertices.size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(vertices.size()), GL_UNSIGNED_INT, 0);
 		}
 	}
     else if(shaderArray.getActiveIndex()==PointShader) {
@@ -56,7 +56,7 @@ void bf::BasicBezier::bezierDraw(const bf::ShaderArray &shaderArray, bool isLine
 		shaderArray.setColor(255,0,255);
         shader.setVec3("position", 0.f,0.f,0.f);
         if(isPointDraw) {
-            glDrawElements(GL_POINTS, vertices.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_POINTS, static_cast<GLsizei>(vertices.size()), GL_UNSIGNED_INT, 0);
         }
     }
 	else if(shaderArray.getActiveIndex()==BezierShader) {

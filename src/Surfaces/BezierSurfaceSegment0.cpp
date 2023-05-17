@@ -65,7 +65,7 @@ void bf::BezierSurfaceSegment0::segmentDraw(const bf::ShaderArray &shaderArray, 
 void bf::BezierSurfaceSegment0::onPointMove(const bf::ObjectArray &objectArray, unsigned int index) {
     auto it = std::find(pointIndices.begin(),pointIndices.end(), index);
     if(it!=pointIndices.end()) {
-        unsigned itIndex = it - pointIndices.begin();
+        auto itIndex = static_cast<unsigned>(it - pointIndices.begin());
         vertices[itIndex]=objectArray[index].getPosition();
         bf::gl::namedBufferSubData(VBO, vertices, itIndex, 1);
     }

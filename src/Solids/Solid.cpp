@@ -16,7 +16,7 @@ bf::Solid::~Solid() {
 }
 
 void bf::Solid::setBuffers() {
-    oldVerticesSize = vertices.size();
+    oldVerticesSize = static_cast<unsigned>(vertices.size());
 	//remove old ones
     if(VAO==UINT_MAX) {
         if(indices.empty() || vertices.empty()) {
@@ -46,7 +46,7 @@ void bf::Solid::draw(const bf::ShaderArray& shaderArray/*, const bf::Transform& 
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);
     shaderArray.getActiveShader().setMat4("model", getModelMatrix(/*relativeTo*/));
-    glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
+    glDrawElements(GL_LINES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT,   // type
                    reinterpret_cast<void*>(0)           // element array buffer offset
     );
 }
@@ -84,10 +84,10 @@ void bf::Solid::swapSolids(bf::Solid &a, bf::Solid &b) {
 void bf::Solid::glUpdateVertices() const {
     if(oldVerticesSize!=vertices.size()) {
         bf::gl::namedBufferData(VBO, vertices, isDynamic);
-        oldVerticesSize=vertices.size();
+        oldVerticesSize=static_cast<unsigned>(vertices.size());
     }
     else {
-        bf::gl::namedBufferSubData(VBO, vertices, 0, vertices.size());
+        bf::gl::namedBufferSubData(VBO, vertices, 0, static_cast<GLsizei>(vertices.size()));
     }
 }
 

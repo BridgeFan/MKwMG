@@ -309,7 +309,7 @@ std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segm
 			pointCount[s.pointIndices[j]][k] = i;
 		}
 	}
-	unsigned leftBottomIndex;
+	unsigned leftBottomIndex=0;
 	for(auto&& [key, values]: pointCount) {
 		if(values[1]==values[2] && values[2]==values[3] && values[3]==UINT_MAX) {
 			leftBottomIndex=values[0];
@@ -400,7 +400,7 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
 
 template<std::derived_from<bf::Object> T>
 void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool> >& objects, std::pair<unsigned, T*> o) {
-    for(unsigned j=objects.size();j<=o.first;j++) {
+    for(auto j=static_cast<unsigned>(objects.size());j<=o.first;j++) {
         objects.emplace_back(nullptr, false);
     }
     objects[o.first].first.reset(o.second);
@@ -478,7 +478,7 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
     //TODO - save surfacesC2
     Json::Value pValue(Json::arrayValue);
     Json::Value gValue(Json::arrayValue);
-    unsigned idTmp = objectArray.size();
+    auto idTmp = static_cast<unsigned>(objectArray.size());
     for(unsigned i=0;i<objectArray.size();i++) {
 		const auto& o = objectArray[i];
 		if(typeid(*&o)==typeid(bf::Point)) {

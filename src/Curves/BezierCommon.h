@@ -19,7 +19,7 @@ namespace bf {
 		bool isTmpPointDrawn=false;
 		bf::BasicBezier bezier;
 		bool isPolygonVisible, isCurveVisible, isLineDrawn;
-		std::size_t activeIndex;
+		unsigned activeIndex;
 		std::vector<unsigned> pointIndices;
     public:
         const std::vector<unsigned int> &getPointIndices() const;

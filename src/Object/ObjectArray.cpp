@@ -20,7 +20,7 @@ auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){
 std::vector<bool> activeBefore;
 bool isBoxSelectActive=false;
 
-bf::Object &bf::ObjectArray::operator[](std::size_t index) {
+bf::Object &bf::ObjectArray::operator[](unsigned index) {
 	if(index >= objects.size())
 		throw std::out_of_range("Index too large");
 	if(!objects[index].first)
@@ -28,7 +28,7 @@ bf::Object &bf::ObjectArray::operator[](std::size_t index) {
 	return *objects[index].first;
 }
 
-const bf::Object &bf::ObjectArray::operator[](std::size_t index) const {
+const bf::Object &bf::ObjectArray::operator[](unsigned index) const {
 	if(index >= objects.size())
 		throw std::out_of_range("Index too large");
 	if(!objects[index].first)
@@ -36,7 +36,7 @@ const bf::Object &bf::ObjectArray::operator[](std::size_t index) const {
 	return *objects[index].first;
 }
 
-bool bf::ObjectArray::isCorrect(std::size_t index) const {
+bool bf::ObjectArray::isCorrect(unsigned index) const {
 	return (index < objects.size() && objects[index].first);
 }
 
@@ -45,7 +45,7 @@ void bf::ObjectArray::add(bf::Object* object) {
     activeBefore.push_back(false);
 }
 
-bool bf::ObjectArray::remove(std::size_t index) {
+bool bf::ObjectArray::remove(unsigned index) {
     activeRedirector=-1;
 	if(index>=objects.size() || (isCorrect(index) && objects[index].first->indestructibilityIndex>0))
 		return false;
@@ -53,7 +53,7 @@ bool bf::ObjectArray::remove(std::size_t index) {
 		if(ptr)
 			ptr->onRemoveObject(index);
     isForcedActive=false;
-	for(std::size_t i=index+1;i<objects.size();i++)
+	for(unsigned i=index+1;i<objects.size();i++)
 		std::swap(objects[i-1],objects[i]);
 	if(objects.back().second) {
         countActive--;
@@ -68,7 +68,7 @@ bool bf::ObjectArray::remove(std::size_t index) {
 }
 
 
-bool bf::ObjectArray::isActive(std::size_t index) {
+bool bf::ObjectArray::isActive(unsigned index) {
 	if(index >= objects.size())
 		throw std::out_of_range("Index too large");
 	return objects[index].second;
@@ -78,7 +78,7 @@ void bf::ObjectArray::removeActive() {
     if(isForcedActive) {
         return;
     }
-	for(std::size_t i=0u;i<size();i++)
+	for(unsigned i=0u;i<size();i++)
 		if(objects[i].second && remove(i)) {
 			i--;
 		}
@@ -86,11 +86,11 @@ void bf::ObjectArray::removeActive() {
     std::fill(activeBefore.begin(), activeBefore.end(), false);
 }
 
-void bf::ObjectArray::clearSelection(std::size_t index) {
+void bf::ObjectArray::clearSelection(int index) {
     if(isForcedActive)
         return;
     if(isCorrect(activeRedirector)) {
-        if(activeRedirector==static_cast<int>(index)) {
+        if(activeRedirector==index) {
             activeRedirector = -1;
         }
         else {
@@ -98,7 +98,7 @@ void bf::ObjectArray::clearSelection(std::size_t index) {
             return;
         }
     }
-	for(std::size_t i=0;i<objects.size();i++)
+	for(int i=0;i<objects.size();i++)
 		if(i!=index)
 			objects[i].second=false;
     std::fill(activeBefore.begin(), activeBefore.end(), false);
@@ -121,7 +121,7 @@ glm::vec3 bf::ObjectArray::getCentre() {
 void bf::ObjectArray::updateCentre() {
     float count=0.f;
     glm::vec3 sum = {.0f,.0f,.0f};
-    for(std::size_t i=0;i<objects.size();i++) {
+    for(unsigned i=0;i<objects.size();i++) {
         if(!isCorrect(i))
             continue;
         if(objects[i].second) {
@@ -147,7 +147,7 @@ bool bf::ObjectArray::isMultipleActive() const {
 	return countActive>1;
 }
 
-bool bf::ObjectArray::setActive(std::size_t index) {
+bool bf::ObjectArray::setActive(unsigned index) {
 	if(!isCorrect(index) || isForcedActive)
 		return false;
     if(isCorrect(activeRedirector)) {
@@ -164,7 +164,7 @@ bool bf::ObjectArray::setActive(std::size_t index) {
     updateCentre();
 	return true;
 }
-bool bf::ObjectArray::setUnactive(std::size_t index) {
+bool bf::ObjectArray::setUnactive(unsigned index) {
 	if(!isCorrect(index) || isForcedActive) {
         return false;
     }
@@ -175,7 +175,7 @@ bool bf::ObjectArray::setUnactive(std::size_t index) {
         countActive--;
     }
 	if(countActive==1) {
-        activeIndex = std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin();
+        activeIndex = static_cast<int>(std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin());
     }
 	objects[index].second=false;
     if(!isBoxSelectActive)
@@ -184,7 +184,7 @@ bool bf::ObjectArray::setUnactive(std::size_t index) {
 	return true;
 }
 
-bool bf::ObjectArray::toggleActive(std::size_t index) {
+bool bf::ObjectArray::toggleActive(unsigned index) {
 	if(!isCorrect(index))
 		return false;
 	objects[index].second ? setUnactive(index) : setActive(index);
@@ -200,7 +200,7 @@ void bf::ObjectArray::removeListener(bf::ObjectArrayListener &listener) {
 	    listeners.erase(p);
 }
 
-bool bf::ObjectArray::isMovable(std::size_t index) {
+bool bf::ObjectArray::isMovable(unsigned index) {
 	return isCorrect(index) && objects[index].first->isMovable();
 }
 
@@ -211,7 +211,7 @@ int bf::ObjectArray::getActiveIndex() const
     return -1;
 }
 
-bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& multiCursor) {
+bool bf::ObjectArray::imGuiCheckChanged(unsigned index, bf::MultiCursor& multiCursor) {
 	if(!isCorrect(index)) {
 		ImGui::Text("_");
 		return false;
@@ -235,7 +235,7 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& 
         	shaderArray.changeShader(k);
         if(k==PointShader)
             shaderArray.getActiveShader().setFloat("pointSize",2.f*configState.pointRadius);
-        for (std::size_t i = 0; i < objects.size(); i++) {
+        for (unsigned i = 0; i < objects.size(); i++) {
             if (isCorrect(i) && std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end()) {
                 if (isActive(i))
 					shaderArray.setColor(255,128,0);
@@ -247,7 +247,7 @@ void bf::ObjectArray::draw(bf::ShaderArray& shaderArray, const bf::ConfigState& 
     }
 }
 
-void bf::ObjectArray::onMove(std::size_t index) {
+void bf::ObjectArray::onMove(unsigned index) {
 	for(auto&& [key, ptr]: listeners)
 		if(ptr)
             ptr->onMoveObject(index);

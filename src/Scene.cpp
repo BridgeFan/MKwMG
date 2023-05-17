@@ -369,7 +369,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 			t.rotation += deltaTransform.rotation;
 			t.scale += deltaTransform.scale;
 			if(objectArray.isMultipleActive()) {
-				for (std::size_t i = 0; i < objectArray.size(); i++) {
+				for (unsigned i = 0; i < objectArray.size(); i++) {
 					if (objectArray.isCorrect(i) && objectArray.isActive(i)) {
 						objectArray[i].setNewTransform(objectArray.getCentre(), multiCursor.transform, t);
 					}

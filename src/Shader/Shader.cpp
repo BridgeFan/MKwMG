@@ -42,14 +42,14 @@ bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPat
     bool isGeometryShaderUsed = !geometryPath.empty();
     unsigned int vertex = compileShaderFromFile(vertexPath, GL_VERTEX_SHADER);
     unsigned int fragment = compileShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
-	unsigned int geometry;
+	unsigned int geometry = UINT_MAX;
 	if(isGeometryShaderUsed) {
         geometry = compileShaderFromFile(geometryPath, GL_GEOMETRY_SHADER);
 	}
 	ID = glCreateProgram();
 	glAttachShader(ID, vertex);
 	glAttachShader(ID, fragment);
-	if(!geometryPath.empty())
+	if(isGeometryShaderUsed)
 		glAttachShader(ID, geometry);
 	glLinkProgram(ID);
 	checkCompileErrors(ID, "PROGRAM");
@@ -115,7 +115,7 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     unsigned int fragment = compileShaderFromFile(fragmentPath, GL_FRAGMENT_SHADER);
     unsigned int tessCtrl = compileShaderFromFile(tessControlPath, GL_TESS_CONTROL_SHADER);
     unsigned int tessEval = compileShaderFromFile(tessEvalPath, GL_TESS_EVALUATION_SHADER);
-    unsigned int geometry;
+    unsigned int geometry = UINT_MAX;
     if(isGeometryShaderUsed) {
         geometry = compileShaderFromFile(geometryPath, GL_GEOMETRY_SHADER);
     }
@@ -124,7 +124,7 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     glAttachShader(ID, fragment);
     glAttachShader(ID, tessCtrl);
     glAttachShader(ID, tessEval);
-    if(!geometryPath.empty())
+    if(isGeometryShaderUsed)
         glAttachShader(ID, geometry);
     glLinkProgram(ID);
     checkCompileErrors(ID, "PROGRAM");
