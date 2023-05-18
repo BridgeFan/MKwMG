@@ -181,6 +181,9 @@ void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int m
     if(s.io.io.WantCaptureKeyboard)
         return;
     //delegate event
+    s.configState.isCtrlPressed=((modKeyBit&ModControl)>0);
+    s.configState.isAltPressed=((modKeyBit&ModAlt)>0);
+    s.configState.isShiftPressed=((modKeyBit&ModShift)>0);
     if(state==KeyState::Press) {
 		if (key == Key::Escape) {
 			glfwSetWindowShouldClose(window, true);
@@ -213,6 +216,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         return;
     }
     //delegate event
+    s.configState.isCtrlPressed=((modKeyBit&ModControl)>0);
+    s.configState.isAltPressed=((modKeyBit&ModAlt)>0);
+    s.configState.isShiftPressed=((modKeyBit&ModShift)>0);
 	if(state==bf::event::MouseButtonState::Press) {
 		if(s.scene.onMouseButtonPressed(mouseButton, modKeyBit, s.configState))
 			return;
