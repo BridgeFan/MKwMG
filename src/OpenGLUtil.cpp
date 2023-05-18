@@ -4,11 +4,10 @@
 #include <iostream>
 
 void bf::gl::namedRenderbufferStorage(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height) {
-#if ARB_direct_state_access
+if(GLEW_ARB_direct_state_access)
 	glNamedRenderbufferStorage(renderbuffer, internalformat, width, height);
-#else
+else
 	glNamedRenderbufferStorageEXT(renderbuffer, internalformat, width, height);
-#endif
 }
 
 void GLAPIENTRY
