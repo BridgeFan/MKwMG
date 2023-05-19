@@ -309,8 +309,10 @@ std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segm
 			pointCount[s.pointIndices[j]][k] = i;
 		}
 	}
-	unsigned leftBottomIndex;
+	unsigned leftBottomIndex=0u;
 	for(auto&& [key, values]: pointCount) {
+        if(values[0]==UINT_MAX)
+            continue;
 		if(values[1]==values[2] && values[2]==values[3] && values[3]==UINT_MAX) {
 			leftBottomIndex=values[0];
 			break;
@@ -378,8 +380,18 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
 		segments.emplace_back(std::move(segment));
     }
     //PHASE 2: recoginze segments
-    auto newSegments = recognizeSegments(std::move(segments), surface->segs,
+    std::vector<std::vector<Segment> > newSegments;
+    if(typeid(T)==typeid(bf::BezierSurface0))
+        newSegments = recognizeSegments(std::move(segments), surface->segs,
     	surface->isWrappedX, surface->isWrappedY);
+    else {
+        int i=0;
+        for(auto&& s: segments) {
+            if(i%surface->segs.x==0)
+                newSegments.emplace_back();
+            newSegments.back().emplace_back(std::move(s));
+        }
+    }
     std::vector<std::vector<std::string> > segmentNames(newSegments.size());
     std::vector<std::vector<glm::vec<2,int> > > segmentSamples(newSegments.size());
     surface->pointIndices.resize(newSegments.size());
@@ -466,9 +478,17 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
             std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
         }
     }
+    //post init
     for(const auto& o: objectArray.objects) {
         if(o.first)
             o.first->postInit();
+    }
+    //clear empty pointers
+    for(int i=0;i<objectArray.size();i++) {
+        if(objectArray.getPtr(i)==nullptr) {
+            objectArray.remove(i);
+            i--;
+        }
     }
     std::cout << std::format("{} loading finished\n",path);
     return true;
@@ -507,7 +527,7 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
         }
         else if(typeid(*&o)==typeid(bf::BezierSurface2)) {
             const auto s = dynamic_cast<const bf::BezierSurface2*>(&o);
-            gValue.append(bf::saveValue(*s, i, "bezierSurfaceC2", "bezierPatchC0", idTmp));
+            gValue.append(bf::saveValue(*s, i, "bezierSurfaceC2", "bezierPatchC2", idTmp));
         }
 		else {
 			std::cout << "Not implemented type\n";

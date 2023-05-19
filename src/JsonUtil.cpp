@@ -146,20 +146,27 @@ Json::Value bf::saveValue(const bf::BezierSurfaceCommon &surface, unsigned int i
     int tmp=0;
     for(int i=0;i<surface.segs.y;i++) {
         for(int j=0;j<surface.segs.x;j++) {
-            const auto& segment = s[i][j];
+            const auto& segment = surface.pointIndices[i][j];
             Json::Value val;
             val["id"]=idTmp;
             idTmp++;
-            val["name"]=segment.name;
             val["objectType"]=ptName;
             val["samples"]=Json::objectValue;
-            val["samples"]["x"]=segment.samples.x;
-            val["samples"]["y"]=segment.samples.y;
+            if(surface.segments.size()>=std::min(surface.segs.x,surface.segs.y)) {
+                const auto& mySeg = surface.segments[i][j];
+                val["samples"]["x"] = mySeg.samples.x;
+                val["samples"]["y"] = mySeg.samples.y;
+                val["name"] = mySeg.name;
+            }
+            else {
+                val["samples"]["x"] = surface.samples.x;
+                val["samples"]["y"] = surface.samples.y;
+            }
             val["controlPoints"]=Json::arrayValue;
             val["controlPoints"].resize(16);
             for(int k=0;k<16;k++) {
                 Json::Value pValue = Json::objectValue;
-                pValue["id"]=segment.pointIndices[k];
+                pValue["id"]=segment[k];
                 val["controlPoints"][k]=pValue;
             }
             cPts[tmp]=val;

@@ -1,5 +1,5 @@
 #pragma once
-#ifdef GVV
+#ifdef GCC
 #pragma GCC diagnostic ignored "-Wformat-signedness"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wold-style-cast"

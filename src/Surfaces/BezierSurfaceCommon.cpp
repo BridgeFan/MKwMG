@@ -166,7 +166,7 @@ bf::BezierSurfaceCommon::~BezierSurfaceCommon() {
     for(auto& pRow: pointIndices) {
         for(auto& p: pRow) {
             for(auto& i: p) {
-                if(objectArray[i].indestructibilityIndex>0)
+                if(objectArray.isCorrect(i) && objectArray[i].indestructibilityIndex>0)
                     objectArray[i].indestructibilityIndex--;
             }
         }
