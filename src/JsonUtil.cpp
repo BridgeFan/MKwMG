@@ -141,7 +141,6 @@ Json::Value bf::saveValue(const bf::BezierSurfaceCommon &surface, unsigned int i
     value["size"]["x"]=surface.segs.x;
     value["size"]["y"]=surface.segs.y;
     Json::Value cPts=Json::arrayValue;
-    auto& s = surface.segments;
     cPts.resize(surface.segs.x*surface.segs.y);
     int tmp=0;
     for(int i=0;i<surface.segs.y;i++) {
@@ -152,7 +151,7 @@ Json::Value bf::saveValue(const bf::BezierSurfaceCommon &surface, unsigned int i
             idTmp++;
             val["objectType"]=ptName;
             val["samples"]=Json::objectValue;
-            if(surface.segments.size()>=std::min(surface.segs.x,surface.segs.y)) {
+            if(static_cast<int>(surface.segments.size())>=std::min(surface.segs.x,surface.segs.y)) {
                 const auto& mySeg = surface.segments[i][j];
                 val["samples"]["x"] = mySeg.samples.x;
                 val["samples"]["y"] = mySeg.samples.y;

@@ -17,7 +17,8 @@ bool bf::ShaderArray::changeShader(int n) {
         case BasicShader:
         case BezierShader:
         case PointShader:   break;
-        case BezierSurfaceShader:
+        case BezierSurfaceShader0:
+        case BezierSurfaceShader2:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
             break;
         case LinkShader:
@@ -32,7 +33,8 @@ bool bf::ShaderArray::changeShader(int n) {
             glPatchParameteri( GL_PATCH_VERTICES, 4);
             break;
         case PointShader:   break;
-        case BezierSurfaceShader:
+        case BezierSurfaceShader0:
+        case BezierSurfaceShader2:
             glPatchParameteri( GL_PATCH_VERTICES, 16);
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
             break;
@@ -99,7 +101,8 @@ bf::ShaderArray::ShaderArray() {
     addBasicShader(SHADER_PATH+"shader", false);
     addTessellationShader(SHADER_PATH+"bezierShader", false);
     addBasicShader(SHADER_PATH+"pointShader", false);
-    addTessellationShader(SHADER_PATH+"surfaceShader", false);
+    addTessellationShader(SHADER_PATH+"surfaceShader0", false);
+    addTessellationShader(SHADER_PATH+"surfaceShader2", false);
     addBasicShader(SHADER_PATH+"linkShader", false);
 }
 

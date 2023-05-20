@@ -18,7 +18,7 @@
 #include "Surfaces/BezierSurface0.h"
 #include "Surfaces/BezierSurface2.h"
 #include "JsonUtil.h"
-#include "Surfaces/BezierSurfaceSegment0.h"
+#include "Surfaces/BezierSurfaceSegment.h"
 #include "src/Gizmos/Cursor.h"
 
 
@@ -484,7 +484,7 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
             o.first->postInit();
     }
     //clear empty pointers
-    for(int i=0;i<objectArray.size();i++) {
+    for(int i=0;i<static_cast<int>(objectArray.size());i++) {
         if(objectArray.getPtr(i)==nullptr) {
             objectArray.remove(i);
             i--;
@@ -495,7 +495,6 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 }
 
 bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
-    //TODO - save surfacesC2
     Json::Value pValue(Json::arrayValue);
     Json::Value gValue(Json::arrayValue);
     unsigned idTmp = objectArray.size();

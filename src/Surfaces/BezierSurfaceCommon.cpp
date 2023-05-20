@@ -9,9 +9,16 @@
 #include "Object/ObjectArray.h"
 #include "src/Gizmos/Cursor.h"
 #include "Object/Point.h"
-#include "Util.h"
 
 int bf::BezierSurfaceCommon::_index = 1;
+
+void bf::BezierSurfaceCommon::recalculateSegments(unsigned int index) {
+    for(auto& sRow: segments) {
+        for(auto& s: sRow) {
+            s.onPointMove(objectArray, index);
+        }
+    }
+}
 
 void bf::BezierSurfaceCommon::draw(const bf::ShaderArray& shaderArray) const {
     for(const auto& sRow: segments) {
@@ -29,6 +36,7 @@ void bf::BezierSurfaceCommon::ObjectGui() {
         bf::imgui::checkChanged("Samples", samples);
         ImGui::Checkbox("Cylindrical", &isCylinder);
         bf::imgui::checkChanged("Segments", segs);
+        bf::imgui::checkChanged("Rotation", transform.rotation);
         if(isCylinder) {
             bf::imgui::checkChanged("Radius", totalSize.x);
             bf::imgui::checkChanged("Height", totalSize.y);
@@ -38,67 +46,10 @@ void bf::BezierSurfaceCommon::ObjectGui() {
             bf::imgui::checkChanged("Size Y", totalSize.y);
         }
         if(ImGui::Button("Confirm")) {
+            if(isCylinder)
+                isWrappedX=true;
             objectArray.isForcedActive=false;
-            auto P = static_cast<int>(objectArray.size());
-            //generate points
-            if(!isCylinder) {
-                float dx = totalSize.x / static_cast<float>(segs.x) / 3.f;
-                float dy = totalSize.y / static_cast<float>(segs.y) / 3.f;
-                for (int i = 0; i <= 3 * segs.y; i++) {
-                    for (int j = 0; j <= 3 * segs.x; j++) {
-                        bf::Transform t = cursor.transform;
-                        glm::vec3 v(.0f);
-                        v.x = dx * (static_cast<float>(j));
-                        v.y = dy * (static_cast<float>(i));
-                        t.position += v;
-                        objectArray.add<bf::Point>(t);
-                        objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
-                    }
-                }
-                for (int i = 0; i < segs.y; i++) {
-                    int S = segs.x * 3 + 1;
-                    std::vector<pArray> segsRow;
-                    for (int j = 0; j < segs.x; j++) {
-                        segsRow.emplace_back();
-                        for (int k = 0; k < 4; k++) {
-                            for (int l = 0; l < 4; l++) {
-                                segsRow.back()[4 * k + l] = P + 3 * j + l + S * (3 * i + k);
-                            }
-                        }
-                    }
-                    pointIndices.emplace_back(std::move(segsRow));
-                }
-            }
-            else {
-                isWrappedX = true;
-                float dt = 2.f * PI / (3.f * static_cast<float>(segs.x));
-                float dy = totalSize.y / static_cast<float>(segs.y) / 3.f;
-                for (int i = 0; i <= 3 * segs.y; i++) {
-                    for (int j = 0; j < 3 * segs.x; j++) {
-                        bf::Transform t = cursor.transform;
-                        glm::vec3 v(.0f);
-                        v.x = std::cos(dt * (static_cast<float>(j)));
-                        v.z = std::sin(dt * (static_cast<float>(j)));
-                        v.y = dy * (static_cast<float>(i));
-                        t.position += v;
-                        objectArray.add<bf::Point>(t);
-                        objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
-                    }
-                }
-                for (int i = 0; i < segs.x; i++) {
-                    int S = segs.x * 3;
-                    std::vector<pArray> segsRow;
-                    for (int j = 0; j < segs.y; j++) {
-                        segsRow.emplace_back();
-                        for (int k = 0; k < 4; k++) {
-                            for (int l = 0; l < 4; l++) {
-                                segsRow.back()[4 * k + l] = P + (3 * i + l)%S + S * (3 * j + k);
-                            }
-                        }
-                    }
-                    pointIndices.emplace_back(std::move(segsRow));
-                }
-            }
+            generatePoints(totalSize);
             objectArray.isForcedActive=false;
             postInit();
         }
@@ -171,4 +122,25 @@ bf::BezierSurfaceCommon::~BezierSurfaceCommon() {
             }
         }
     }
+}
+
+void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> >&& segmentNames,
+                                      std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples) {
+    for(unsigned i=0;i<pointIndices.size();i++) {
+        std::vector<bf::BezierSurfaceSegment> segRow;
+        for(unsigned j=0;j<pointIndices[i].size();j++) {
+            segRow.emplace_back(isC2);
+            if(!segmentNames.empty())
+                segRow.back().name = std::move(segmentNames[i][j]);
+            if(!segmentSamples.empty())
+                segRow.back().samples = std::move(segmentSamples[i][j]);
+            else
+                segRow.back().samples = samples;
+            segRow.back().pointIndices = pointIndices[i][j];
+            segRow.back().initGL(objectArray);
+        }
+        segments.emplace_back(std::move(segRow));
+    }
+    segmentNames.clear();
+    segmentSamples.clear();
 }

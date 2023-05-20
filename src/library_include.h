@@ -1,5 +1,5 @@
 #pragma once
-#ifdef GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-signedness"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -32,7 +32,7 @@
 #include <valijson/validator.hpp>
 #endif
 
-#ifdef GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic warning "-Wformat-signedness"
 #pragma GCC diagnostic warning "-Wuseless-cast"
 #pragma GCC diagnostic warning "-Wold-style-cast"

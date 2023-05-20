@@ -363,8 +363,9 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 				t = multiCursor.transform;
 			else if(objectArray.isMovable(objectArray.getActiveIndex()))
 				t = objectArray[objectArray.getActiveIndex()].getTransform();
-			else
-				t = cursor.transform;
+			else {
+                t = cursor.transform;
+            }
 			t.position += deltaTransform.position;
 			t.rotation += deltaTransform.rotation;
 			t.scale += deltaTransform.scale;

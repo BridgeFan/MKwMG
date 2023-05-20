@@ -16,11 +16,9 @@ namespace bf {
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
         static int _index;
     public:
-        virtual void recalculateSegments(unsigned int index) override;
-        virtual void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
-            std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples) override;
         BezierSurface2(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
         BezierSurface2(ObjectArray &objectArray, const Cursor &c);
+        void generatePoints(const glm::vec2 &totalSize) override;
     };
 }
 

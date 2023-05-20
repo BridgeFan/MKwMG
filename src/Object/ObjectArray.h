@@ -12,6 +12,7 @@
 #include <glm/vec3.hpp>
 #include "ObjectArrayListener.h"
 #include "Object.h"
+#include "Point.h"
 #include <map>
 
 template<class T, class U>
@@ -58,12 +59,16 @@ namespace bf {
 		}
 		template<Derived<bf::Object> T, typename... Args>
 		void add(Args&... args) {
+            if(isForcedActive && !std::is_same<T, bf::Point>::value)
+                return;
 			std::unique_ptr<bf::Object> ptr(new T(std::forward<Args>(args)...));
 			ptr->postInit();
 			objects.emplace_back(std::move(ptr), false);
 		}
 		template<Derived<bf::Object> T, typename... Args>
 		void addRef(Args&... args) {
+            if(isForcedActive)
+                return;
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
 			ptr->postInit();
             clearSelection(-1);

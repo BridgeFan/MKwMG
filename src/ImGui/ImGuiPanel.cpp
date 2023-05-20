@@ -28,7 +28,7 @@ enum class SpecialPanel: short {
 SpecialPanel activeSpecialPanel = SpecialPanel::None;
 
 ImU32 ImCol32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-#ifdef GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wold-style-cast"
     return IM_COL32(r,g,b,a);
 #pragma GCC diagnostic warning "-Wold-style-cast"

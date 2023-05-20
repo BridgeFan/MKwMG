@@ -118,8 +118,6 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
 	//update GPU data
 	if(!wasSizeChanged) {
         bf::gl::namedBufferData(VBO, positions, isDynamic);
-        //TODO - improve glNamedBufferSubData
-		//glNamedBufferSubData(VBO, 0, positions.size() * sizeof(Vertex), positions.data());
 	}
 	else {
 		if(positions.empty()) {
@@ -149,7 +147,6 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, tmpIndices.size() * sizeof(unsigned), tmpIndices.data(), usage);
         }
         else {
-            int usage = isDynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
             bf::gl::namedBufferData(VBO, positions, isDynamic);
             bf::gl::namedBufferData(IBO, tmpIndices, isDynamic);
         }

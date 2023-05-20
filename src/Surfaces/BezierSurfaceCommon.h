@@ -10,7 +10,7 @@
 #include <string>
 #include <array>
 #include <vector>
-#include "BezierSurfaceSegment0.h"
+#include "BezierSurfaceSegment.h"
 
 namespace bf {
     class ObjectArray;
@@ -23,8 +23,9 @@ namespace bf {
         static int _index;
         const bf::Cursor& cursor;
         bool isPolygonVisible=false, isSurfaceVisible=true;
+        bool isC2 = false;
     public:
-        std::vector<std::vector<bf::BezierSurfaceSegment0> > segments;
+        std::vector<std::vector<bf::BezierSurfaceSegment> > segments;
         virtual ~BezierSurfaceCommon() override;
         bool isWrappedX=false, isWrappedY=false;
         glm::vec<2,int> segs={3,3};
@@ -39,9 +40,10 @@ namespace bf {
         explicit BezierSurfaceCommon(bf::ObjectArray &objectArray, const bf::Cursor& c);
         void onRemoveObject(unsigned int index) override;
         void onMoveObject(unsigned int index) override;
-        virtual void recalculateSegments(unsigned int index) = 0;
-        virtual void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
-            std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples) = 0;
+        virtual void generatePoints(const glm::vec2& totalSize) = 0;
+        void recalculateSegments(unsigned int index);
+        void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
+            std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples);
     };
 }
 

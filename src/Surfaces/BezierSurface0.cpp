@@ -8,40 +8,77 @@
 #include "ImGui/ImGuiUtil.h"
 #include "Object/ObjectArray.h"
 #include "src/Gizmos/Cursor.h"
+#include "Util.h"
+#include "Object/Point.h"
 
 int bf::BezierSurface0::_index = 1;
 
-void bf::BezierSurface0::recalculateSegments(unsigned int index) {
-    for(auto& sRow: segments) {
-        for(auto& s: sRow) {
-            s.onPointMove(objectArray, index);
-        }
-    }
-}
-
-void bf::BezierSurface0::initSegments(std::vector<std::vector<std::string> >&& segmentNames,
-        std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples) {
-    for(unsigned i=0;i<pointIndices.size();i++) {
-        std::vector<bf::BezierSurfaceSegment0> segRow;
-        for(unsigned j=0;j<pointIndices[i].size();j++) {
-            segRow.emplace_back();
-            if(!segmentNames.empty())
-                segRow.back().name = std::move(segmentNames[i][j]);
-            if(!segmentSamples.empty())
-                segRow.back().samples = std::move(segmentSamples[i][j]);
-            else
-                segRow.back().samples = samples;
-            segRow.back().pointIndices = pointIndices[i][j];
-            segRow.back().initGL(objectArray);
-        }
-        segments.emplace_back(std::move(segRow));
-    }
-    segmentNames.clear();
-    segmentSamples.clear();
-}
 
 bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const std::string &objName, const bf::Cursor &c)
         : BezierSurfaceCommon(oArray, objName, c) {}
 
 bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const bf::Cursor &c) : BezierSurfaceCommon(oArray,
                                                                                                             c) {}
+
+void bf::BezierSurface0::generatePoints(const glm::vec2 &totalSize) {
+    isC2 = false;
+    auto P = static_cast<int>(objectArray.size());
+    //generate points
+    if(!isWrappedX) {
+        float dx = totalSize.x / static_cast<float>(segs.x) / 3.f;
+        float dy = totalSize.y / static_cast<float>(segs.y) / 3.f;
+        for (int i = 0; i <= 3 * segs.y; i++) {
+            for (int j = 0; j <= 3 * segs.x; j++) {
+                bf::Transform t = cursor.transform;
+                glm::vec3 v(.0f);
+                v.x = dx * (static_cast<float>(j));
+                v.y = dy * (static_cast<float>(i));
+                t.position += bf::rotate(v, transform.rotation);
+                objectArray.add<bf::Point>(t);
+                objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
+            }
+        }
+        for (int i = 0; i < segs.y; i++) {
+            int S = segs.x * 3 + 1;
+            std::vector<pArray> segsRow;
+            for (int j = 0; j < segs.x; j++) {
+                segsRow.emplace_back();
+                for (int k = 0; k < 4; k++) {
+                    for (int l = 0; l < 4; l++) {
+                        segsRow.back()[4 * k + l] = P + 3 * j + l + S * (3 * i + k);
+                    }
+                }
+            }
+            pointIndices.emplace_back(std::move(segsRow));
+        }
+    }
+    else {
+        float dt = 2.f * PI / (3.f * static_cast<float>(segs.x));
+        float dy = totalSize.y / static_cast<float>(segs.y) / 3.f;
+        for (int i = 0; i <= 3 * segs.y; i++) {
+            for (int j = 0; j < 3 * segs.x; j++) {
+                bf::Transform t = cursor.transform;
+                glm::vec3 v(.0f);
+                v.x = std::cos(dt * (static_cast<float>(j)));
+                v.z = std::sin(dt * (static_cast<float>(j)));
+                v.y = dy * (static_cast<float>(i));
+                t.position += bf::rotate(v, transform.rotation);
+                objectArray.add<bf::Point>(t);
+                objectArray[objectArray.size() - 1].indestructibilityIndex = 1u;
+            }
+        }
+        for (int i = 0; i < segs.x; i++) {
+            int S = segs.x * 3;
+            std::vector<pArray> segsRow;
+            for (int j = 0; j < segs.y; j++) {
+                segsRow.emplace_back();
+                for (int k = 0; k < 4; k++) {
+                    for (int l = 0; l < 4; l++) {
+                        segsRow.back()[4 * k + l] = P + (3 * i + l)%S + S * (3 * j + k);
+                    }
+                }
+            }
+            pointIndices.emplace_back(std::move(segsRow));
+        }
+    }
+}

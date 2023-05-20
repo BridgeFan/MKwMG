@@ -5,7 +5,7 @@
 
 #ifndef MG1_ZAD2_IMGUI_INCLUDE_H
 #define MG1_ZAD2_IMGUI_INCLUDE_H
-#ifdef GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wformat-signedness"
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -35,7 +35,7 @@
 #include <imgui_impl_opengl3.h>
 #endif
 
-#ifdef GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic warning "-Wformat-signedness"
 #pragma GCC diagnostic warning "-Wuseless-cast"
 #pragma GCC diagnostic warning "-Wold-style-cast"

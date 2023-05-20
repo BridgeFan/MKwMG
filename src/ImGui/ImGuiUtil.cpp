@@ -15,7 +15,7 @@
 #endif
 
 
-ImGuiIO& init(GLFWwindow* window, const bf::ConfigState& configState) {
+ImGuiIO& init(GLFWwindow* window, const bf::ConfigState&) {
 	//IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
