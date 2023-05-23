@@ -80,7 +80,7 @@ bool bf::imgui::checkChanged(const char* name, glm::vec2& values, const char* fo
     	ImGui::InputFloat2(name, array, format);
 	else
 		ImGui::InputFloat2(name, array);
-    bool ret = !almostEqual(array[0],values.x, 1e-4) || !almostEqual(array[1],values.y, 1e-4);
+    bool ret = !almostEqual(array[0],values.x, 1e-4f) || !almostEqual(array[1],values.y, 1e-4f);
     if(!ret)
         return false;
     values.x = array[0];
