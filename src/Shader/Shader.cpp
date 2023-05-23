@@ -135,7 +135,7 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     glDeleteShader(tessEval);
     if(isGeometryShaderUsed)
         glDeleteShader(geometry);
-    std::cout << std::format("Tessellation Shader {} {} loaded successfully\n",vertexPath,fragmentPath);
+    std::cout << std::format("Tessellation Shader {} {} {} {} loaded successfully\n",vertexPath,fragmentPath,tessControlPath,tessEvalPath);
 
 }
 

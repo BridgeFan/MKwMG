@@ -38,7 +38,7 @@ namespace bf {
 		unsigned FBOs, colorBuffers, RBOs;
 		StereoscopicState stereoscopicState=StereoscopicState::None;
         void addBasicShader(const std::string& path, bool isGeometric);
-        void addTessellationShader(const std::string& path, bool isGeometric);
+        void addTessellationShader(const std::string& path, bool isGeometric, bool isCommonUsed=true);
         float grayPercentage=.0f;
     public:
         void setGrayPercentage(float g);

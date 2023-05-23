@@ -7,6 +7,8 @@
 #include "ShaderArray.h"
 #include "Util.h"
 
+const std::string SHADER_PATH = "shaders/";
+
 bool bf::ShaderArray::changeShader(int n) {
     if(n<0 || n>=static_cast<int>(shaders.size())) {
 		return false;
@@ -88,21 +90,23 @@ void bf::ShaderArray::addBasicShader(const std::string &path, bool isGeometric) 
     else
         shaders.emplace_back(path + ".vert", path + ".frag");
 }
-void bf::ShaderArray::addTessellationShader(const std::string &path, bool isGeometric) {
-	if(isGeometric)
-		shaders.emplace_back(path + ".vert", path + ".frag", path+".tesc", path+".tese", path+".geom");
-	else
-		shaders.emplace_back(path + ".vert", path + ".frag", path+".tesc", path+".tese");
+void bf::ShaderArray::addTessellationShader(const std::string &path, bool isGeometric, bool isCommonUsed) {
+    std::string geomPath{};
+    if(isGeometric)
+        geomPath = path+".geom";
+    if(!isCommonUsed)
+        shaders.emplace_back(path + ".vert", path + ".frag", path + ".tesc", path + ".tese", geomPath);
+    else
+        shaders.emplace_back(SHADER_PATH+"commonTess.vert", SHADER_PATH+"commonTess.frag", path + ".tesc", path + ".tese", geomPath);
 }
 
 bf::ShaderArray::ShaderArray() {
-    const std::string SHADER_PATH = "shaders/";
     //add shaders here
     addBasicShader(SHADER_PATH+"shader", false);
-    addTessellationShader(SHADER_PATH+"bezierShader", false);
+    addTessellationShader(SHADER_PATH+"bezierShader", false, true);
     addBasicShader(SHADER_PATH+"pointShader", false);
-    addTessellationShader(SHADER_PATH+"surfaceShader0", false);
-    addTessellationShader(SHADER_PATH+"surfaceShader2", false);
+    addTessellationShader(SHADER_PATH+"surfaceShader0", false, true);
+    addTessellationShader(SHADER_PATH+"surfaceShader2", false, true);
     addBasicShader(SHADER_PATH+"linkShader", false);
 }
 

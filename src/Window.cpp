@@ -192,11 +192,12 @@ void key_callback(GLFWwindow* window, int k, int /*scancode*/, int action, int m
 			return;
         s.configState.onKeyPressed(key, modKeyBit);
 	}
-	else {
+	else if(state==KeyState::Release) {
 		if(s.scene.onKeyReleased(key, modKeyBit, s.configState))
 			return;
         s.configState.onKeyReleased(key, modKeyBit);
 	}
+    //KeyState::Repeat is ignored
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)

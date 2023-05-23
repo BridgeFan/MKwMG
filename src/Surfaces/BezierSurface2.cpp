@@ -55,8 +55,8 @@ void bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
     else {
         float dt = 2.f * PI / (static_cast<float>(segs.x));
         float dy = totalSize.y / (static_cast<float>(segs.y) + 3.f);
-        for (int i = 0; i <= segs.y; i++) {
-            for (int j = 0; j < segs.x+3; j++) {
+        for (int i = 0; i <= segs.y+3; i++) {
+            for (int j = 0; j < segs.x; j++) {
                 bf::Transform t = cursor.transform;
                 glm::vec3 v(.0f);
                 v.x = std::cos(dt * (static_cast<float>(j)));
@@ -71,7 +71,6 @@ void bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
             int S = segs.x;
             std::vector<pArray> segsRow;
             for (int j = 0; j < segs.x; j++) {
-                std::cout << j << " " << S*i << "\n";
                 segsRow.emplace_back();
                 for (int k = 0; k < 4; k++) {
                     for (int l = 0; l < 4; l++) {
