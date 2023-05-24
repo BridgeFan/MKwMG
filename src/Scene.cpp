@@ -14,6 +14,7 @@
 #include "Util.h"
 #include "FileLoading.h"
 #include "glm/gtc/epsilon.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <OpenGLUtil.h>
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
@@ -322,6 +323,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 		auto rotatedGlmVec = bf::rotate(glmVec, camera.rotation);
 		auto blockedPosVec = blockAxes(rotatedGlmVec, configState.isAxesLocked);
 		auto blockedRotVec = blockAxes({myVec[1], myVec[0], myVec[2]}, configState.isAxesLocked); //swapped X and Y
+        glm::mat4 deltaRotMatrix=glm::mat4(1.f);
         if (configState.isCtrlPressed) {
 			//camera movement
 			if(configState.state == bf::MiddleClick) {
@@ -336,7 +338,8 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 					centre = objectArray[objectArray.getActiveIndex()].getPosition();
 				else
 					centre = cursor.transform.position;
-				bf::Transform rotated = rotateAboutPoint(camera, centre, rotSpeed * glmVec);
+                deltaRotMatrix = rotSpeed*bf::rotationAxisMatrix(camera.getUp(),myVec[0])*bf::rotationAxisMatrix(camera.getRight(),myVec[1])*bf::rotationAxisMatrix(camera.getFront(),myVec[2]);
+				bf::Transform rotated = rotateAboutPoint(camera, centre, glm::degrees(combineRotations(deltaRotMatrix,glm::mat4(1.f))));
 				camera.position = rotated.position;
 				camera.rotation = rotated.rotation;
 			}
@@ -355,7 +358,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 			} else if (configState.state == bf::MiddleClick) {
 				deltaTransform.position += speed * blockedPosVec;
 			} else if (configState.state == bf::RightClick) {
-				deltaTransform.rotation += rotSpeed * blockedRotVec;
+                deltaRotMatrix = rotSpeed*bf::rotationAxisMatrix(camera.getUp(),myVec[0])*bf::rotationAxisMatrix(camera.getRight(),myVec[1])*bf::rotationAxisMatrix(camera.getFront(),myVec[2]);
 			}
 			//object movement
 			bf::Transform t;
@@ -367,7 +370,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
                 t = cursor.transform;
             }
 			t.position += deltaTransform.position;
-			t.rotation += deltaTransform.rotation;
+			t.rotation = glm::degrees(combineRotations(t.rotation,deltaRotMatrix));
 			t.scale += deltaTransform.scale;
 			if(objectArray.isMultipleActive()) {
 				for (std::size_t i = 0; i < objectArray.size(); i++) {

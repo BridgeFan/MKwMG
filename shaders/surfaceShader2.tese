@@ -7,20 +7,29 @@ uniform mat4 projection;
 uniform vec2 DivisionBegin;
 uniform vec2 DivisionEnd;
 
-//TODO - draw Bézier Surface C2
-
 vec2 lerp(float t) {
 	return DivisionBegin+t*(DivisionEnd-DivisionBegin);
 }
 
-void basisFunctions(out float[4] b, float t) {
-	float t1 = (1.0 - t);
-	float t12 = t1 * t1;
-	// Bernstein polynomials
-	b[0] = t12 * t1;
-	b[1] = 3.0 * t12 * t;
-	b[2] = 3.0 * t1 * t * t;
-	b[3] = t * t * t;
+const mat4 matrix = 1.0/6.0*transpose(mat4(
+		1, 4, 1, 0,
+		-3,0, 3, 0,
+		3,-6, 3, 0,
+		-1,3,-3, 1));
+
+vec3 multiplyPseudoMatrix(vec4 left, vec3 P[16], vec4 right) {
+	vec3 tmp[4];
+	for(int i=0;i<4;i++) {
+		tmp[i]=vec3(0.0f);
+		for(int j=0;j<4;j++) {
+			tmp[i]+=left[j]*P[4*i+j];
+		}
+	}
+	vec3 ret=vec3(.0f);
+	for(int i=0;i<4;i++) {
+		ret+=tmp[i]*right[i];
+	}
+	return ret;
 }
 
 layout( quads ) in;
@@ -30,15 +39,15 @@ void main() {
 	float v = gl_TessCoord.y;
 	// Compute basis functions
 	float bu[4], bv[4];
-	 // Basis functions for u and v
-	basisFunctions(bu, u);
-	basisFunctions(bv, v);
-	// Bezier interpolation
-	vec3 p = vec3(0.0);
-	for(int i=0;i<4;i++) {
-		for(int j=0;j<4;j++) {
-			p += gl_in[4*i+j].gl_Position.xyz*bu[i]*bv[j];
-		}
+	vec3 P[16];
+	for(int i=0;i<16;i++) {
+		P[i] = gl_in[i].gl_Position.xyz;
 	}
+	 // Basis functions for u and v
+	vec4 uvec = vec4(1.0,u,u*u,u*u*u);
+	vec4 vvec = vec4(1.0,v,v*v,v*v*v);
+	vec4 pl = uvec*matrix;
+	vec4 pr = transpose(matrix)*vvec;
+	vec3 p = multiplyPseudoMatrix(pl, P, pr);
 	gl_Position = projection * view * vec4(p, 1.0);
 }

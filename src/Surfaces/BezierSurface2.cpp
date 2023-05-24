@@ -15,10 +15,10 @@
 int bf::BezierSurface2::_index = 1;
 
 bf::BezierSurface2::BezierSurface2(bf::ObjectArray &oArray, const std::string &objName, const bf::Cursor &c)
-        : BezierSurfaceCommon(oArray, objName, c) {}
+        : BezierSurfaceCommon(oArray, objName, c) {isC2=true;}
 
-bf::BezierSurface2::BezierSurface2(bf::ObjectArray &oArray, const bf::Cursor &c) : BezierSurfaceCommon(oArray,
-                                                                                                            c) {}
+bf::BezierSurface2::BezierSurface2(bf::ObjectArray &oArray, const bf::Cursor &c) :
+    BezierSurfaceCommon(oArray, c) {isC2=true;}
 
 void bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
     isC2 = true;

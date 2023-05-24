@@ -6,6 +6,8 @@
 #include "Util.h"
 #include <vector>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/transform.hpp>
+#include <iostream>
 
 const bf::Transform bf::Transform::Default=bf::Transform();
 
@@ -149,11 +151,32 @@ glm::vec3 bf::rotate(const glm::vec3 &pos, const glm::vec3 &rot) {
 	//return glm::rotateZ(glm::rotateY(glm::rotateX(pos, glm::radians(rot.x)), glm::radians(rot.y)), glm::radians(rot.z));
 }
 
-glm::vec3 bf::combineRotations(const glm::vec3& r1, const glm::vec3& r2) {
-    auto mat = bf::getRotateMatrix(r2)*bf::getRotateMatrix(r1);
+glm::vec3 bf::combineRotations(const glm::vec3& r1, const glm::vec3& r2) {return bf::combineRotations(bf::getRotateMatrix(r1),bf::getRotateMatrix(r2));}
+glm::vec3 bf::combineRotations(const glm::mat4& m1, const glm::vec3& r2) {return bf::combineRotations(m1,bf::getRotateMatrix(r2));}
+glm::vec3 bf::combineRotations(const glm::vec3& r1, const glm::mat4& m2) {return bf::combineRotations(bf::getRotateMatrix(r1),m2);}
+
+glm::vec3 bf::combineRotations(const glm::mat4& m1, const glm::mat4& m2) {
+    auto mat = m2*m1;
     glm::vec3 ret;
     glm::extractEulerAngleXYZ(mat,ret.x,ret.y,ret.z);
     return ret;
+}
+
+glm::mat4 bf::rotationAxisMatrix(const glm::vec3 &axis, float rotation) {
+	float c = std::cos(glm::radians(rotation));
+	float mc = 1.f-c;
+	float s = std::sin(glm::radians(rotation));
+	float x = axis.x;
+	float y = axis.y;
+	float z = axis.z;
+	glm::mat3 ret(
+		{c+x*x*mc, y*x*mc+z*s, z*x*mc-y*s},
+		{x*y*mc-z*s, c+y*y*mc, x*y*mc+x*s},
+		{x*z*mc+y*s, y*z*mc-x*s, c+z*z*mc}
+	);
+	glm::mat4 m(ret);
+    m[3][3]=1.f;
+	return m;
 }
 
 bf::Transform bf::rotateAboutPoint(const bf::Transform& transform, const glm::vec3& centre, const glm::vec3& rot) {

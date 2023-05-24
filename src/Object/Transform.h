@@ -23,6 +23,10 @@ namespace bf {
 	bool operator==(const Transform &t1, const Transform &t2);
     glm::vec3 rotate(const glm::vec3 &pos, const glm::vec3 &rot);
     glm::vec3 combineRotations(const glm::vec3 &r1, const glm::vec3 &r2);
+    glm::vec3 combineRotations(const glm::mat4 &m1, const glm::vec3 &r2);
+    glm::vec3 combineRotations(const glm::vec3 &r1, const glm::mat4 &m2);
+    glm::vec3 combineRotations(const glm::mat4 &m1, const glm::mat4 &m2);
+	glm::mat4 rotationAxisMatrix(const glm::vec3 &axis, float rotation);
     Transform rotateAboutPoint(const Transform &transform, const glm::vec3 &centre, const glm::vec3 &rot);
     glm::mat4 getTranslateMatrix(const glm::vec3 &pos);
     glm::mat4 getScalingMatrix(const glm::vec3 &scale);
