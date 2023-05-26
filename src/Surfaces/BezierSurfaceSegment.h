@@ -16,6 +16,7 @@ namespace bf {
     struct ShaderArray;
     class BezierSurfaceSegment: public bf::Solid {
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
+        static int _index;
         void swapSegments(BezierSurfaceSegment& a, BezierSurfaceSegment& b);
         bool isC2=false;
     public:
@@ -24,7 +25,7 @@ namespace bf {
         void initGL(const bf::ObjectArray &objectArray);
         void onPointMove(const bf::ObjectArray &objectArray, unsigned index);
         void onPointRemove(unsigned index);
-        void segmentDraw(const bf::ShaderArray &shader, bool isLineDrawn, bool isSurfaceDrawn) const;
+        void segmentDraw(const bf::ShaderArray &shader, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen) const;
         BezierSurfaceSegment(Solid &solid)=delete;
         BezierSurfaceSegment(BezierSurfaceSegment &&solid) noexcept;
         explicit BezierSurfaceSegment(bool c2);

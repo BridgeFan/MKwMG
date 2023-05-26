@@ -145,7 +145,7 @@ Json::Value bf::saveValue(const bf::BezierSurfaceCommon &surface, unsigned int i
     int tmp=0;
     for(int i=0;i<surface.segs.y;i++) {
         for(int j=0;j<surface.segs.x;j++) {
-            const auto& segment = surface.pointIndices[i][j];
+            const auto& segment = surface.segments[i][j].pointIndices;
             Json::Value val;
             val["id"]=idTmp;
             idTmp++;

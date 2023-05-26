@@ -379,7 +379,7 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
 		}
 		segments.emplace_back(std::move(segment));
     }
-    //PHASE 2: recoginze segments
+    //PHASE 2: recognize segments
     std::vector<std::vector<Segment> > newSegments;
     if(typeid(T)==typeid(bf::BezierSurface0))
         newSegments = recognizeSegments(std::move(segments), surface->segs,
@@ -394,18 +394,19 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
     }
     std::vector<std::vector<std::string> > segmentNames(newSegments.size());
     std::vector<std::vector<glm::vec<2,int> > > segmentSamples(newSegments.size());
-    surface->pointIndices.resize(newSegments.size());
+    std::vector<std::vector<bf::pArray> > pointIndices(newSegments.size());
+    pointIndices.resize(newSegments.size());
     for(unsigned i=0;i<newSegments.size();i++) {
         segmentNames[i].resize(newSegments[i].size());
         segmentSamples[i].resize(newSegments[i].size());
-        surface->pointIndices[i].resize(newSegments[i].size());
+        pointIndices[i].resize(newSegments[i].size());
         for(unsigned j=0;j<newSegments[i].size();j++) {
-            surface->pointIndices[i][j] = std::move(newSegments[i][j].pointIndices);
+            pointIndices[i][j] = std::move(newSegments[i][j].pointIndices);
             segmentNames[i][j] = std::move(newSegments[i][j].name);
             segmentSamples[i][j] = std::move(newSegments[i][j].samples);
         }
     }
-    surface->initSegments(std::move(segmentNames),std::move(segmentSamples));
+    surface->initSegments(std::move(segmentNames),std::move(segmentSamples), std::move(pointIndices));
     oa.isForcedActive=false;
     return {id, surface};
 }

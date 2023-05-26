@@ -9,6 +9,8 @@
 #include "Shader/ShaderArray.h"
 #include <OpenGLUtil.h>
 
+int bf::BezierSurfaceSegment::_index = 0;
+
 void bf::BezierSurfaceSegment::initGL(const bf::ObjectArray &objectArray) {
     vertices.clear();
     indices.clear();
@@ -37,11 +39,14 @@ void bf::BezierSurfaceSegment::initGL(const bf::ObjectArray &objectArray) {
 }
 
 
-void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn) const {
+void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen) const {
     if(indices.empty() || vertices.empty())
         return;
     if(shaderArray.getActiveIndex() == BasicShader && isLineDrawn) {
-        shaderArray.setColor(64, 64, 128);
+        if(isChosen)
+            shaderArray.setColor(255, 128, 255);
+        else
+            shaderArray.setColor(64, 64, 128);
         //function assumes set projection and view matrices
         glBindVertexArray(VAO);
         shaderArray.setUniform("model", glm::mat4(1.f));
@@ -51,6 +56,15 @@ void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, b
     }
     else if(shaderArray.getActiveIndex() == (isC2 ? BezierSurfaceShader2 : BezierSurfaceShader0) &&
         isSurfaceDrawn) {
+        static bool wasChosen=false;
+        if(isChosen) {
+            shaderArray.setColor(128, 128, 255);
+            wasChosen=true;
+        }
+        else if(wasChosen) {
+            shaderArray.setColor(255, 128, 0);
+            wasChosen=false;
+        }
         glPatchParameteri( GL_PATCH_VERTICES, 16);
         const auto& shader = shaderArray.getActiveShader();
         shader.setInt("SegmentsX",samples.x);
@@ -86,8 +100,9 @@ bf::BezierSurfaceSegment::BezierSurfaceSegment(bf::BezierSurfaceSegment &&solid)
     isDynamic=true;
 }
 
-bf::BezierSurfaceSegment::BezierSurfaceSegment(bool c2) : Solid(), isC2(c2) {
+bf::BezierSurfaceSegment::BezierSurfaceSegment(bool c2) : Solid("Segment "+std::to_string(_index)), isC2(c2) {
     isDynamic=true;
+    _index++;
 }
 
 void bf::BezierSurfaceSegment::swapSegments(bf::BezierSurfaceSegment &a, bf::BezierSurfaceSegment &b) {

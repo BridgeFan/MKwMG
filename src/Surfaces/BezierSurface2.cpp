@@ -2,7 +2,6 @@
 // Created by kamil-hp on 06.05.23.
 //
 
-#include <iostream>
 #include "ImGui/imgui_include.h"
 #include "BezierSurface2.h"
 #include "Shader/ShaderArray.h"
@@ -20,9 +19,10 @@ bf::BezierSurface2::BezierSurface2(bf::ObjectArray &oArray, const std::string &o
 bf::BezierSurface2::BezierSurface2(bf::ObjectArray &oArray, const bf::Cursor &c) :
     BezierSurfaceCommon(oArray, c) {isC2=true;}
 
-void bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
+std::vector<std::vector<bf::pArray>> bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
     isC2 = true;
     auto P = static_cast<int>(objectArray.size());
+    std::vector<std::vector<pArray> > pointIndices;
     //generate points
     if(!isWrappedX) {
         float dx = totalSize.x / (static_cast<float>(segs.x) + 3.f);
@@ -75,11 +75,11 @@ void bf::BezierSurface2::generatePoints(const glm::vec2 &totalSize) {
                 for (int k = 0; k < 4; k++) {
                     for (int l = 0; l < 4; l++) {
                         segsRow.back()[4 * k + l] = P + (j + l)%S + S * (i + k);
-                        std::cout << (j + l)%S + S * (i + k) << "\n";
                     }
                 }
             }
             pointIndices.emplace_back(std::move(segsRow));
         }
     }
+    return pointIndices;
 }

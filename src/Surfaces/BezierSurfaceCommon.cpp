@@ -21,9 +21,16 @@ void bf::BezierSurfaceCommon::recalculateSegments(unsigned int index) {
 }
 
 void bf::BezierSurfaceCommon::draw(const bf::ShaderArray& shaderArray) const {
+    int index=0;
+    if(activeIndex>=0) {
+        auto s = static_cast<int>(segments[0].size());
+        segments[activeIndex/s][activeIndex%s].segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, true);
+    }
     for(const auto& sRow: segments) {
         for(const auto& s: sRow) {
-            s.segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible);
+            if(index!=activeIndex)
+                s.segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, false);
+            index++;
         }
     }
 }
@@ -49,9 +56,9 @@ void bf::BezierSurfaceCommon::ObjectGui() {
             if(isCylinder)
                 isWrappedX=true;
             objectArray.isForcedActive=false;
-            generatePoints(totalSize);
+            auto pts = generatePoints(totalSize);
             objectArray.isForcedActive=false;
-            postInit();
+            surfacePostInit(std::move(pts));
         }
     }
     else {
@@ -60,13 +67,36 @@ void bf::BezierSurfaceCommon::ObjectGui() {
         ImGui::Checkbox("Polygon", &isPolygonVisible);
         ImGui::SameLine();
         ImGui::Checkbox("Surface", &isSurfaceVisible);
-        if(bf::imgui::checkChanged("Samples", samples)) {
-            for(auto& sRow: segments) {
-                for(auto& s: sRow) {
-                    s.samples=samples;
+        if(activeIndex>=0) {
+            auto s = static_cast<int>(segments[0].size());
+            auto& seg = segments[activeIndex/s][activeIndex%s];
+            ImGui::InputText("Seg. name", &seg.name);
+            bf::imgui::checkChanged("Seg. samples", seg.samples);
+            if(ImGui::Button("Deselect")) {
+                activeIndex=-1;
+            }
+        }
+        else {
+            if (bf::imgui::checkChanged("Global samples", samples)) {
+                for (auto &sRow: segments) {
+                    for (auto &s: sRow) {
+                        s.samples = samples;
+                    }
                 }
             }
         }
+        ImGui::BeginChild("List of segments", ImVec2(ImGui::GetContentRegionAvail().x, activeIndex>=0 ? 150 : 195), true);
+        for(unsigned i=0u; i < segments.size(); i++) {
+            for(unsigned j=0u;j<segments[i].size();j++) {
+                int index = static_cast<int>(i*segments[i].size()+j);
+                bool val = (index == activeIndex);
+                bool ret = bf::imgui::checkSelectableChanged(segments[i][j].name.c_str(), index, val);
+                if (ret && val) {
+                    activeIndex = index;
+                }
+            }
+        }
+        ImGui::EndChild();
     }
 }
 
@@ -88,7 +118,11 @@ bf::BezierSurfaceCommon::BezierSurfaceCommon(bf::ObjectArray &objArray, const bf
 {_index++;}
 
 void bf::BezierSurfaceCommon::postInit() {
-    initSegments({},{});
+    surfacePostInit({});
+}
+void bf::BezierSurfaceCommon::surfacePostInit(std::vector<std::vector<pArray> >&& pointIndices) {
+    if(segments.empty())
+        initSegments({},{}, std::move(pointIndices));
     for(auto& sRow: segments) {
         for(auto& s: sRow) {
             s.initGL(objectArray);
@@ -97,9 +131,9 @@ void bf::BezierSurfaceCommon::postInit() {
 }
 
 void bf::BezierSurfaceCommon::onRemoveObject(unsigned int index) {
-    for(auto& pRow: pointIndices) {
-        for(auto& p: pRow) {
-            for(auto& i: p) {
+    for(auto& sRow: segments) {
+        for(auto& s: sRow) {
+            for(auto& i: s.pointIndices) {
                 if(i>index)
                     i--;
             }
@@ -114,9 +148,9 @@ void bf::BezierSurfaceCommon::onMoveObject(unsigned int index) {
 
 bf::BezierSurfaceCommon::~BezierSurfaceCommon() {
     //remove point indestructibility
-    for(auto& pRow: pointIndices) {
-        for(auto& p: pRow) {
-            for(auto& i: p) {
+    for(auto& sRow: segments) {
+        for(auto& s: sRow) {
+            for(auto& i: s.pointIndices) {
                 if(objectArray.isCorrect(i) && objectArray[i].indestructibilityIndex>0)
                     objectArray[i].indestructibilityIndex--;
             }
@@ -125,7 +159,8 @@ bf::BezierSurfaceCommon::~BezierSurfaceCommon() {
 }
 
 void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> >&& segmentNames,
-                                      std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples) {
+                                      std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples,
+        std::vector<std::vector<pArray> >&& pointIndices) {
     for(unsigned i=0;i<pointIndices.size();i++) {
         std::vector<bf::BezierSurfaceSegment> segRow;
         for(unsigned j=0;j<pointIndices[i].size();j++) {

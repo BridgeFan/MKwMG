@@ -18,7 +18,7 @@ namespace bf {
     public:
         BezierSurface2(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
         BezierSurface2(ObjectArray &objectArray, const Cursor &c);
-        void generatePoints(const glm::vec2 &totalSize) override;
+        std::vector<std::vector<pArray>> generatePoints(const glm::vec2 &totalSize) override;
     };
 }
 

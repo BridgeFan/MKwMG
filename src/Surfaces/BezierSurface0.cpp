@@ -20,9 +20,10 @@ bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const std::string &o
 bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const bf::Cursor &c) : BezierSurfaceCommon(oArray,
                                                                                                             c) {}
 
-void bf::BezierSurface0::generatePoints(const glm::vec2 &totalSize) {
+std::vector<std::vector<bf::pArray>> bf::BezierSurface0::generatePoints(const glm::vec2 &totalSize) {
     isC2 = false;
     auto P = static_cast<int>(objectArray.size());
+    std::vector<std::vector<pArray> > pointIndices;
     //generate points
     if(!isWrappedX) {
         float dx = totalSize.x / static_cast<float>(segs.x) / 3.f;
@@ -81,4 +82,5 @@ void bf::BezierSurface0::generatePoints(const glm::vec2 &totalSize) {
             pointIndices.emplace_back(std::move(segsRow));
         }
     }
+    return pointIndices;
 }
