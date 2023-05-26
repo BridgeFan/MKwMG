@@ -24,7 +24,7 @@ if(NOT WIN32)
     include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/imgui/misc/cpp")
     link_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/bin")
 endif()
-include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/valijson/include")
+#include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/valijson/include")
 include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/ImGui-Addons/FileBrowser")
 
 #compile project

@@ -1,6 +1,3 @@
-[submodule "lib/valijson"]
-	path = lib/valijson
-	url = https://github.com/tristanpenman/valijson
 [submodule "lib/imgui"]
 	path = lib/imgui
 	url = https://github.com/ocornut/imgui

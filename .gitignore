@@ -20,3 +20,4 @@ MKwMG.ilk
 MKwMG.pdb
 *.dll
 MKwMG
+.clang-format
