@@ -2,7 +2,6 @@
 // Created by kamil-hp on 28.04.23.
 //
 #include "ConfigState.h"
-#include "Util.h"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -39,6 +38,7 @@ bf::ConfigState::ConfigState() {
     load(value, convergence, "convergence");
     load(value, IOD, "iod");
     load(value, fontPath, "font_path");
+    load(value, gizmoSize, "gizmo_size");
 	if(value.isMember("camera") && value["camera"].isObject()) {
 		Json::Value cameraValue = value["camera"];
 		load(cameraValue, cameraFOV, "fov");
@@ -77,6 +77,7 @@ bf::ConfigState::~ConfigState() {
     value["convergence"]=convergence;
     value["iod"]=IOD;
     value["font_path"]=fontPath;
+    value["gizmo_size"]=gizmoSize;
 	//camera
 	Json::Value cameraValue;
 	cameraValue["fov"]=cameraFOV;

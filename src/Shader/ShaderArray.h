@@ -23,7 +23,8 @@ namespace bf {
         PointShader=2,
 		BezierSurfaceShader0=3,
         BezierSurfaceShader2=4,
-        LinkShader=5,
+        CursorShader=5,
+        LinkShader=6,
         MultipleShaders
     };
     template<typename T>
@@ -37,7 +38,7 @@ namespace bf {
         std::vector<bf::Shader> shaders;
 		unsigned FBOs, colorBuffers, RBOs;
 		StereoscopicState stereoscopicState=StereoscopicState::None;
-        void addBasicShader(const std::string& path, bool isGeometric);
+        void addBasicShader(const std::string& vertFile, const std::string& fragFile={});
         void addTessellationShader(const std::string& path, bool isGeometric, bool isCommonUsed=true);
         float grayPercentage=.0f;
     public:

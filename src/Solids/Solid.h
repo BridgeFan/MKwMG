@@ -44,6 +44,7 @@ namespace bf {
 		void setBuffers();
 	public:
 		void draw(const bf::ShaderArray &shader) const override;
+        void anyDraw(const bf::ShaderArray &shader) const;
 		//virtual void bezierDraw(const bf::ShaderArray &shader, const bf::Transform &relativeTo) const;
 		void ObjectGui() override;
         void glUpdateVertices() const;

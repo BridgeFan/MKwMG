@@ -5,7 +5,6 @@
 
 #ifndef MG1_ZAD2_OBJECTARRAYLISTENER_H
 #define MG1_ZAD2_OBJECTARRAYLISTENER_H
-#include <cstddef>
 
 namespace bf {
 	class ObjectArray;

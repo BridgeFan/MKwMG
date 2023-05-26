@@ -6,17 +6,19 @@
 #include "Shader/ShaderArray.h"
 #include "ImGui/ImGuiUtil.h"
 #include "Util.h"
+#include "ConfigState.h"
 
-void bf::Cursor::draw(const bf::ShaderArray &shaderArray) {
-    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+void bf::Cursor::draw(const bf::ShaderArray &shaderArray, const bf::ConfigState& configState, const glm::vec3& cameraPosition) {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::CursorShader) {
 		return;
 	}
+    shaderArray.getActiveShader().setFloat("cameraDistance", glm::distance(cameraPosition, transform.position));
 	for(auto & line : lines) {
 		shaderArray.setColor(255,255,0);
 		line.setPosition(transform.position);
 		line.setRotation(glm::vec3(.0f));
-		line.setScale(glm::vec3(1.f));
-		line.draw(shaderArray);
+		line.setScale(glm::vec3(configState.gizmoSize));
+		line.anyDraw(shaderArray);
 	}
 	shaderArray.setColor(255,255,255);
 }
@@ -30,8 +32,8 @@ void bf::Cursor::initLines() {
 	//set buffers
 	for(unsigned i=0u;i<3u;i++) {
 		std::vector vec = {.0f,.0f,.0f};
-        vec[i]=.2f;
-        vec[(i+1)%3]=.2f;
+        vec[i]=.03f;
+        vec[(i+1)%3]=.03f;
 		lines[i].vertices.emplace_back(-vec[0],-vec[1],-vec[2]);
         lines[i].vertices.emplace_back(vec[0],vec[1],vec[2]);
 		lines[i].indices = {0u,1u};

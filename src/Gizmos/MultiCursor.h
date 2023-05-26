@@ -17,7 +17,7 @@ namespace bf {
     public:
         Transform transform;
         explicit MultiCursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::ShaderArray &shader, const bf::ConfigState &configState);
+        void draw(const bf::ShaderArray &shader, const bf::ConfigState &configState, const glm::vec3& cameraPosition);
         void ObjectGui();
     };
 }

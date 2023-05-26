@@ -43,6 +43,7 @@ namespace bf {
         float mouseX = 0.f;
         float mouseY = 0.f;
         float deltaTime = 0.f;
+        float gizmoSize = 1.f;
         //state set from UI / config
         int screenWidth = 1024;
         int screenHeight = 768;

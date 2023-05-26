@@ -14,25 +14,26 @@
 #include "Util.h"
 #include "FileLoading.h"
 #include "glm/gtc/epsilon.hpp"
-#include <glm/gtc/matrix_transform.hpp>
 #include <OpenGLUtil.h>
+#include <glm/trigonometric.hpp>
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
 	//bezierDraw objects
-	std::vector<unsigned> indices;
-	if(objectArray.isMultipleActive()) {
-		multiCursor.transform.position+=objectArray.getCentre();
-		multiCursor.draw(shaderArray, configState);
-		multiCursor.transform.position-=objectArray.getCentre();
-	}
-	else if(objectArray.isMovable(objectArray.getActiveIndex())) {
-		bf::Transform oldTransform = multiCursor.transform;
-		multiCursor.transform=objectArray[objectArray.getActiveIndex()].getTransform();
-		multiCursor.draw(shaderArray, configState);
-		multiCursor.transform=std::move(oldTransform);
-	}
-	cursor.draw(shaderArray);
 	objectArray.draw(shaderArray,configState);
+    //draw gizmos
+    shaderArray.changeShader(CursorShader);
+    if(objectArray.isMultipleActive()) {
+        multiCursor.transform.position+=objectArray.getCentre();
+        multiCursor.draw(shaderArray, configState, camera.position);
+        multiCursor.transform.position-=objectArray.getCentre();
+    }
+    else if(objectArray.isMovable(objectArray.getActiveIndex())) {
+        bf::Transform oldTransform = multiCursor.transform;
+        multiCursor.transform=objectArray[objectArray.getActiveIndex()].getTransform();
+        multiCursor.draw(shaderArray, configState, camera.position);
+        multiCursor.transform=std::move(oldTransform);
+    }
+    cursor.draw(shaderArray, configState, camera.position);
     //draw box select
     if(configState.isBoxSelect) {
         shaderArray.changeShader(BasicShader);
@@ -322,7 +323,6 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 		auto glmVec = glm::vec3(myVec[0],myVec[1],myVec[2]);
 		auto rotatedGlmVec = bf::rotate(glmVec, camera.rotation);
 		auto blockedPosVec = blockAxes(rotatedGlmVec, configState.isAxesLocked);
-		auto blockedRotVec = blockAxes({myVec[1], myVec[0], myVec[2]}, configState.isAxesLocked); //swapped X and Y
         glm::mat4 deltaRotMatrix=glm::mat4(1.f);
         if (configState.isCtrlPressed) {
 			//camera movement

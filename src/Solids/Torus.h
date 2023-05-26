@@ -5,8 +5,6 @@
 
 #ifndef MG1_ZAD2_TORUS_H
 #define MG1_ZAD2_TORUS_H
-#include <vector>
-#include <climits>
 #include "Solid.h"
 namespace bf {
 	struct Shader;

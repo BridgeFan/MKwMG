@@ -40,8 +40,14 @@ void bf::Solid::setBuffers() {
     }
 }
 
-void bf::Solid::draw(const bf::ShaderArray& shaderArray/*, const bf::Transform& relativeTo*/) const {
-    if(indices.empty() || vertices.empty() || shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
+void bf::Solid::draw(const bf::ShaderArray& shaderArray) const {
+    if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader)
+        return;
+    anyDraw(shaderArray);
+}
+
+void bf::Solid::anyDraw(const bf::ShaderArray& shaderArray/*, const bf::Transform& relativeTo*/) const {
+    if(indices.empty() || vertices.empty())
         return;
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);

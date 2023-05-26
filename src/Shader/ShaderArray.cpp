@@ -84,30 +84,33 @@ const bf::Shader &bf::ShaderArray::getActiveShader() const {return shaders[activ
 
 int bf::ShaderArray::getSize() const {return static_cast<int>(shaders.size())-1;}
 
-void bf::ShaderArray::addBasicShader(const std::string &path, bool isGeometric) {
-    if(isGeometric)
-        shaders.emplace_back(path + ".vert", path + ".frag",path+".geom");
-    else
-        shaders.emplace_back(path + ".vert", path + ".frag");
+void bf::ShaderArray::addBasicShader(const std::string& vertFile, const std::string& fragFile) {
+    //don't write here SHADER_PATH
+    std::string f = SHADER_PATH+fragFile+".frag";
+    if(fragFile.empty())
+        f = SHADER_PATH+vertFile+".frag";
+    shaders.emplace_back(SHADER_PATH+vertFile+".vert", f);
 }
+
 void bf::ShaderArray::addTessellationShader(const std::string &path, bool isGeometric, bool isCommonUsed) {
     std::string geomPath{};
     if(isGeometric)
         geomPath = path+".geom";
     if(!isCommonUsed)
-        shaders.emplace_back(path + ".vert", path + ".frag", path + ".tesc", path + ".tese", geomPath);
+        shaders.emplace_back(SHADER_PATH+path + ".vert", SHADER_PATH+path + ".frag", SHADER_PATH+path + ".tesc", SHADER_PATH+path + ".tese", geomPath);
     else
-        shaders.emplace_back(SHADER_PATH+"commonTess.vert", SHADER_PATH+"commonTess.frag", path + ".tesc", path + ".tese", geomPath);
+        shaders.emplace_back(SHADER_PATH+"commonTess.vert", SHADER_PATH+"commonTess.frag", SHADER_PATH+path + ".tesc", SHADER_PATH+path + ".tese", geomPath);
 }
 
 bf::ShaderArray::ShaderArray() {
-    //add shaders here
-    addBasicShader(SHADER_PATH+"shader", false);
-    addTessellationShader(SHADER_PATH+"bezierShader", false, true);
-    addBasicShader(SHADER_PATH+"pointShader", false);
-    addTessellationShader(SHADER_PATH+"surfaceShader0", false, true);
-    addTessellationShader(SHADER_PATH+"surfaceShader2", false, true);
-    addBasicShader(SHADER_PATH+"linkShader", false);
+    ///add shaders here
+    addBasicShader("shader");
+    addTessellationShader("bezierShader", false, true);
+    addBasicShader("pointShader", "shader");
+    addTessellationShader("surfaceShader0", false, true);
+    addTessellationShader("surfaceShader2", false, true);
+    addBasicShader("cursorShader", "shader");
+    addBasicShader("linkShader");
 }
 
 glm::vec3 getGray(const glm::vec3& vec) {

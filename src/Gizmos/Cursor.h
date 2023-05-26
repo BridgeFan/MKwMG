@@ -8,6 +8,7 @@
 #include "src/Solids/Solid.h"
 
 namespace bf {
+    struct ConfigState;
     class Cursor {
     private:
         DummySolid lines[3];
@@ -15,7 +16,7 @@ namespace bf {
     public:
         Transform transform;
         explicit Cursor(const bf::Transform &t = bf::Transform::Default);
-        void draw(const bf::ShaderArray &shaderArray);
+        void draw(const bf::ShaderArray &shaderArray, const bf::ConfigState& configState, const glm::vec3& cameraPosition);
         void
         ObjectGui(int screenWidth, int screenHeight, const glm::mat4 &view, const glm::mat4 &inverseView, const glm::mat4 &projection,
                   const glm::mat4 &inverseProjection);
