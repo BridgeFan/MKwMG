@@ -216,8 +216,10 @@ void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
     else {
         if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, size,
                                        ".json")) {
-            if(!bf::saveToFile(scene.objectArray, scene.camera, file_dialog.selected_path+file_dialog.ext)) {
-                name = file_dialog.selected_path+file_dialog.ext;
+			name = file_dialog.selected_path;
+			if(!name.ends_with(".json"))
+				name+=file_dialog.ext;
+            if(!bf::saveToFile(scene.objectArray, scene.camera, name)) {
                 ImGui::OpenPopup("File fail");
                 activeSpecialPanel = SpecialPanel::FileFailPanel;
             }
