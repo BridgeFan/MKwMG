@@ -76,8 +76,8 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
     d[n-1]=glm::vec3(.0f);
     a[n-2]=c[0]=.0f;
     for(int i=1;i<n-1;i++) {
-        float di = glm::length(getPoint(i+1)-getPoint(i));
-        float di_1 = glm::length(getPoint(i)-getPoint(i-1));
+        float di = bf::distance(getPoint(i+1),getPoint(i));
+        float di_1 = bf::distance(getPoint(i),getPoint(i-1));
         glm::vec3 npi = (getPoint(i+1)-getPoint(i))/di;
         glm::vec3 npi_1 = (getPoint(i)-getPoint(i-1))/di_1;
         a[i-1]=di_1/(di+di_1);
@@ -88,14 +88,14 @@ void bf::BezierCurveInter::recalculate(bool wasSizeChanged) {
     //calculate power polynomials
     std::vector<glm::vec3> pa(n-1), pb(n-1), pd(n-1);
     for(int i=0;i<n-1;i++) {
-        float di = glm::length(getPoint(i+1)-getPoint(i));
+        float di = bf::distance(getPoint(i+1),getPoint(i));
         pa[i]=getPoint(i);
         pd[i]=(pc[i+1]-pc[i])/(di*3.f);
         pb[i]=(getPoint(i+1)-getPoint(i))/di-di/3.f*(2.f*pc[i]+pc[i+1]);
     }
     //normalise (make length of segment in parameter difference as 1)
     for(int i=0;i<n-1;i++) {
-        float di = glm::length(getPoint(i+1)-getPoint(i));
+        float di = bf::distance(getPoint(i+1),getPoint(i));
         pb[i]*=di;
         pc[i]*=(di*di);
         pd[i]*=(di*di*di);

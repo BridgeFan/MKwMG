@@ -15,7 +15,7 @@
 namespace bf {
     class ObjectArray;
     class Cursor;
-    typedef std::array<unsigned, 16> pArray;
+    using pArray = std::array<unsigned, 16>;
 
     class BezierSurfaceCommon: public bf::Object, public bf::ObjectArrayListener {
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
@@ -47,7 +47,8 @@ namespace bf {
         void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
             std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples,
             std::vector<std::vector<pArray> >&& pointIndices);
-    };
+		void onMergePoints(int p1, int p2) override;
+	};
 }
 
 

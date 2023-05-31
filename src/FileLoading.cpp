@@ -4,22 +4,23 @@
 #include <iostream>
 #include <memory>
 #define VALIJSON
-#include "library_include.h"
-#include <format>
-#include "FileLoading.h"
-#include "Object/ObjectArray.h"
-#include "src/Object/Point.h"
-#include "Solids/Torus.h"
+#include "Camera.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
+#include "FileLoading.h"
+#include "JsonUtil.h"
 #include "Object/Object.h"
+#include "Object/ObjectArray.h"
 #include "Shader/ShaderArray.h"
+#include "Solids/Torus.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Surfaces/BezierSurface2.h"
-#include "JsonUtil.h"
-#include "Surfaces/BezierSurfaceSegment.h"
+#include "Util.h"
+#include "library_include.h"
 #include "src/Gizmos/Cursor.h"
+#include "src/Object/Point.h"
+#include <format>
 
 
 const std::string schemaStr = R"_JSON_({
@@ -27,13 +28,23 @@ const std::string schemaStr = R"_JSON_({
 
 			"type": "object",
 			"properties": {
+		"camera": {
+			"type": "object",
+			"properties": {
+				"focusPoint": {"$ref": "#/definitions/float3"},
+				"distance": {"type": "number"},
+				"rotation": {"$ref": "#/definitions/float2"}
+			},
+			"required": ["focusPoint", "distance", "rotation"],
+			"additionalProperties": false
+		},
 		"points": {
 			"type": "array",
 					"items": { "$ref": "#/definitions/geometry/point" }
 		},
 		"geometry": {
 			"type": "array",
-					"items": {
+			"items": {
 				"oneOf": [
 				{ "$ref": "#/definitions/geometry/torus" },
 				{ "$ref": "#/definitions/geometry/bezierC0" },
@@ -65,6 +76,16 @@ const std::string schemaStr = R"_JSON_({
 					"minimum": 0
 		},
 
+		
+		"float2": {
+			"type": "object",
+					"properties" : {
+				"x": { "type": "number" },
+				"y": { "type": "number" }
+			},
+			"required": ["x", "y"],
+			"additionalProperties": false
+		},
 		"float3": {
 			"type": "object",
 					"properties" : {
@@ -419,7 +440,7 @@ void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool
 	objects[o.first].first.reset(o.second);
 }
 
-bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
+bool bf::loadFromFile(bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path) {
 	std::cout << std::format("Began loading file {}\n",path);
 	if(!wasValidatorLoaded) {
 		loadValidator();
@@ -443,9 +464,9 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 			valijson::ValidationResults::Error error;
 			errors.popError(error);
 			for(const auto& a: error.context) {
-				std::cout << std::format("{}/",a);
+				std::cerr << std::format("{}/",a);
 			}
-			std::cout << std::format("\nDESC: {}\n",error.description);
+			std::cerr << std::format("\nDESC: {}\n",error.description);
 		}
 		return false;
 	}
@@ -479,6 +500,26 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 			std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
 		}
 	}
+	glm::vec3 oldPos=camera.position, oldRot=camera.rotation;
+	bool isWrong=false;
+	{
+		Json::Value &cameraValue = value["camera"];
+		if(cameraValue.isNull())
+			isWrong=true;
+		camera.position = loadVec3(cameraValue["focusPoint"]);
+		float dist = cameraValue["distance"].asFloat();
+		float rotX = cameraValue["rotation"]["x"].asFloat();
+		float rotY = cameraValue["rotation"]["y"].asFloat();
+		glm::mat4 matrix = bf::getRotateXMatrix(rotX)*bf::getRotateYMatrix(rotY);
+		camera.rotation = decomposeRotationMatrix(matrix);
+		camera.GetViewMatrix();
+		camera.position -= camera.getFront() * dist;
+	}
+	if(isWrong) {
+		camera.position=oldPos;
+		camera.rotation=oldRot;
+		camera.GetViewMatrix();
+	}
 	//post init
 	for(const auto& o: objectArray.objects) {
 		if(o.first)
@@ -495,7 +536,7 @@ bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
 	return true;
 }
 
-bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
+bool bf::saveToFile(const bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path) {
 	Json::Value pValue(Json::arrayValue);
 	Json::Value gValue(Json::arrayValue);
 	unsigned idTmp = objectArray.size();
@@ -533,9 +574,20 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
 			std::cout << "Not implemented type\n";
 		}
 	}
+	//save camera
+	Json::Value cValue(Json::objectValue);
+	cValue["focusPoint"]=saveValue(camera.position);
+	cValue["distance"]=0.f;
+	auto matrix = bf::getRotateMatrix(camera.rotation);
+	glm::vec3 r = bf::matrixToEulerYXZ(matrix);
+	r=bf::degrees(r);
+	cValue["rotation"]=Json::objectValue;
+	cValue["rotation"]["x"]=r.y;
+	cValue["rotation"]["y"]=r.x;
 	Json::Value root;
 	root["points"]=pValue;
 	root["geometry"]=gValue;
+	root["camera"]=cValue;
 
 	std::ofstream file(path);
 	if(!file.good())

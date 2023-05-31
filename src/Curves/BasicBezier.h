@@ -21,6 +21,7 @@ namespace bf {
         std::vector<glm::vec3> points;
         virtual void bezierDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isPointDraw) const;
         void recalculate(bool wasSizeChanged=true);
+		void onMergePoints(int, int) override {}
     };
 	std::vector<glm::vec3> bezier2ToBezier0(const std::vector<glm::vec3>& points);
 	std::vector<glm::vec3> bezier0ToBezier2(const std::vector<glm::vec3>& points);

@@ -23,6 +23,7 @@ bool bf::ShaderArray::changeShader(int n) {
         case BezierSurfaceShader2:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
             break;
+		case CursorShader:
         case LinkShader:
         case MultipleShaders: break;
     }
@@ -40,6 +41,7 @@ bool bf::ShaderArray::changeShader(int n) {
             glPatchParameteri( GL_PATCH_VERTICES, 16);
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
             break;
+		case CursorShader:
         case LinkShader:
         case MultipleShaders: break;
     }

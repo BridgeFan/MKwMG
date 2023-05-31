@@ -15,7 +15,6 @@
 #include "FileLoading.h"
 #include "glm/gtc/epsilon.hpp"
 #include <OpenGLUtil.h>
-#include <glm/trigonometric.hpp>
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
 	//bezierDraw objects
@@ -191,7 +190,7 @@ bf::Scene::Scene(const ConfigState& configState) :
     boxRectangle.setBuffers();
 
     //load initial configuration
-    if(!bf::loadFromFile(objectArray)) {
+    if(!bf::loadFromFile(objectArray, camera)) {
         objectArray.add<bf::Torus>();
     }
 }
@@ -255,7 +254,7 @@ bool bf::Scene::onMouseButtonPressed(bf::event::MouseButton button, bf::event::M
                 continue;
             auto screenPos = bf::toScreenPos(configState.screenWidth,configState.screenHeight,
                                              objectArray[i].getTransform().position, getView(), getProjection());
-            if(glm::all(glm::epsilonEqual(screenPos,bf::outOfWindow, 1e-6f)))
+            if(almostEqual(screenPos,bf::outOfWindow, 1e-6f))
                 continue;
             float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
             if(d<=sqrDist && actualZ>screenPos.z) {
@@ -339,7 +338,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
 				else
 					centre = cursor.transform.position;
                 deltaRotMatrix = rotSpeed*bf::rotationAxisMatrix(camera.getUp(),myVec[0])*bf::rotationAxisMatrix(camera.getRight(),myVec[1])*bf::rotationAxisMatrix(camera.getFront(),myVec[2]);
-				bf::Transform rotated = rotateAboutPoint(camera, centre, glm::degrees(combineRotations(deltaRotMatrix,glm::mat4(1.f))));
+				bf::Transform rotated = rotateAboutPoint(camera, centre, combineRotations(deltaRotMatrix,glm::mat4(1.f)));
 				camera.position = rotated.position;
 				camera.rotation = rotated.rotation;
 			}
@@ -370,7 +369,7 @@ void bf::Scene::onMouseMove(const glm::vec2 &oldMousePos, const bf::ConfigState 
                 t = cursor.transform;
             }
 			t.position += deltaTransform.position;
-			t.rotation = glm::degrees(combineRotations(t.rotation,deltaRotMatrix));
+			t.rotation = combineRotations(t.rotation,deltaRotMatrix);
 			t.scale += deltaTransform.scale;
 			if(objectArray.isMultipleActive()) {
 				for (std::size_t i = 0; i < objectArray.size(); i++) {

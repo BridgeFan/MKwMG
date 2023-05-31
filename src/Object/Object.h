@@ -21,10 +21,11 @@ namespace bf {
 	class ObjectArray;
     struct ShaderArray;
     class Scene;
+	class Camera;
 	class Object {
 	private:
 		static int _objIndex;
-		friend bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path);
+		friend bool saveToFile(const bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path);
 	protected:
 		bf::Transform transform;
         static const ConfigState* configState;
@@ -58,6 +59,7 @@ namespace bf {
         [[nodiscard]] virtual std::vector<unsigned> usedVectors() const {return {};}
 		//utility functions
 		[[nodiscard]] virtual bool isMovable() const {return true;}
+		virtual void onMergePoints(int p1, int p2)=0;
         virtual bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);
         virtual bool onKeyReleased(bf::event::Key key, bf::event::ModifierKeyBit mods);
 		virtual bool onMouseButtonPressed(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);

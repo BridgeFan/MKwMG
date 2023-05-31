@@ -87,6 +87,7 @@ std::vector<T> tridiagonalMatrixAlgorithm(const std::vector<float>& a, const std
 
 
 bool almostEqual(float a1, float a2, float eps=1e-7);
+bool almostEqual(const glm::vec3& v1, const glm::vec3& v2, float eps=1e-5);
 namespace  bf {
     glm::vec3 toScreenPos(int screenWidth, int screenHeight, const glm::vec3 &worldPos, const glm::mat4 &view,
                           const glm::mat4 &projection);
@@ -98,6 +99,16 @@ namespace  bf {
     bool isInBounds(int screenWidth, int screenHeight, const glm::vec2& screenPos);
     bool isInBounds(int screenWidth, int screenHeight, const glm::vec3& mousePos);
     float getDeltaTime();
+	float distance(const glm::vec3& a, const glm::vec3& b);
+	float sqrDistance(const glm::vec3& a, const glm::vec3& b);
+	float length(const glm::vec3& a);
+	float sqrLength(const glm::vec3& a);
+	float degrees(float a);
+	glm::vec3 degrees(const glm::vec3& v);
+	float radians(float a);
+	glm::vec3 radians(const glm::vec3& v);
+	glm::vec3 matrixToEulerXYZ(glm::mat4 const& M);
+	glm::vec3 matrixToEulerYXZ(glm::mat4 const& M);
 }
 
 #endif //MG1_ZAD2_UTIL_H

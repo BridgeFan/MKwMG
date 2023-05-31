@@ -7,13 +7,14 @@
 #include "src/ImGui/ImGuiUtil.h"
 #include "ConfigState.h"
 #include "ImGui/imgui_include.h"
+#include "Util.h"
 
 constexpr glm::vec3 multiColor[3] = {{1.f,0.f,0.f},{0.f,1.f,0.f},{0.f,0.f,1.f}};
 
 void bf::MultiCursor::draw(const bf::ShaderArray &shaderArray, const bf::ConfigState& configState, const glm::vec3& cameraPosition) {
     if(shaderArray.getActiveIndex()!=bf::ShaderType::CursorShader)
         return;
-    shaderArray.getActiveShader().setFloat("cameraDistance", glm::distance(cameraPosition, transform.position));
+    shaderArray.getActiveShader().setFloat("cameraDistance", bf::distance(cameraPosition, transform.position));
     for(int i=0;i<3;i++) {
         auto& line = lines[i];
         if((configState.isAxesLocked>>i)%2)

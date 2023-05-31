@@ -8,8 +8,9 @@
 #include <string>
 
 namespace bf {
+	class Camera;
 	class ObjectArray;
-	bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path = "saves/save.json");
-	bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path = "saves/save.json");
+	bool loadFromFile(bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path = "saves/save.json");
+	bool saveToFile(const bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path = "saves/save.json");
 }
 #endif //MG1_ZAD2_FILELOADING_H

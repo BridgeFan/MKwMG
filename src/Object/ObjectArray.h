@@ -22,6 +22,7 @@ namespace bf {
 	struct ConfigState;
 	struct ShaderArray;
 	class MultiCursor;
+	class Camera;
 	class ObjectArray {
 	private:
         int addToIndex = -1;
@@ -32,7 +33,7 @@ namespace bf {
 		std::map<intptr_t, bf::ObjectArrayListener*> listeners;
         glm::vec3 centre;
         void updateCentre();
-		friend bool loadFromFile(bf::ObjectArray& objectArray, const std::string& path);
+		friend bool loadFromFile(bf::ObjectArray& objectArray, bf::Camera& camera, const std::string& path);
 	public:
 		~ObjectArray();
         bool isForcedActive=false;

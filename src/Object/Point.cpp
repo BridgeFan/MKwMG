@@ -3,11 +3,12 @@
 //
 
 #include "Point.h"
-#include <GL/glew.h>
-#include "src/Shader/ShaderArray.h"
 #include "ObjectArray.h"
 #include "Solids/Solid.h"
+#include "Util.h"
 #include "glm/gtc/epsilon.hpp"
+#include "src/Shader/ShaderArray.h"
+#include <GL/glew.h>
 
 int bf::Point::index = 1;
 bool bf::Point::isInited = false;
@@ -70,21 +71,21 @@ void notify(bf::ObjectArray* objectArray, bf::Point* tis) {
 }
 
 void bf::Point::setPosition(const glm::vec3 &pos) {
-	if(glm::all(glm::epsilonEqual(pos,transform.position,1e-6f)))
+	if(almostEqual(pos,transform.position,1e-6f))
 		return;
 	Object::setPosition(pos);
 	notify(objectArray, this);
 }
 
 void bf::Point::setTransform(const bf::Transform &t) {
-    if(glm::all(glm::epsilonEqual(t.position,transform.position,1e-6f)))
+    if(almostEqual(t.position,transform.position,1e-6f))
 		return;
 	Object::setTransform(t);
 	notify(objectArray, this);
 }
 
 void bf::Point::setTransform(bf::Transform &&t) {
-	if(glm::all(glm::epsilonEqual(t.position,transform.position,1e-6f)))
+	if(almostEqual(t.position,transform.position,1e-6f))
 		return;
 	Object::setTransform(t);
 	notify(objectArray, this);

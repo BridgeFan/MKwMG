@@ -86,7 +86,7 @@ bool bf::BezierCurve2::onMouseButtonPressed(bf::event::MouseButton button, bf::e
 	float actualZ = 9.999f;
 	for(unsigned i=0u;i<bezier.points.size();i++) {
 		auto screenPos = bf::toScreenPos(configState->screenWidth, configState->screenHeight, bezier.points[i], scene->getView(), scene->getProjection());
-        if(glm::all(glm::epsilonEqual(screenPos,bf::outOfWindow, 1e-6f)))
+        if(almostEqual(screenPos,bf::outOfWindow, 1e-6f))
 			continue;
 		float d = (screenPos.x-mouseXF)*(screenPos.x-mouseXF)+(screenPos.y-mouseYF)*(screenPos.y-mouseYF);
 		if(d<=sqrDist && actualZ>screenPos.z) {

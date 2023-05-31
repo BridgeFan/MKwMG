@@ -1,14 +1,12 @@
 //
 // Created by kamil-hp on 23.03.2022.
 //
-#include <memory>
-#include <fstream>
-#include <sstream>
-#include <chrono>
-#include <iostream>
 #include "Util.h"
 #include "ConfigState.h"
-#include "Scene.h"
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 std::string toString(const glm::vec3& v) {
 	return "("+std::to_string(v.x)+","+std::to_string(v.y)+", "+std::to_string(v.z)+")";
@@ -37,7 +35,10 @@ bool isnan(const glm::vec4 &v) {
 }
 
 bool almostEqual(float a1, float a2, float eps) {
-	return std::abs(a1-a2)<eps*std::max(std::max(std::abs(a1),std::abs(a2)),1e-5f);
+	return std::abs(a1-a2)<=eps*std::max(std::max(std::abs(a1),std::abs(a2)),1e-5f);
+}
+bool almostEqual(const glm::vec3& v1, const glm::vec3& v2, float eps) {
+	return bf::sqrDistance(v1,v2)<=eps;
 }
 
 glm::vec3 bf::toScreenPos(int screenWidth, int screenHeight, const glm::vec3& worldPos, const glm::mat4& view, const glm::mat4& projection) {
@@ -73,10 +74,59 @@ bool bf::isInBounds(int screenWidth, int screenHeight, const glm::vec3 &mousePos
 }
 
 float bf::getDeltaTime() {
-    typedef std::chrono::high_resolution_clock clock;
-    typedef std::chrono::duration<float> duration;
+    using clock = std::chrono::high_resolution_clock;
+    using duration = std::chrono::duration<float>;
     static clock::time_point start = clock::now();
     duration elapsed = clock::now() - start;
     start = clock::now();
     return elapsed.count();
+}
+float bf::sqrLength(const glm::vec3 &a) {
+	return a.x*a.x+a.y*a.y+a.z*a.z;
+}
+float bf::length(const glm::vec3 &a) {
+	return std::sqrt(sqrLength(a));
+}
+float bf::distance(const glm::vec3 &a, const glm::vec3 &b) {
+	return length(a-b);
+}
+float bf::sqrDistance(const glm::vec3 &a, const glm::vec3 &b) {
+	return sqrLength(a - b);
+}
+float bf::degrees(float a) {
+	return 180.f/PI*a;
+}
+glm::vec3 bf::degrees(const glm::vec3& a) {
+	return (180.f/PI)*a;
+}
+float bf::radians(float a) {
+	return a*PI/180.f;
+}
+glm::vec3 bf::radians(const glm::vec3& a) {
+	return a*(PI/180.f);
+}
+glm::vec3 bf::matrixToEulerXYZ(const glm::mat4 &M) {
+	//calculate X
+	float x = std::atan2(M[2][1], M[2][2]);
+	//calculate Y
+	float cy = std::sqrt(M[0][0]*M[0][0] + M[1][0]*M[1][0]);
+	float y = std::atan2(-M[2][0], cy);
+	//calculate Z
+	float sx = std::sin(x);
+	float cx = std::cos(x);
+	float z = std::atan2(sx*M[0][2] - cx*M[0][1], cx*M[1][1] - sx*M[1][2]);
+	return {-x,-y,-z};
+}
+
+glm::vec3 bf::matrixToEulerYXZ(const glm::mat4 &M) {
+	//calculate Y
+	float x = std::atan2(M[2][0], M[2][2]);
+	//calculate X
+	float cy = std::sqrt(M[0][1]*M[0][1] + M[1][1]*M[1][1]);
+	float y = std::atan2(-M[2][1], cy);
+	//calculate Z
+	float sx = std::sin(x);
+	float cx = std::cos(x);
+	float z = std::atan2(sx*M[1][2] - cx*M[1][0], cx*M[0][0] - sx*M[0][2]);
+	return {-x,-y,-z};
 }

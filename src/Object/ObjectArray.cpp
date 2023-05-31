@@ -15,6 +15,7 @@
 #include "Point.h"
 #include "Util.h"
 #include "glm/gtc/epsilon.hpp"
+#include "Event.h"
 
 auto isActiveLambda = [](const std::pair<std::unique_ptr<bf::Object>, bool>& o){return o.second;};
 std::vector<bool> activeBefore;
@@ -272,6 +273,30 @@ void bf::ObjectArray::setActiveRedirector(const bf::Object *redirector) {
 }
 
 bool bf::ObjectArray::onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods) {
+	using namespace bf::event;
+	if(key==Key::M && isMultipleActive()) {
+		int m1=INT_MAX;
+		int m2=INT_MAX;
+		for(int i=0;i<static_cast<int>(objects.size());i++) {
+			if(objects[i].second && typeid(*objects[i].first)==typeid(bf::Point)) {
+				if(m1==INT_MAX)
+					m1=i;
+				else {
+					m2=i;
+					break;
+				}
+			}
+		}
+		if(isCorrect(m2)) {
+			auto& o1 = operator[](m1);
+			auto& o2 = operator[](m2);
+			o1.setPosition((o1.getPosition()+o2.getPosition())*.5f);
+			for(auto&& [o, b]: objects) {
+				if(o)
+					o->onMergePoints(m1,m2);
+			}
+		}
+	}
     for(auto&& [o, b]: objects) {
         if(b && o->onKeyPressed(key, mods))
             return true;
@@ -316,7 +341,7 @@ const glm::mat4& view, const glm::mat4& projection) {
             if(o && typeid(*o)==typeid(bf::Point)) {
                 auto screenPos = bf::toScreenPos(configState.screenWidth,configState.screenHeight,
                                                  o->getPosition(), view, projection);
-                if(glm::all(glm::epsilonEqual(screenPos,bf::outOfWindow, 1e-6f)))
+                if(almostEqual(screenPos,bf::outOfWindow, 1e-6f))
                     continue;
                 if(isBetween(screenPos, newPos, {configState.boxMouseX, configState.boxMouseY})) {
                     setActive(i);

@@ -51,6 +51,8 @@ namespace bf {
 
         ShaderType getShaderType() const override;
 
+		void onMergePoints(int p1, int p2) override;
+
     };
 }
 

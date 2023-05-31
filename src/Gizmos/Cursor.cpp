@@ -12,7 +12,7 @@ void bf::Cursor::draw(const bf::ShaderArray &shaderArray, const bf::ConfigState&
 	if(shaderArray.getActiveIndex()!=bf::ShaderType::CursorShader) {
 		return;
 	}
-	shaderArray.getActiveShader().setFloat("cameraDistance", glm::distance(cameraPosition, transform.position));
+	shaderArray.getActiveShader().setFloat("cameraDistance", bf::distance(cameraPosition, transform.position));
 	for(auto & line : lines) {
 		shaderArray.setColor(255,255,0);
 		line.setPosition(transform.position);

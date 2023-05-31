@@ -58,6 +58,7 @@ namespace bf {
         DummySolid& operator=(const DummySolid&)=delete;
         DummySolid& operator=(bf::DummySolid&& solid) noexcept;
         DummySolid(const std::string &solidName, bool dynamic=false);
+		void onMergePoints(int, int) override {}
     };
 }
 
