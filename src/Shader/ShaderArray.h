@@ -30,7 +30,7 @@ namespace bf {
     template<typename T>
     concept ShaderArrayVariantable = std::is_same_v<T, glm::vec2> || std::is_same_v<T, glm::vec3> || std::is_same_v<T, glm::vec4> ||
             std::is_same_v<T, glm::mat2> || std::is_same_v<T, glm::mat3> || std::is_same_v<T, glm::mat4>;
-    typedef std::variant<glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4, int, bool, float> ShaderArrayVariant;
+    using ShaderArrayVariant = std::variant<glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4, int, bool, float>;
     struct ShaderArray {
         std::map<std::string,bf::ShaderArrayVariant> commonUniformMap;
         void setUniform(const std::string& name, const ShaderArrayVariant& var) const;

@@ -2,8 +2,8 @@
 // Created by kamil-hp on 20.03.2022.
 //
 
-#include <glm/gtx/euler_angles.hpp>
 #include "Object.h"
+#include "Util.h"
 #include "src/ImGui/ImGuiUtil.h"
 
 const bf::Scene* bf::Object::scene = nullptr;
@@ -21,8 +21,8 @@ void bf::Object::setNewTransform(const glm::vec3& centre, const bf::Transform& o
     //rotation
     glm::vec3 r = getRotation();
     auto rotMat = bf::getRotateMatrix(newTransform.rotation)*bf::getInverseRotateMatrix(oldTransform.rotation)*bf::getRotateMatrix(r);
-    glm::extractEulerAngleXYZ(rotMat, r.x, r.y, r.z);
-    setRotation(glm::degrees(r));
+    r = bf::matrixToEulerXYZ(rotMat);
+    setRotation(bf::degrees(r));
 }
 
 void bf::Object::ObjectGui() {

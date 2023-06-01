@@ -23,6 +23,7 @@ namespace bf {
 	struct ConfigState;
 	struct ShaderArray;
 	class MultiCursor;
+	class Camera;
 	class ObjectArray {
 	private:
         int addToIndex = -1;

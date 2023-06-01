@@ -3,8 +3,8 @@
 //
 
 #include "Camera.h"
-#include "src/ImGui/ImGuiUtil.h"
 #include "ConfigState.h"
+#include "src/ImGui/ImGuiUtil.h"
 
 void bf::Camera::ObjectGui(bf::ConfigState& configState) {
 	bf::imgui::checkChanged("Position", position);
@@ -52,7 +52,14 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
 		0.f,0.f,-1.f);
 	const glm::mat3 invMatrix = glm::mat3(bf::getRotateMatrix(rotation))*m3;
 	auto ret = glm::mat4(invMatrix);
-	ret[3]=tmp[3];
+	ret[3] = tmp[3];
+	/*glm::vec3 v = bf::rotate(bf::rotate(position,-rotation),rotation);
+	ret[3] = glm::vec4(v, 1.f);
+	for(int i=0;i<4;i++) {
+		if(!almostEqual(ret[3][i],tmp[3][i],1e-4f)) {
+			std::cout << ret[3][i] << " " << tmp[3][i] << "\n";
+		}
+	}*/
 	return ret;
 }
 

@@ -9,6 +9,7 @@
 #include <iosfwd>
 
 namespace bf {
+	class Camera;
 	class ObjectArray;
 	bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path = "saves/save.json");
 	bool saveToFile(const bf::ObjectArray &objectArray, const std::string &path = "saves/save.json");

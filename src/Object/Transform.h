@@ -41,6 +41,7 @@ namespace bf {
     glm::mat4 getLeftProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD);
     glm::mat4 getRightProjectionMatrix(float fov, float aspect, float near, float far, float convergence, float IOD);
     Transform decomposeModelMatrix(const glm::mat4 &matrix);
+	glm::vec3 decomposeRotationMatrix(const glm::mat4 &matrix);
     glm::mat4 getInverseRotateMatrix(const glm::vec3 &rot);
 }
 

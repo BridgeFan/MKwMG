@@ -8,7 +8,7 @@
 
 #include <array>
 #include <string>
-#include <glm/detail/type_vec2.hpp>
+#include <glm/vec2.hpp>
 #include "Solids/Solid.h"
 
 namespace bf {
@@ -31,6 +31,8 @@ namespace bf {
         explicit BezierSurfaceSegment(bool c2);
         BezierSurfaceSegment& operator=(BezierSurfaceSegment&)=delete;
         BezierSurfaceSegment& operator=(BezierSurfaceSegment&&) noexcept;
+		void onMergePoints(int, int) override {}
+
     };
 }
 

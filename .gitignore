@@ -4,6 +4,7 @@
 /.idea/
 /.vs
 /saves
+/saves-old
 /lib/bin
 /lib/CMakeFiles
 /lib/CMakeCache.txt

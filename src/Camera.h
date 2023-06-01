@@ -3,7 +3,7 @@
 #define CAMERA_H
 
 #include <vector>
-#include "src/Object/Transform.h"
+#include "Object/Transform.h"
 //source based on learnopengl.com
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL

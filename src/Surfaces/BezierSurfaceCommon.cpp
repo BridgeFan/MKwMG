@@ -179,3 +179,16 @@ void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> 
     segmentNames.clear();
     segmentSamples.clear();
 }
+void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
+	if(objectArray.isCorrect(p2) && objectArray[p2].indestructibilityIndex>0)
+		objectArray[p2].indestructibilityIndex--;
+	for(auto& sRow: segments) {
+		for(auto& s: sRow) {
+			for(auto& i: s.pointIndices) {
+				if(static_cast<int>(i)==p2)
+					i=p1;
+			}
+		}
+	}
+	onMoveObject(p1);
+}

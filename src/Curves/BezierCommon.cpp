@@ -270,3 +270,13 @@ bf::ShaderType bf::BezierCommon::getShaderType() const {
 const std::vector<unsigned int> &bf::BezierCommon::getPointIndices() const {
     return pointIndices;
 }
+void bf::BezierCommon::onMergePoints(int p1, int p2) {
+	for(unsigned i=0u;i<pointIndices.size();i++) {
+		auto& ind = pointIndices[i];
+		if(static_cast<int>(ind)==p2) {
+			ind=static_cast<unsigned>(p1);
+		}
+		if(static_cast<int>(ind)==p1)
+			bezierOnMove(i);
+	}
+}

@@ -6,7 +6,7 @@
 #ifndef MG1_ZAD2_POINT_H
 #define MG1_ZAD2_POINT_H
 
-#include "src/Object/Object.h"
+#include "Object/Object.h"
 
 namespace bf {
 	class ObjectArray;
@@ -32,6 +32,7 @@ namespace bf {
 		void setTransform(Transform &&t) override;
 
         ShaderType getShaderType() const override;
+		void onMergePoints(int, int) override {}
     };
 }
 

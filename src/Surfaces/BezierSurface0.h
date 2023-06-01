@@ -11,9 +11,10 @@
 namespace bf {
 	class ObjectArray;
     class Cursor;
+	class Camera;
 
     class BezierSurface0: public bf::BezierSurfaceCommon {
-        friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
+        friend bool loadFromFile(bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path);
         static int _index;
     public:
         BezierSurface0(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
