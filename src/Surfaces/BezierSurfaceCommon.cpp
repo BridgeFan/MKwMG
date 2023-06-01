@@ -85,7 +85,7 @@ void bf::BezierSurfaceCommon::ObjectGui() {
                 }
             }
         }
-        ImGui::BeginChild("List of segments", ImVec2(ImGui::GetContentRegionAvail().x, activeIndex>=0 ? 150 : 195), true);
+        ImGui::BeginChild("List of segments", ImVec2(ImGui::GetContentRegionAvail().x, activeIndex>=0 ? 150.f : 195.f), true);
         for(unsigned i=0u; i < segments.size(); i++) {
             for(unsigned j=0u;j<segments[i].size();j++) {
                 int index = static_cast<int>(i*segments[i].size()+j);

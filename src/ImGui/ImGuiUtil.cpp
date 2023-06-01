@@ -7,6 +7,11 @@
 #include <string>
 #include <algorithm>
 #include <format>
+#ifdef WIN32
+#include <locale>
+#include <utility>
+#include <codecvt>
+#endif
 #include "Util.h"
 #include "ConfigState.h"
 
@@ -63,6 +68,17 @@ bool bf::imgui::checkChanged(const char* name, std::string& value) {
     }
 	return oldVal!=value;
 }
+
+#ifdef WIN32
+bool bf::imgui::checkChanged(const char* name, mstring& value) {
+    std::string strVal = toStr(value);
+    bool ret =checkChanged(name, strVal);
+    if(ret) {
+        value = toMStr(strVal);
+    }
+    return ret;
+}
+#endif
 
 bool bf::imgui::checkChanged(const char* name, glm::vec3& values, bool isZeroInsurance) {
 	float array[] = {values.x, values.y, values.z};
@@ -125,6 +141,18 @@ void bf::imgui::postDraw() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+#ifdef WIN32
+std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wideConv;
+mstring toMStr(const std::string& str) {return wideConv.from_bytes(str);}
+std::string toStr(const mstring& ustr) {return wideConv.to_bytes(ustr);}
+mstring operator ""_m(const char *a, size_t n) {return wideConv.from_bytes(a,a+n);}
+mstring pathToMStr(const std::filesystem::path& path) {return path.wstring();}
+#else
+mstring toMStr(const std::string& str) {return str;}
+std::string toStr(const mstring& str) {return str;}
+mstring operator ""_m(const char *a, size_t n) {return {a};}
+mstring pathToMStr(const std::filesystem::path& path) {return path.string();}
+#endif
 
 bf::imgui::IO::IO(GLFWwindow *window, const bf::ConfigState& configState) : io(init(window, configState)) {
     io.Fonts->GetGlyphRangesDefault();

@@ -9,8 +9,14 @@
 #include <glm/vec2.hpp>
 #include <string>
 #include <vector>
+#include <filesystem>
 
 #define U8(_S) reinterpret_cast<const char*>(u8##_S)
+#ifdef WIN32
+using mstring = std::wstring;
+#else
+using mstring = std::string;
+#endif
 struct ImGuiIO;
 struct GLFWwindow;
 namespace bf {
@@ -32,10 +38,15 @@ namespace bf {
 		bool checkChanged(const char *name, glm::vec2 &values, const char* format = nullptr);
 		bool checkChanged(const char *name, glm::vec<2,int> &values);
 		bool checkChanged(const char *name, std::string &value);
+        bool checkChanged(const char *name, mstring &value);
 		bool checkSliderChanged(const char *name, int &value, int min, int max);
 		bool checkSliderChanged(const char *name, float &value, float min, float max);
 		bool checkSelectableChanged(const char *name, int index, bool &selectable);
 	}
 }
+mstring operator ""_m(const char* a, size_t);
+mstring toMStr(const std::string& str);
+std::string toStr(const mstring& mstr);
+mstring pathToMStr(const std::filesystem::path& path);
 
 #endif //MG1_ZAD2_IMGUIUTIL_H

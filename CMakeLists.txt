@@ -24,8 +24,8 @@ if(NOT WIN32)
     include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/imgui/misc/cpp")
     link_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/bin")
 endif()
-#include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/valijson/include")
-include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/ImGui-Addons/FileBrowser")
+include_directories(MKwMG PRIVATE ${VALIJSON_INCLUDE_DIRS})
+include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib")
 
 #compile project
 set(CMAKE_CXX_STANDARD 20)
@@ -36,7 +36,7 @@ else()
 endif()
 include_directories(MKwMG ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/src)
 file(GLOB_RECURSE MKWMG_SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
-add_executable(MKwMG "lib/ImGui-Addons/FileBrowser/ImGuiFileBrowser.cpp" ${MKWMG_SRC})
+add_executable(MKwMG ${MKWMG_SRC})
 set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 #set libraries

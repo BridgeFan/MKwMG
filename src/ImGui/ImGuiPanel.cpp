@@ -4,7 +4,13 @@
 #include <format>
 #include <iostream>
 #include <filesystem>
-#include <algorithm>
+#include <fstream>
+#ifdef WIN32
+#include <Windows.h>
+auto& mcout = std::wcout;
+#else
+auto& mcout = std::cout;
+#endif
 #include "ImGuiUtil.h"
 #include "ImGui/imgui_include.h"
 #include "ImGui/ImGuiPanel.h"
@@ -18,14 +24,67 @@
 #include "FileLoading.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Surfaces/BezierSurface2.h"
-#include "lib/ImGui-Addons/FileBrowser/ImGuiFileBrowser.h"
 
 enum class SpecialPanel: short {
     None,
     FileLoadSavePanel,
+    FileSaveMakeSurePanel,
     FileFailPanel
 };
 SpecialPanel activeSpecialPanel = SpecialPanel::None;
+
+int getTypeValue(const std::filesystem::path& p) {
+    if(p.empty())
+        return 9999;
+    if(is_directory(p))
+        return 0;
+    else if(is_regular_file(p))
+        return 2;
+    else
+        return 1;
+}
+
+void initPath(std::filesystem::path& path, std::vector<std::filesystem::path>& files) {
+#ifdef WIN32
+    if(path=="") {
+        files.clear();
+        uint32_t drives = GetLogicalDrives();
+        char letter = 'A';
+        for(uint32_t i=0x1;i<=0x4000000;i<<=1) {
+            std::string l = std::string(1, letter)+":/";
+            if(drives&i)
+                files.emplace_back(l);
+            letter++;
+        }
+        return;
+    }
+#endif
+    std::filesystem::directory_iterator b(path), e;
+    std::vector<std::filesystem::path> paths(b, e);
+    files = std::move(paths);
+    //TODO - check if file can be opened
+    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+        return getTypeValue(a)<getTypeValue(b);
+    });
+    while(!files.empty() && files.back().empty())
+        files.pop_back();
+}
+
+void changePath(std::filesystem::path& path, std::vector<std::filesystem::path>& files, const std::filesystem::path *change) {
+    if(!change && path.has_parent_path()) {
+#ifdef WIN32
+        if(path.string().length()==3)
+            path = "";
+        else
+#endif
+        path = path.parent_path();
+    }
+    else if(change) {
+        path = *change;
+    }
+    initPath(path, files);
+}
+
 
 ImU32 ImCol32(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 #ifdef __GNUC__
@@ -80,9 +139,10 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
     ImGui::End();
 }
 
-imgui_addons::ImGuiFileBrowser file_dialog;
-
 void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configState) {
+#ifdef WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
     setNextPanelAlignment({275, 520}, {configState.screenWidth, configState.screenHeight}, {0.f,.5f});
     ImGui::Begin("List of objects", nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
@@ -191,43 +251,85 @@ void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& confi
     ImGui::End();
 }
 
-static std::string name = "";
+auto path = std::filesystem::current_path()/"saves";
+std::vector<std::filesystem::path> files;
+mstring name;
+bool wasPathChosen = false;
 
 void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
-    ImVec2 size = {700, 310};
-    if(isLoading)
-        ImGui::OpenPopup("Open File");
-    else
-        ImGui::OpenPopup("Save File");
-    if(isLoading) {
-        if (file_dialog.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, size,
-                                       ".json")) {
-            if(!bf::loadFromFile(scene.objectArray, file_dialog.selected_path)) {
-                name = file_dialog.selected_path;
-                ImGui::OpenPopup("File fail");
-                activeSpecialPanel = SpecialPanel::FileFailPanel;
+    ImVec2 size = {700, 410};
+    ImGui::SetNextWindowSizeConstraints(size,size);
+    ImGui::Begin("Choose file");
+    ImGui::Text("%s", toStr(pathToMStr(path)).c_str());
+    ImGui::BeginChild("Child", ImVec2(ImGui::GetContentRegionAvail().x, 300), true);
+    if(!path.empty() && ImGui::Selectable(".."))
+        changePath(path,files,nullptr);
+    for (const auto & entry : files) {
+        if(is_directory(entry)) {
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255,127,0,255));
+            auto p = pathToMStr(entry.filename());
+            if(p.empty()) {
+                p = pathToMStr(entry);
             }
-            else
-                activeSpecialPanel = SpecialPanel::None;
+            if(ImGui::Selectable(toStr(p).c_str())) {
+                changePath(path,files,&entry);
+                ImGui::PopStyleColor();
+                break;
+            }
+            ImGui::PopStyleColor();
         }
-        if(!ImGui::IsPopupOpen("Open File"))
-            activeSpecialPanel = SpecialPanel::None;
+        else if(entry.extension()==".json") {
+             if(ImGui::Selectable(toStr(pathToMStr(entry.filename())).c_str())) {
+                auto tmp = entry.filename();
+                if(!isLoading)
+                    tmp.replace_extension("");
+                name = pathToMStr(tmp);
+                wasPathChosen=true;
+                break;
+            }
+        }
+    }
+    ImGui::EndChild();
+    if(isLoading) {
+        mstring a = pathToMStr(path)+"/"_m+name;
+        ImGui::Text("Chosen path: %s", toStr(a).c_str());
     }
     else {
-        if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, size,
-                                       ".json")) {
-            if(!bf::saveToFile(scene.objectArray, file_dialog.selected_path+file_dialog.ext)) {
-                name = file_dialog.selected_path+file_dialog.ext;
-                ImGui::OpenPopup("File fail");
+        if(bf::imgui::checkChanged("File path (+.json)", name))
+            wasPathChosen = !name.empty();
+    }
+    if(!wasPathChosen)
+        ImGui::BeginDisabled();
+    if(ImGui::Button(isLoading ? "Load" : "Save")) {
+        auto fileName = pathToMStr(path)+"/"_m+name;
+        if(isLoading) {
+            mcout << "Chosen file to load: "_m << fileName << "\n"_m;
+            std::ifstream in(fileName);
+            if(in.bad() && !bf::loadFromStream(scene.objectArray, in))
                 activeSpecialPanel = SpecialPanel::FileFailPanel;
-            }
             else
                 activeSpecialPanel = SpecialPanel::None;
         }
-        if(!ImGui::IsPopupOpen("Save File"))
-            activeSpecialPanel = SpecialPanel::None;
+        else {
+            fileName += ".json"_m;
+            if(std::filesystem::exists(fileName))
+                activeSpecialPanel = SpecialPanel::FileSaveMakeSurePanel;
+            else  {
+                mcout << "Chosen file to save: "_m << fileName << "\n"_m;
+                std::ofstream out(fileName);
+                if (out.bad() && bf::saveToStream(scene.objectArray, out))
+                    activeSpecialPanel = SpecialPanel::FileFailPanel;
+                else
+                    activeSpecialPanel = SpecialPanel::None;
+            }
+        }
     }
-    ImGui::CloseCurrentPopup();
+    if(!wasPathChosen)
+        ImGui::EndDisabled();
+    ImGui::SameLine();
+    if(ImGui::Button("Cancel"))
+        activeSpecialPanel=SpecialPanel::None;
+    ImGui::End();
 }
 
 void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) {
@@ -242,11 +344,15 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     if(activeSpecialPanel==SpecialPanel::None) {
         if (ImGui::Button("Save to file")) {
             isLoading = false;
+            initPath(path,files);
+            name = {};
             activeSpecialPanel = SpecialPanel::FileLoadSavePanel;
         }
         ImGui::SameLine();
         if (ImGui::Button("Load from file")) {
             isLoading = true;
+            initPath(path,files);
+            wasPathChosen = false;
             activeSpecialPanel = SpecialPanel::FileLoadSavePanel;
         }
     }
@@ -254,11 +360,33 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     if(activeSpecialPanel==SpecialPanel::FileLoadSavePanel) {
         fileLoadSavePanel(isLoading, scene);
     }
+    else if(activeSpecialPanel==SpecialPanel::FileSaveMakeSurePanel) {
+        setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f,.5f});
+        ImGui::Begin("File2", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
+        std::string makeSureText = std::format("Are you sure you want to override file {}?", toStr(name + ".json"_m));
+        ImGui::Text("%s", makeSureText.c_str());
+        if(ImGui::Button("Yes")) {
+            auto fileName = pathToMStr(path)+"/"_m+name+".json"_m;
+            mcout << "Chosen file to save: "_m << fileName << "\n"_m;
+            std::ofstream out(fileName);
+            if (out.good() && bf::saveToStream(scene.objectArray, out))
+                activeSpecialPanel = SpecialPanel::None;
+            else
+                activeSpecialPanel = SpecialPanel::FileFailPanel;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("No"))
+            activeSpecialPanel=SpecialPanel::None;
+        ImGui::End();
+    }
+    if(activeSpecialPanel == SpecialPanel::FileFailPanel && !ImGui::IsPopupOpen("File fail")) {
+        ImGui::OpenPopup("File fail");
+    }
     if(ImGui::IsPopupOpen("File fail")) {
         setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f, .5f});
     }
     if(ImGui::BeginPopupModal("File fail")) {
-        std::string failText = std::format("Failed to {} file {}!", isLoading ? "load" : "save", name);
+        std::string failText = std::format("Failed to {} file {}!", isLoading ? "load" : "save", toStr(name));
 		ImGui::TextColored({255,0,0,255},"%s", failText.c_str());
         if(ImGui::Button("OK")) {
             ImGui::CloseCurrentPopup();

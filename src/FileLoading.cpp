@@ -420,82 +420,108 @@ void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool
 }
 
 bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
-	std::cout << std::format("Began loading file {}\n",path);
-	if(!wasValidatorLoaded) {
-		loadValidator();
-		if(!wasValidatorLoaded) {
-			std::cout << "Validator not loaded correctly\n";
-			return false;
-		}
-	}
-	Json::Value value;
-	if (!valijson::utils::loadDocument(path, value)) {
-		std::cerr << std::format("File {} not found!\n",path);
-		return false;
-	}
-	std::cout << std::format("{} loaded successfully\n",path);
-	valijson::Validator validator;
-	valijson::adapters::JsonCppAdapter myTargetAdapter(value);
-	valijson::ValidationResults errors;
-	if (!validator.validate(modelSchema, myTargetAdapter, &errors)) {
-		std::cerr << std::format("File {} is not valid model file! Found {} errors.\n",path, errors.numErrors());
-		while(errors.numErrors()>0) {
-			valijson::ValidationResults::Error error;
-			errors.popError(error);
-			for(const auto& a: error.context) {
-				std::cout << std::format("{}/",a);
-			}
-			std::cout << std::format("\nDESC: {}\n",error.description);
-		}
-		return false;
-	}
-	std::cout << std::format("{} validated successfully\n",path);
-	objectArray.removeAll();
-	Json::Value& pointValue = value["points"];
-	for(auto & pValue : pointValue) {
-		emplaceToObjectArray(objectArray.objects,loadPoint(pValue));
-	}
-	Json::Value& geometry = value["geometry"];
-	for(auto& gValue: geometry) {
-		if(gValue["objectType"]=="torus") {
-			emplaceToObjectArray(objectArray.objects,loadTorus(gValue));
-		}
-		else if(gValue["objectType"]=="bezierC0") {
-			emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve0>(gValue, objectArray, "controlPoints"));
-		}
-		else if(gValue["objectType"]=="bezierC2") {
-			emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve2>(gValue, objectArray, "deBoorPoints"));
-		}
-		else if(gValue["objectType"]=="interpolatedC2") {
-			emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurveInter>(gValue, objectArray, "controlPoints"));
-		}
-		else if(gValue["objectType"]=="bezierSurfaceC0") {
-			emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface0>(gValue, objectArray));
-		}
-		else if(gValue["objectType"]=="bezierSurfaceC2") {
-			emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface2>(gValue, objectArray));
-		}
-		else {
-			std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
-		}
-	}
-	//post init
-	for(const auto& o: objectArray.objects) {
-		if(o.first)
-			o.first->postInit();
-	}
-	//clear empty pointers
-	for(int i=0;i<static_cast<int>(objectArray.size());i++) {
-		if(objectArray.getPtr(i)==nullptr) {
-			objectArray.remove(i);
-			i--;
-		}
-	}
-	std::cout << std::format("{} loading finished\n",path);
-	return true;
+    std::cout << "\nChosen file " << path << "\n";
+    std::ifstream file(path);
+    if(!file.good()) {
+        std::cerr << "File not found!\n";
+        return false;
+    }
+    bool ret = loadFromStream(objectArray, file);
+    return ret;
+}
+
+bool bf::loadFromStream(bf::ObjectArray &objectArray, std::istream& in) {
+    std::cout << "Began loading file\n";
+    if(!wasValidatorLoaded) {
+        loadValidator();
+        if(!wasValidatorLoaded) {
+            std::cout << "Validator not loaded correctly\n";
+            return false;
+        }
+    }
+    Json::Value value;
+    try {
+        in >> value;
+    }
+    catch(const std::exception& e) {
+        std::cerr << e.what() << "\n";
+        std::cerr << "File not found!\n";
+        return false;
+    }
+    std::cout << "File loaded successfully\n";
+    valijson::Validator validator;
+    valijson::adapters::JsonCppAdapter myTargetAdapter(value);
+    valijson::ValidationResults errors;
+    if (!validator.validate(modelSchema, myTargetAdapter, &errors)) {
+        std::cerr << std::format("File is not valid model file! Found {} errors.\n", errors.numErrors());
+        while(errors.numErrors()>0) {
+            valijson::ValidationResults::Error error;
+            errors.popError(error);
+            for(const auto& a: error.context) {
+                std::cout << std::format("{}/",a);
+            }
+            std::cout << std::format("\nDESC: {}\n",error.description);
+        }
+        return false;
+    }
+    std::cout << "File validated successfully\n";
+    objectArray.removeAll();
+    Json::Value& pointValue = value["points"];
+    for(auto & pValue : pointValue) {
+        emplaceToObjectArray(objectArray.objects,loadPoint(pValue));
+    }
+    Json::Value& geometry = value["geometry"];
+    for(auto& gValue: geometry) {
+        if(gValue["objectType"]=="torus") {
+            emplaceToObjectArray(objectArray.objects,loadTorus(gValue));
+        }
+        else if(gValue["objectType"]=="bezierC0") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve0>(gValue, objectArray, "controlPoints"));
+        }
+        else if(gValue["objectType"]=="bezierC2") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurve2>(gValue, objectArray, "deBoorPoints"));
+        }
+        else if(gValue["objectType"]=="interpolatedC2") {
+            emplaceToObjectArray(objectArray.objects,loadBezier<bf::BezierCurveInter>(gValue, objectArray, "controlPoints"));
+        }
+        else if(gValue["objectType"]=="bezierSurfaceC0") {
+            emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface0>(gValue, objectArray));
+        }
+        else if(gValue["objectType"]=="bezierSurfaceC2") {
+            emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface2>(gValue, objectArray));
+        }
+        else {
+            std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
+        }
+    }
+    //post init
+    for(const auto& o: objectArray.objects) {
+        if(o.first)
+            o.first->postInit();
+    }
+    //clear empty pointers
+    for(int i=0;i<static_cast<int>(objectArray.size());i++) {
+        if(objectArray.getPtr(i)==nullptr) {
+            objectArray.remove(i);
+            i--;
+        }
+    }
+    std::cout << "File loading finished\n";
+    return true;
 }
 
 bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
+    std::cout << "\nChosen file " << path << "\n";
+    std::ofstream file(path);
+    if(!file.good()) {
+        std::cerr << "File not found!\n";
+        return false;
+    }
+    bool ret = saveToStream(objectArray, file);
+    return ret;
+}
+
+bool bf::saveToStream(const bf::ObjectArray &objectArray, std::ostream &out) {
 	Json::Value pValue(Json::arrayValue);
 	Json::Value gValue(Json::arrayValue);
 	unsigned idTmp = objectArray.size();
@@ -536,11 +562,7 @@ bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path)
 	Json::Value root;
 	root["points"]=pValue;
 	root["geometry"]=gValue;
-
-	std::ofstream file(path);
-	if(!file.good())
-		return false;
-	file << root;
+	out << root;
 	return true;
 }
 

@@ -14,6 +14,7 @@
 #include "Object.h"
 #include "Point.h"
 #include <map>
+#include <iosfwd>
 
 template<class T, class U>
 concept Derived = std::is_base_of<U, T>::value;
@@ -32,7 +33,7 @@ namespace bf {
 		std::map<intptr_t, bf::ObjectArrayListener*> listeners;
         glm::vec3 centre;
         void updateCentre();
-		friend bool loadFromFile(bf::ObjectArray& objectArray, const std::string& path);
+		friend bool loadFromStream(bf::ObjectArray& objectArray, std::istream& in);
 	public:
 		~ObjectArray();
         bool isForcedActive=false;
