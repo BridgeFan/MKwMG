@@ -167,6 +167,7 @@ bf::imgui::IO::IO(GLFWwindow *window, const bf::ConfigState& configState) : io(i
                         0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
                         0x0591, 0x05F4, // Hebrew
                         0x1e00, 0x1eff, // Latin Extended Additional
+						0x2190, 0x2195, //only supported arrows
                         0,
                 };
         ImFontGlyphRangesBuilder builder;

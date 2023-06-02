@@ -2,11 +2,11 @@
 // Created by kamil-hp on 28.04.23.
 //
 #include "ConfigState.h"
-#include <fstream>
-#include <string>
-#include <iostream>
 #include "Event.h"
-#include "JsonUtil.h"
+#include "src/Json/JsonUtil.h"
+#include <fstream>
+#include <iostream>
+#include <string>
 
 constexpr const char* configPath = "config.cfg";
 

@@ -26,7 +26,7 @@ namespace bf {
 	class Object {
 	private:
 		static int _objIndex;
-		friend bool saveToStream(const bf::ObjectArray &objectArray, const std::ostream& out);
+		friend bool saveToStream(const bf::ObjectArray &objectArray, const bf::Camera& camera, const std::ostream& out);
 	protected:
 		bf::Transform transform;
         static const ConfigState* configState;

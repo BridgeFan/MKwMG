@@ -21,259 +21,7 @@
 #include "src/Gizmos/Cursor.h"
 #include "src/Object/Point.h"
 #include <format>
-
-
-const std::string schemaStr = R"_JSON_({
-	"$schema": "https://json-schema.org/draft/2020-12/schema",
-
-			"type": "object",
-			"properties": {
-		"camera": {
-			"type": "object",
-			"properties": {
-				"focusPoint": {"$ref": "#/definitions/float3"},
-				"distance": {"type": "number"},
-				"rotation": {"$ref": "#/definitions/float2"}
-			},
-			"required": ["focusPoint", "distance", "rotation"],
-			"additionalProperties": false
-		},
-		"points": {
-			"type": "array",
-					"items": { "$ref": "#/definitions/geometry/point" }
-		},
-		"geometry": {
-			"type": "array",
-			"items": {
-				"oneOf": [
-				{ "$ref": "#/definitions/geometry/torus" },
-				{ "$ref": "#/definitions/geometry/bezierC0" },
-				{ "$ref": "#/definitions/geometry/bezierC2" },
-				{ "$ref": "#/definitions/geometry/interpolatedC2" },
-				{ "$ref": "#/definitions/geometry/bezierSurfaceC0" },
-				{ "$ref": "#/definitions/geometry/bezierSurfaceC2" }
-				]
-			}
-		}
-	},
-	"additionalProperties": false,
-
-			"definitions": {
-
-		"normalizedValue": {
-			"type": "number",
-					"minimum": 0.0,
-					"maximum": 1.0
-		},
-
-		"positiveValue": {
-			"type": "number",
-					"minimum": 0.0
-		},
-
-		"uint": {
-			"type": "integer",
-					"minimum": 0
-		},
-
-		
-		"float2": {
-			"type": "object",
-					"properties" : {
-				"x": { "type": "number" },
-				"y": { "type": "number" }
-			},
-			"required": ["x", "y"],
-			"additionalProperties": false
-		},
-		"float3": {
-			"type": "object",
-					"properties" : {
-				"x": { "type": "number" },
-				"y": { "type": "number" },
-				"z": { "type": "number" }
-			},
-			"required": ["x", "y", "z"],
-			"additionalProperties": false
-		},
-
-		"uint2": {
-			"type": "object",
-					"properties" : {
-				"x": { "$ref": "#/definitions/uint" },
-				"y": { "$ref": "#/definitions/uint" }
-			},
-			"required": ["x", "y"],
-			"additionalProperties": false
-		},
-
-		"geometry": {
-
-			"point": {
-				"type": "object",
-						"properties": {
-					"id":	   { "$ref": "#/definitions/uint" },
-					"name":	 { "type": "string" },
-					"position": { "$ref": "#/definitions/float3" }
-				},
-				"required": ["id", "position"],
-				"additionalProperties": false
-			},
-
-			"pointRef": {
-				"type": "object",
-						"properties": {
-					"id": { "$ref": "#/definitions/uint" }
-				},
-				"required": ["id"],
-				"additionalProperties": false
-			},
-
-			"controlPoints":	{
-				"type": "array",
-						"items": { "$ref": "#/definitions/geometry/pointRef" }
-			},
-
-			"patchControlPoints": {
-				"type": "array",
-						"items": { "$ref": "#/definitions/geometry/pointRef" },
-				"minItems": 16,
-						"maxItems": 16
-			},
-
-			"torus": {
-				"type": "object",
-						"properties": {
-					"objectType":   { "const": "torus" },
-					"id":		   { "$ref": "#/definitions/uint" },
-					"name":		 { "type": "string" },
-					"position":	 { "$ref": "#/definitions/float3" },
-					"rotation":	 { "$ref": "#/definitions/float3" },
-					"scale":		{ "$ref": "#/definitions/float3" },
-					"samples":	  { "$ref": "#/definitions/uint2" },
-					"smallRadius":  { "type": "number", "minimum": 0.0 },
-					"largeRadius":  { "type": "number", "minimum": 0.0 }
-				},
-				"required": ["objectType", "id", "position", "rotation", "scale", "samples", "smallRadius", "largeRadius"],
-				"additionalProperties": false
-			},
-
-			"bezierC0": {
-				"type": "object",
-						"properties": {
-					"objectType":	   { "const": "bezierC0" },
-					"id":			   { "$ref": "#/definitions/uint" },
-					"name":			 { "type": "string" },
-					"controlPoints":	{ "$ref": "#/definitions/geometry/controlPoints" }
-				},
-				"required": ["objectType", "id", "controlPoints"],
-				"additionalProperties": false
-			},
-
-			"bezierC2": {
-				"type": "object",
-						"properties": {
-					"objectType":	   { "const": "bezierC2" },
-					"id":			   { "$ref": "#/definitions/uint" },
-					"name":			 { "type": "string" },
-					"deBoorPoints":	 { "$ref": "#/definitions/geometry/controlPoints" }
-				},
-				"required": ["objectType", "id", "deBoorPoints"],
-				"additionalProperties": false
-			},
-
-			"interpolatedC2": {
-				"type": "object",
-						"properties": {
-					"objectType":	   { "const": "interpolatedC2" },
-					"id":			   { "$ref": "#/definitions/uint" },
-					"name":			 { "type": "string" },
-					"controlPoints":	{ "$ref": "#/definitions/geometry/controlPoints" }
-				},
-				"required": ["objectType", "id", "controlPoints"],
-				"additionalProperties": false
-			},
-
-			"bezierPatchC0": {
-				"type": "object",
-						"properties": {
-					"objectType":	   { "const": "bezierPatchC0" },
-					"id":			   { "$ref": "#/definitions/uint" },
-					"name":			 { "type": "string" },
-					"controlPoints":	{ "$ref": "#/definitions/geometry/patchControlPoints" },
-					"samples":		  { "$ref": "#/definitions/uint2" }
-				},
-				"required": ["objectType", "id", "controlPoints", "samples"],
-				"additionalProperties": false
-			},
-
-			"bezierSurfaceC0": {
-				"type": "object",
-						"properties": {
-					"objectType": { "const": "bezierSurfaceC0" },
-					"id": { "$ref": "#/definitions/uint" },
-					"name": { "type": "string" },
-					"patches": {
-						"type": "array",
-								"items": { "$ref": "#/definitions/geometry/bezierPatchC0" }
-					},
-					"parameterWrapped": {
-						"type": "object",
-								"properties": {
-							"u": { "type": "boolean" },
-							"v": { "type": "boolean" }
-						},
-						"additionalProperties": false,
-								"required": ["u", "v"]
-					},
-					"size": { "$ref": "#/definitions/uint2" }
-				},
-				"required": ["objectType", "id", "patches", "parameterWrapped", "size"],
-				"additionalProperties": false
-			},
-
-			"bezierPatchC2": {
-				"type": "object",
-						"properties": {
-					"objectType":	   { "const": "bezierPatchC2" },
-					"id":			   { "$ref": "#/definitions/uint" },
-					"name":			 { "type": "string" },
-					"controlPoints":	{ "$ref": "#/definitions/geometry/patchControlPoints" },
-					"samples":		  { "$ref": "#/definitions/uint2" }
-				},
-				"required": ["objectType", "id", "controlPoints", "samples"],
-				"additionalProperties": false
-			},
-
-			"bezierSurfaceC2": {
-				"type": "object",
-						"properties": {
-					"objectType":   { "const": "bezierSurfaceC2" },
-					"id":		   { "$ref": "#/definitions/uint" },
-					"name":		 { "type": "string" },
-					"patches":	  {
-						"type": "array",
-								"items": { "$ref": "#/definitions/geometry/bezierPatchC2" }
-					},
-					"parameterWrapped": {
-						"type": "object",
-								"properties": {
-							"u": { "type": "boolean" },
-							"v": { "type": "boolean" }
-						},
-						"additionalProperties": false,
-								"required": ["u", "v"]
-					},
-					"size": {
-						"$ref": "#/definitions/uint2"
-					}
-				},
-				"required": ["objectType", "id", "patches", "parameterWrapped", "size"],
-				"additionalProperties": false
-			}
-		}
-	}
-})_JSON_";
+#include "Schema.h"
 
 valijson::Schema modelSchema;
 bool wasValidatorLoaded=false;
@@ -440,18 +188,18 @@ void emplaceToObjectArray(std::vector<std::pair<std::unique_ptr<bf::Object>,bool
 	objects[o.first].first.reset(o.second);
 }
 
-bool bf::loadFromFile(bf::ObjectArray &objectArray, const std::string &path) {
+bool bf::loadFromFile(bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path) {
     std::cout << "\nChosen file " << path << "\n";
     std::ifstream file(path);
     if(!file.good()) {
         std::cerr << "File not found!\n";
         return false;
     }
-    bool ret = loadFromStream(objectArray, file);
+    bool ret = loadFromStream(objectArray, camera,file);
     return ret;
 }
 
-bool bf::loadFromStream(bf::ObjectArray &objectArray, std::istream& in) {
+bool bf::loadFromStream(bf::ObjectArray &objectArray, bf::Camera& camera, std::istream& in) {
     std::cout << "Began loading file\n";
     if(!wasValidatorLoaded) {
         loadValidator();
@@ -551,18 +299,18 @@ bool bf::loadFromStream(bf::ObjectArray &objectArray, std::istream& in) {
     return true;
 }
 
-bool bf::saveToFile(const bf::ObjectArray &objectArray, const std::string &path) {
+bool bf::saveToFile(const bf::ObjectArray &objectArray, const bf::Camera& camera, const std::string &path) {
     std::cout << "\nChosen file " << path << "\n";
     std::ofstream file(path);
     if(!file.good()) {
         std::cerr << "File not found!\n";
         return false;
     }
-    bool ret = saveToStream(objectArray, file);
+    bool ret = saveToStream(objectArray, camera, file);
     return ret;
 }
 
-bool bf::saveToStream(const bf::ObjectArray &objectArray, std::ostream &out) {
+bool bf::saveToStream(const bf::ObjectArray &objectArray, const bf::Camera& camera, std::ostream &out) {
 	Json::Value pValue(Json::arrayValue);
 	Json::Value gValue(Json::arrayValue);
 	unsigned idTmp = objectArray.size();

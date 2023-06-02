@@ -3,18 +3,18 @@
 //
 
 #include <GL/glew.h>
-#include <array>
 #include "Scene.h"
 #include "ConfigState.h"
+#include "Event.h"
+#include "Solids/Torus.h"
+#include "Util.h"
+#include "glm/gtc/epsilon.hpp"
+#include "src/Json/FileLoading.h"
+#include "src/Object/Point.h"
 #include "src/Shader/Shader.h"
 #include "src/Shader/ShaderArray.h"
-#include "src/Object/Point.h"
-#include "Solids/Torus.h"
-#include "Event.h"
-#include "Util.h"
-#include "FileLoading.h"
-#include "glm/gtc/epsilon.hpp"
 #include <OpenGLUtil.h>
+#include <array>
 
 void bf::Scene::internalDraw(const ConfigState& configState) {
 	//bezierDraw objects

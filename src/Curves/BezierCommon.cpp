@@ -85,6 +85,7 @@ void bf::BezierCommon::onRemoveObject(unsigned index) {
 bf::BezierCommon::BezierCommon(bf::ObjectArray &array):
 		bf::Solid("Bézier curve0 " + std::to_string(_index), true), ObjectArrayListener(array),
 		isPolygonVisible(false), isCurveVisible(true), isLineDrawn(true) {
+	activeIndex = 0;
 	_index++;
 }
 
@@ -142,43 +143,45 @@ void bf::BezierCommon::ObjectGui() {
     ImGui::Checkbox("Polygon", &isPolygonVisible);
     ImGui::SameLine();
     ImGui::Checkbox("Curve", &isCurveVisible);
-	if (ImGui::Button("Delete point"))
+	ImVec2 bSize = ImVec2(-FLT_MIN, 0.0f);
+	ImGui::BeginTable("bezierCommonSplit", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings);
+	ImGui::TableNextColumn();
+	if (ImGui::Button("Delete point", bSize))
 		removePoint(activeIndex);
-    ImGui::SameLine();
+    ImGui::TableNextColumn();
 	int ari = objectArray.getActiveRedirector();
 	bool isRedirected = objectArray.isCorrect(ari);
 	if (isRedirected) {
-		if (ImGui::Button("End adding"))
+		if (ImGui::Button("End adding", bSize))
 			objectArray.setActiveRedirector(nullptr);
 	} else {
-		if (ImGui::Button("Add points"))
+		if (ImGui::Button("Add points", bSize))
 			objectArray.setActiveRedirector(this);
 	}
-	if (ImGui::BeginTable("split", 2)) {
-		ImGui::TableNextColumn();
-		if (!isRedirected && activeIndex > 0) {
-			if (ImGui::Button("Up")) {
-				std::swap(pointIndices[activeIndex - 1], pointIndices[activeIndex]);
-				bezierOnSwap(activeIndex-1,activeIndex);
-				activeIndex--;
-				recalculatePart(activeIndex);
-			}
-		} else {
-			ImGui::Text("Up");
+	ImGui::TableNextColumn();
+	if (!isRedirected && activeIndex > 0) {
+		if (ImGui::Button(U8("↑"), bSize)) {
+			std::swap(pointIndices[activeIndex - 1], pointIndices[activeIndex]);
+			bezierOnSwap(activeIndex-1,activeIndex);
+			activeIndex--;
+			recalculatePart(activeIndex);
 		}
-		ImGui::TableNextColumn();
-		if (!isRedirected && activeIndex < pointIndices.size() - 1) {
-			if (ImGui::Button("Down")) {
-				std::swap(pointIndices[activeIndex], pointIndices[activeIndex + 1]);
-				bezierOnSwap(activeIndex,activeIndex+1);
-				activeIndex++;
-				recalculatePart(activeIndex);
-			}
-		} else {
-			ImGui::Text("Down");
-		}
-		ImGui::EndTable();
+	} else {
+		ImGui::Text(U8("↑"));
 	}
+	ImGui::Spacing();
+	ImGui::TableNextColumn();
+	if (!isRedirected && activeIndex < pointIndices.size() - 1 && activeIndex >= 0) {
+		if (ImGui::Button(U8("↓"), bSize)) {
+			std::swap(pointIndices[activeIndex], pointIndices[activeIndex + 1]);
+			bezierOnSwap(activeIndex,activeIndex+1);
+			activeIndex++;
+			recalculatePart(activeIndex);
+		}
+	} else {
+		ImGui::Text(U8("↓"));
+	}
+	ImGui::EndTable();
     ImGui::BeginChild("List of points", ImVec2(ImGui::GetContentRegionAvail().x, 170), true);
 	for(unsigned i=0u; i < pointIndices.size(); i++) {
 		if(!objectArray.isCorrect(pointIndices[i]))

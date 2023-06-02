@@ -34,7 +34,7 @@ namespace bf {
 		std::map<intptr_t, bf::ObjectArrayListener*> listeners;
         glm::vec3 centre;
         void updateCentre();
-		friend bool loadFromStream(bf::ObjectArray& objectArray, std::istream& in);
+		friend bool loadFromStream(bf::ObjectArray& objectArray, bf::Camera& camera, std::istream& in);
 	public:
 		~ObjectArray();
         bool isForcedActive=false;

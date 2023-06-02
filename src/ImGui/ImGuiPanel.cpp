@@ -5,25 +5,26 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 #ifdef WIN32
 #include <Windows.h>
 auto& mcout = std::wcout;
 #else
 auto& mcout = std::cout;
 #endif
-#include "ImGuiUtil.h"
-#include "ImGui/imgui_include.h"
-#include "ImGui/ImGuiPanel.h"
-#include "Scene.h"
 #include "ConfigState.h"
-#include "Solids/Torus.h"
-#include "src/Object/Point.h"
 #include "Curves/BezierCurve0.h"
 #include "Curves/BezierCurve2.h"
 #include "Curves/BezierCurveInter.h"
-#include "FileLoading.h"
+#include "ImGui/ImGuiPanel.h"
+#include "ImGui/imgui_include.h"
+#include "ImGuiUtil.h"
+#include "Scene.h"
+#include "Solids/Torus.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Surfaces/BezierSurface2.h"
+#include "src/Json/FileLoading.h"
+#include "src/Object/Point.h"
 
 enum class SpecialPanel: short {
     None,
@@ -62,9 +63,28 @@ void initPath(std::filesystem::path& path, std::vector<std::filesystem::path>& f
     std::filesystem::directory_iterator b(path), e;
     std::vector<std::filesystem::path> paths(b, e);
     files = std::move(paths);
+	//filter elements
+	for(auto& f: files) {
+		if(is_directory(f)) {
+			try {
+				std::filesystem::directory_iterator it(f);
+			}
+			catch(...) {
+				f="";
+			}
+		}
+		else {
+			std::ifstream testFile(f);
+			if(testFile.bad())
+				f="";
+		}
+	}
     //TODO - check if file can be opened
     std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-        return getTypeValue(a)<getTypeValue(b);
+		int ta = getTypeValue(a);
+		int tb = getTypeValue(b);
+		if(ta!=tb) return getTypeValue(a)<getTypeValue(b);
+		return a<b;
     });
     while(!files.empty() && files.back().empty())
         files.pop_back();
@@ -105,37 +125,50 @@ void setNextPanelAlignment(const glm::vec2& panelSize, const glm::vec2& screenSi
 }
 
 void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configState) {
-    setNextPanelAlignment({155, 192}, {configState.screenWidth, configState.screenHeight}, {1.f,0.f},{0,175});
+    setNextPanelAlignment({155, 220}, {configState.screenWidth, configState.screenHeight}, {1.f,0.f},{0,175});
     ImGui::Begin("Create object",nullptr, ImGuiWindowFlags_NoResize);
+	ImGui::BeginTable("split", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
-    if(ImGui::Button("Torus")) {
+	ImVec2 bSize = ImVec2(-FLT_MIN, 0.0f);
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Torus", bSize)) {
         scene.objectArray.add<bf::Torus>(scene.cursor.transform);
     }
-    if(ImGui::Button("Point")) {
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Point", bSize)) {
         scene.objectArray.add<bf::Point>(scene.cursor.transform);
         int redIndex = scene.objectArray.getActiveRedirector();
         if(scene.objectArray.isCorrect(redIndex)) {
             scene.objectArray[redIndex].addPoint(scene.objectArray.size()-1);
         }
     }
-    if(ImGui::Button("Bézier curve 0")) {
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Bézier curve 0", bSize)) {
         scene.objectArray.addRef<bf::BezierCurve0>();
     }
-    if(ImGui::Button("Bézier curve 2")) {
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Bézier curve 2", bSize)) {
         scene.objectArray.addRef<bf::BezierCurve2>();
     }
-    if(ImGui::Button("Bézier curve inter")) {
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Bézier curve inter", bSize)) {
         scene.objectArray.addRef<bf::BezierCurveInter>();
     }
-	if(ImGui::Button("Bézier surface 0")) {
+	ImGui::TableNextColumn();
+	if(ImGui::Button("Bézier surface 0", bSize)) {
 		scene.objectArray.addRef<bf::BezierSurface0>(scene.cursor);
 	}
-    if(ImGui::Button("Bézier surface 2")) {
+	ImGui::TableNextColumn();
+    if(ImGui::Button("Bézier surface 2", bSize)) {
         scene.objectArray.addRef<bf::BezierSurface2>(scene.cursor);
     }
+	ImGui::TableNextColumn();
+	if(ImGui::Button("Gregory patch", bSize)) {
+	}
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::EndDisabled();
+	ImGui::EndTable();
     ImGui::End();
 }
 
@@ -305,7 +338,7 @@ void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
         if(isLoading) {
             mcout << "Chosen file to load: "_m << fileName << "\n"_m;
             std::ifstream in(fileName);
-            if(in.bad() && !bf::loadFromStream(scene.objectArray, in))
+            if(in.bad() || !bf::loadFromStream(scene.objectArray, scene.camera, in))
                 activeSpecialPanel = SpecialPanel::FileFailPanel;
             else
                 activeSpecialPanel = SpecialPanel::None;
@@ -317,7 +350,7 @@ void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
             else  {
                 mcout << "Chosen file to save: "_m << fileName << "\n"_m;
                 std::ofstream out(fileName);
-                if (out.bad() && bf::saveToStream(scene.objectArray, out))
+                if (out.bad() || !bf::saveToStream(scene.objectArray, scene.camera, out))
                     activeSpecialPanel = SpecialPanel::FileFailPanel;
                 else
                     activeSpecialPanel = SpecialPanel::None;
@@ -369,7 +402,7 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
             auto fileName = pathToMStr(path)+"/"_m+name+".json"_m;
             mcout << "Chosen file to save: "_m << fileName << "\n"_m;
             std::ofstream out(fileName);
-            if (out.good() && bf::saveToStream(scene.objectArray, out))
+            if (out.good() && bf::saveToStream(scene.objectArray, scene.camera, out))
                 activeSpecialPanel = SpecialPanel::None;
             else
                 activeSpecialPanel = SpecialPanel::FileFailPanel;
@@ -385,7 +418,7 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     if(ImGui::IsPopupOpen("File fail")) {
         setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f, .5f});
     }
-    if(ImGui::BeginPopupModal("File fail")) {
+    if(ImGui::BeginPopupModal("File fail", nullptr, ImGuiWindowFlags_NoResize)) {
         std::string failText = std::format("Failed to {} file {}!", isLoading ? "load" : "save", toStr(name));
 		ImGui::TextColored({255,0,0,255},"%s", failText.c_str());
         if(ImGui::Button("OK")) {
