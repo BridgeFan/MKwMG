@@ -14,11 +14,14 @@
 namespace bf {
     class ObjectArray;
     struct ShaderArray;
+	class BezierSurfaceCommon;
     class BezierSurfaceSegment: public bf::Solid {
+		friend class bf::BezierSurfaceCommon;
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
         static int _index;
         void swapSegments(BezierSurfaceSegment& a, BezierSurfaceSegment& b);
         bool isC2=false;
+		uint8_t emptyEdges=0x0; //___RLUB
     public:
         glm::vec<2,int> samples;
         std::array<unsigned, 16> pointIndices;
@@ -32,7 +35,11 @@ namespace bf {
         BezierSurfaceSegment& operator=(BezierSurfaceSegment&)=delete;
         BezierSurfaceSegment& operator=(BezierSurfaceSegment&&) noexcept;
 		void onMergePoints(int, int) override {}
-
+		bool isRightEmpty() const {return emptyEdges&0x8;}
+		bool isLeftEmpty() const {return emptyEdges&0x4;}
+		bool isTopEmpty() const {return emptyEdges&0x2;}
+		bool isBottomEmpty() const {return emptyEdges&0x1;}
+		bool isInternal() const {return emptyEdges==0x0;}
     };
 }
 

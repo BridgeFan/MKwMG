@@ -276,7 +276,7 @@ bool bf::loadFromStream(bf::ObjectArray &objectArray, bf::Camera& camera, std::i
         glm::mat4 matrix = bf::getRotateXMatrix(rotX)*bf::getRotateYMatrix(rotY);
         camera.rotation = decomposeRotationMatrix(matrix);
         camera.GetViewMatrix();
-        camera.position -= camera.getFront() * dist;
+        camera.position += camera.getFront() * dist;
     }
     if(isWrong) {
         camera.position=oldPos;

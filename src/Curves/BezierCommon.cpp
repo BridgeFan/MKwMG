@@ -89,7 +89,7 @@ bf::BezierCommon::BezierCommon(bf::ObjectArray &array):
 	_index++;
 }
 
-void bf::BezierCommon::postInit() {
+bool bf::BezierCommon::postInit() {
 	for(std::size_t i=0;i<objectArray.size();i++) {
 		if(objectArray.isActive(i) && typeid(objectArray[i])==typeid(bf::Point)) {
 			pointIndices.push_back(i);
@@ -97,6 +97,7 @@ void bf::BezierCommon::postInit() {
 		}
 	}
 	recalculate();
+	return false;
 }
 
 void bf::BezierCommon::draw(const bf::ShaderArray &shaderArray) const {

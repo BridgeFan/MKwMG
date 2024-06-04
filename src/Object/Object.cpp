@@ -68,4 +68,25 @@ void bf::Object::initData(const bf::ConfigState &cs, const bf::Scene &s) {
     configState = &cs;
     scene = &s;
 }
-
+glm::vec4 bf::Object::clampParam(float u, float v, float modulo) const {
+	glm::vec4 ret;
+	if (parameterWrappingU()) {
+		ret.x = std::fmod(u, getParameterMax().x);
+		if(ret.x<0) ret.x += getParameterMax().x;
+	}
+	else
+		ret.x = std::max(std::min(u, getParameterMax().x), getParameterMin().x);
+	if (parameterWrappingV()) {
+		ret.y = std::fmod(v, getParameterMax().y);
+		if(ret.y<0) ret.y += getParameterMax().y;
+	}
+	else
+		ret.y = std::max(std::min(v, getParameterMax().y), getParameterMin().y);
+	if(modulo>.0f) {
+		ret.z = std::floor(ret.x / modulo);
+		ret.w = std::floor(ret.y / modulo);
+		ret.x = std::fmod(ret.x, modulo);
+		ret.y = std::fmod(ret.y, modulo);
+	}
+	return ret;
+}

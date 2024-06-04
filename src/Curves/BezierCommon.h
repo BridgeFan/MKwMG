@@ -34,7 +34,7 @@ namespace bf {
         glm::vec3 getPoint(int pIndex) const;
 	public:
 		explicit BezierCommon(bf::ObjectArray& array);
-		void postInit() override;
+		bool postInit() override;
 		void onRemoveObject(unsigned index) override;
 		void onMoveObject(unsigned index) override;
 

@@ -95,3 +95,30 @@ bf::Torus &bf::Torus::operator=(bf::Torus &&solid) noexcept {
     swapTori(*this, solid);
     return *this;
 }
+glm::vec3 bf::Torus::parameterFunction(float uf, float vf) const {
+	glm::vec4 param = clampParam(uf,vf);
+	float u = param.x;
+	float v = param.y;
+	glm::vec4 vector = {(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
+			(bigRadius+smallRadius*std::cos(u))*std::sin(v),
+			smallRadius*std::sin(u), 1.f};
+	return getModelMatrix()*vector;
+}
+glm::vec3 bf::Torus::parameterGradientU(float uf, float vf) const {
+	glm::vec4 param = clampParam(uf,vf);
+	float u = param.x;
+	float v = param.y;
+	glm::vec4 vector = {(-smallRadius*std::sin(u)) * std::cos(v),
+						(-smallRadius*std::sin(u))*std::sin(v),
+						smallRadius*std::cos(u), 0.f};
+	return getModelMatrix()*vector;
+}
+glm::vec3 bf::Torus::parameterGradientV(float uf, float vf) const {
+	glm::vec4 param = clampParam(uf,vf);
+	float u = param.x;
+	float v = param.y;
+	glm::vec4 vector = {-(bigRadius + smallRadius * std::cos(u)) * std::sin(v),
+						(bigRadius+smallRadius*std::cos(u))*std::cos(v),
+						0.f, 0.f};
+	return getModelMatrix()*vector;
+}

@@ -6,8 +6,8 @@ Right mouse button - rotation
 Key:
 Ctrl - camera movement
 X - block/unblock X axis
-Y - block/unblock X axis
-Z - block/unblock X axis
+Y - block/unblock Y axis
+Z - block/unblock Z axis
 C - clear selection
 U - uniform/non-uniform scaling
 Del - delete objects

@@ -117,8 +117,9 @@ bf::BezierSurfaceCommon::BezierSurfaceCommon(bf::ObjectArray &objArray, const bf
         BezierSurfaceCommon(objArray, "Bézier surface0 " + std::to_string(_index), c)
 {_index++;}
 
-void bf::BezierSurfaceCommon::postInit() {
+bool bf::BezierSurfaceCommon::postInit() {
     surfacePostInit({});
+	return false;
 }
 void bf::BezierSurfaceCommon::surfacePostInit(std::vector<std::vector<pArray> >&& pointIndices) {
     if(segments.empty())
@@ -128,6 +129,23 @@ void bf::BezierSurfaceCommon::surfacePostInit(std::vector<std::vector<pArray> >&
             s.initGL(objectArray);
         }
     }
+	if(isC2 || segments.empty()) return;
+	if(!isWrappedY) {
+		for (auto &s: segments[0]) {
+			s.emptyEdges |= 0x1;
+		}
+		for (auto &s: segments.back()) {
+			s.emptyEdges |= 0x2;
+		}
+	}
+	if(!isWrappedX) {
+		for (auto &sRow: segments) {
+			if (sRow.empty())
+				continue;
+			sRow[0].emptyEdges |= 0x4;
+			sRow.back().emptyEdges |= 0x8;
+		}
+	}
 }
 
 void bf::BezierSurfaceCommon::onRemoveObject(unsigned int index) {
@@ -192,3 +210,5 @@ void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
 	}
 	onMoveObject(p1);
 }
+
+

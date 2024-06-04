@@ -24,6 +24,7 @@ namespace bf {
 	struct ShaderArray;
 	class MultiCursor;
 	class Camera;
+	class IntersectionObject;
 	class ObjectArray {
 	private:
         int addToIndex = -1;
@@ -35,6 +36,7 @@ namespace bf {
         glm::vec3 centre;
         void updateCentre();
 		friend bool loadFromStream(bf::ObjectArray& objectArray, bf::Camera& camera, std::istream& in);
+		friend class IntersectionObject;
 	public:
 		~ObjectArray();
         bool isForcedActive=false;
@@ -64,7 +66,9 @@ namespace bf {
             if(isForcedActive && !std::is_same<T, bf::Point>::value)
                 return;
 			std::unique_ptr<bf::Object> ptr(new T(std::forward<Args>(args)...));
-			ptr->postInit();
+			if(!ptr) return;
+			bool r = ptr->postInit();
+			if(r) return;
 			objects.emplace_back(std::move(ptr), false);
 		}
 		template<Derived<bf::Object> T, typename... Args>
@@ -72,7 +76,9 @@ namespace bf {
             if(isForcedActive)
                 return;
 			std::unique_ptr<bf::Object> ptr(new T(*this, std::forward<Args>(args)...));
-			ptr->postInit();
+			if(!ptr) return;
+			bool r = ptr->postInit();
+			if(r) return;
             clearSelection(-1);
             activeIndex=objects.size();
 			objects.emplace_back(std::move(ptr), true);

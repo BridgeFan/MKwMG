@@ -41,7 +41,7 @@ namespace bf {
 		explicit Object(const std::string &objName) : bf::Object(Transform::Default, objName) {}
 		virtual ~Object() = default;
 		virtual void draw(const bf::ShaderArray &shader) const = 0;
-		virtual void postInit() {}
+		virtual bool postInit() {return false;}//show if should be removed after initialization
         virtual bool addPoint(unsigned index);
 		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }
 		virtual void setPosition(const glm::vec3 &pos) { transform.position = pos; }
@@ -67,6 +67,15 @@ namespace bf {
 		virtual bool onMouseButtonReleased(bf::event::MouseButton button, bf::event::ModifierKeyBit mods);
 		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
         [[nodiscard]] virtual bf::ShaderType getShaderType() const = 0;
+		[[nodiscard]] virtual bool isIntersectable() const {return false;}
+		[[nodiscard]] virtual glm::vec2 getParameterMin() const {return {.0f,.0f};}
+		[[nodiscard]] virtual glm::vec2 getParameterMax() const {return {1.f,1.f};}
+		[[nodiscard]] virtual bool parameterWrappingU() const {return false;}
+		[[nodiscard]] virtual bool parameterWrappingV() const {return false;}
+		[[nodiscard]] virtual glm::vec3 parameterFunction(float u, float v) const {return {0.f,0.f,0.f};}
+		[[nodiscard]] virtual glm::vec3 parameterGradientU(float u, float v) const {return {1.f,0.f,0.f};}
+		[[nodiscard]] virtual glm::vec3 parameterGradientV(float u, float v) const {return {0.f,1.f,0.f};}
+		[[nodiscard]] glm::vec4 clampParam(float u, float v, float modulo=-1.f) const; //x,y - new parameters, z,w - modulo
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

@@ -11,6 +11,7 @@
 #include "glm/gtc/epsilon.hpp"
 #include "src/Json/FileLoading.h"
 #include "src/Object/Point.h"
+#include "src/Object/IntersectionObject.h"
 #include "src/Shader/Shader.h"
 #include "src/Shader/ShaderArray.h"
 #include <OpenGLUtil.h>
@@ -135,6 +136,7 @@ bf::Scene::Scene(const ConfigState& configState) :
     shaderArray.setGrayPercentage(configState.grayPercentage);
     bf::Point::initObjArrayRef(objectArray);
     bf::Object::initData(configState, *this);
+	bf::IntersectionObject::initObjectArray(objectArray);
     //add framebuffers
     glGenFramebuffers(2, &FBO);
     glGenTextures(2, &texture);

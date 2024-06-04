@@ -22,6 +22,7 @@ namespace bf {
 		explicit Point(const std::string &pointName) : Point(bf::Transform::Default, pointName) {}
 		explicit Point(const bf::Transform &t = bf::Transform::Default) : Point( t, "Point " + std::to_string(
 				index)) { index++; }
+		explicit Point(const glm::vec3& p) : Point( bf::Transform(p)) {}
 		void draw(const bf::ShaderArray &shader) const override;
 		static void initObjArrayRef(bf::ObjectArray& objArray);
 

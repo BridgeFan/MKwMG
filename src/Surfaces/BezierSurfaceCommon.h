@@ -32,7 +32,7 @@ namespace bf {
         glm::vec<2,int> segs={3,3};
         glm::vec<2,int> samples;
         //std::vector<std::vector<pArray> > pointIndices;
-        void postInit() override;
+        bool postInit() override;
         void surfacePostInit(std::vector<std::vector<pArray> >&& pointIndices);
         void draw(const ShaderArray &shader) const override;
         void ObjectGui() override;
@@ -48,6 +48,11 @@ namespace bf {
             std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples,
             std::vector<std::vector<pArray> >&& pointIndices);
 		void onMergePoints(int p1, int p2) override;
+		[[nodiscard]] bool isIntersectable() const override {return true;}
+		[[nodiscard]] glm::vec2 getParameterMin() const override {return {0.f,0.f};}
+		[[nodiscard]] glm::vec2 getParameterMax() const override {return {segs.x,segs.y};}
+		[[nodiscard]] virtual bool parameterWrappingU() const {return isWrappedX;}
+		[[nodiscard]] virtual bool parameterWrappingV() const {return isWrappedY;}
 	};
 }
 

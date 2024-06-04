@@ -23,6 +23,8 @@ auto& mcout = std::cout;
 #include "Solids/Torus.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Surfaces/BezierSurface2.h"
+#include "Surfaces/GregoryPatch.h"
+#include "Object/IntersectionObject.h"
 #include "src/Json/FileLoading.h"
 #include "src/Object/Point.h"
 
@@ -165,6 +167,11 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
     }
 	ImGui::TableNextColumn();
 	if(ImGui::Button("Gregory patch", bSize)) {
+		scene.objectArray.addRef<bf::GregoryPatch>();
+	}
+	ImGui::TableNextColumn();
+	if(ImGui::Button("Intersection", bSize)) {
+		scene.objectArray.add<bf::IntersectionObject>();
 	}
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::EndDisabled();
@@ -248,7 +255,7 @@ void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& confi
     ImGui::Begin("Modify object panel", nullptr, ImGuiWindowFlags_NoResize);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
-    if(scene.objectArray.getActiveIndex()!=-1 && !scene.objectArray.isMultipleActive())
+    if(scene.objectArray.isCorrect(scene.objectArray.getActiveIndex()) && !scene.objectArray.isMultipleActive())
         scene.objectArray[scene.objectArray.getActiveIndex()].ObjectGui();
     else {
         bool isAny = false;
