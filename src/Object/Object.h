@@ -72,9 +72,9 @@ namespace bf {
 		[[nodiscard]] virtual glm::vec2 getParameterMax() const {return {1.f,1.f};}
 		[[nodiscard]] virtual bool parameterWrappingU() const {return false;}
 		[[nodiscard]] virtual bool parameterWrappingV() const {return false;}
-		[[nodiscard]] virtual glm::vec3 parameterFunction(float u, float v) const {return {0.f,0.f,0.f};}
-		[[nodiscard]] virtual glm::vec3 parameterGradientU(float u, float v) const {return {1.f,0.f,0.f};}
-		[[nodiscard]] virtual glm::vec3 parameterGradientV(float u, float v) const {return {0.f,1.f,0.f};}
+		[[nodiscard]] virtual glm::vec3 parameterFunction(float u, float v) const;
+		[[nodiscard]] virtual glm::vec3 parameterGradientU(float u, float v) const;
+		[[nodiscard]] virtual glm::vec3 parameterGradientV(float u, float v) const;
 		[[nodiscard]] glm::vec4 clampParam(float u, float v, float modulo=-1.f) const; //x,y - new parameters, z,w - modulo
 	};
 

@@ -218,6 +218,7 @@ bool bf::loadFromStream(bf::ObjectArray &objectArray, bf::Camera& camera, std::i
         return false;
     }
     std::cout << "File loaded successfully\n";
+	objectArray.clearSelection();
     valijson::Validator validator;
     valijson::adapters::JsonCppAdapter myTargetAdapter(value);
     valijson::ValidationResults errors;

@@ -22,7 +22,9 @@ namespace bf {
 		std::array<uint8_t, 6> order; //indices in Béziers
 		void recalculate();
 		bool isDebug=true;
-
+		int samples=4;
+		glm::vec3 getPointPos(int seg, bool isFurther);
+		glm::vec3 getPointPos(int seg, int x, int y);
 	public:
 		[[nodiscard]] const std::array<bf::BezierSurfaceSegment *, 3> &getSegments() const;
 		static constexpr std::array tmpArray{0u,3u,12u,15u};

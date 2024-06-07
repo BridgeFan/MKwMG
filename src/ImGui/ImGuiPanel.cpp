@@ -189,6 +189,8 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
         ImGui::BeginDisabled();
     ImGui::Text("Hold CTRL and click to select multiple items.");
     ImGui::Checkbox("Uniform scalng", &configState.isUniformScaling);
+	ImGui::SameLine();
+	ImGui::Checkbox("Hide points", &configState.arePointsHidden);
 	ImGui::Checkbox("Stereoscopic", &configState.stereoscopic);
     if(configState.stereoscopic) {
         ImGui::SliderFloat("Intraocular distance", &configState.IOD, .0f, 1.f);
@@ -232,7 +234,7 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
         }
 		if(scene.objectArray[n].indestructibilityIndex>0)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImCol32(255,255,0,255));
-        if (scene.objectArray.imGuiCheckChanged(n, scene.multiCursor))
+        if (scene.objectArray.imGuiCheckChanged(n, scene.multiCursor, configState))
         {
             scene.multiCursor.transform = bf::Transform::Default;
             if (!configState.isCtrlPressed) { // Clear selection when CTRL is not held

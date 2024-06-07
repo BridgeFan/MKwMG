@@ -39,6 +39,7 @@ bf::ConfigState::ConfigState() {
 	load(value, IOD, "iod");
 	load(value, fontPath, "font_path");
 	load(value, gizmoSize, "gizmo_size");
+	load(value, arePointsHidden, "are_points_hidden");
 	if(value.isMember("camera") && value["camera"].isObject()) {
 		Json::Value cameraValue = value["camera"];
 		load(cameraValue, cameraFOV, "fov");
@@ -78,6 +79,7 @@ bf::ConfigState::~ConfigState() {
 	value["iod"]=IOD;
 	value["font_path"]=fontPath;
 	value["gizmo_size"]=gizmoSize;
+	value["are_points_hidden"]=arePointsHidden;
 	//camera
 	Json::Value cameraValue;
 	cameraValue["fov"]=cameraFOV;

@@ -23,6 +23,7 @@ namespace bf {
         bool isC2=false;
 		uint8_t emptyEdges=0x0; //___RLUB
     public:
+		std::vector<uint8_t> tmpIndices; //for checking Grégory - allowed
         glm::vec<2,int> samples;
         std::array<unsigned, 16> pointIndices;
         void initGL(const bf::ObjectArray &objectArray);

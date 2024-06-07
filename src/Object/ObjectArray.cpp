@@ -212,12 +212,14 @@ int bf::ObjectArray::getActiveIndex() const
     return -1;
 }
 
-bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& multiCursor) {
+bool bf::ObjectArray::imGuiCheckChanged(std::size_t index, bf::MultiCursor& multiCursor, const bf::ConfigState& configState) {
 	if(!isCorrect(index)) {
 		ImGui::Text("_");
 		return false;
 	}
 	bool val = isActive(index);
+	if(configState.arePointsHidden && typeid(*objects[index].first)==typeid(bf::Point))
+		return false;
 	bool ret = bf::imgui::checkSelectableChanged(objects[index].first->name.c_str(), index,val);
 	if(ret) {
         toggleActive(index);

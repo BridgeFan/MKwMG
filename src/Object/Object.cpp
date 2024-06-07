@@ -90,3 +90,6 @@ glm::vec4 bf::Object::clampParam(float u, float v, float modulo) const {
 	}
 	return ret;
 }
+glm::vec3 bf::Object::parameterFunction(float, float) const {return {0.f,0.f,0.f};}
+glm::vec3 bf::Object::parameterGradientU(float, float) const {return {1.f,0.f,0.f};}
+glm::vec3 bf::Object::parameterGradientV(float, float) const {return {0.f,1.f,0.f};}

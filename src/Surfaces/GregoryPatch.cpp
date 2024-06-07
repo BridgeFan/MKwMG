@@ -9,6 +9,7 @@
 #include "Shader/ShaderArray.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Util.h"
+#include <GL/glew.h>
 #include <algorithm>
 #include <iostream>
 #include <optional>
@@ -23,23 +24,30 @@ bool isCorrectIndex(const bf::BezierSurfaceSegment& s, uint8_t index) {
 
 using SegmentSurface = std::pair<bf::BezierSurface0*, bf::BezierSurfaceSegment*>;
 
-std::optional<std::array<uint8_t, 6> > areGregoryIntersecting(bf::BezierSurfaceSegment* a, bf::BezierSurfaceSegment* b, bf::BezierSurfaceSegment* c) {
-	if(!a || !b || !c) return std::nullopt;
-	std::array<uint8_t, 6> order{};
+
+bool areIndicesOK(uint8_t a, uint8_t b) {
+	if(a==b) return false;
+	const uint8_t& na=std::min(a,b);
+	const uint8_t& nb=std::max(a,b);
+	return !((na==0 && nb==15) || (na==3 && nb==12));
+}
+
+std::vector<std::array<uint8_t, 6> > areGregoryIntersecting(bf::BezierSurfaceSegment* a, bf::BezierSurfaceSegment* b, bf::BezierSurfaceSegment* c) {
+	if(!a || !b || !c) return {};
+	std::vector<std::array<uint8_t, 6> > ret;
 	constexpr std::array A=bf::GregoryPatch::tmpArray;
-	//TODO: checking diagonal
-	for(uint8_t i1: A) {
-		for(uint8_t i2: A) {
-			if(i1==i2) continue;
-			for(uint8_t i3: A) {
-				for(uint8_t i4: A) {
-					if(i3==i4) continue;
-					for(uint8_t i5: A) {
-						for(uint8_t i6: A) {
-							if(i5==i6) continue;
+	for(uint8_t i1: a->tmpIndices) {
+		for(uint8_t i2: a->tmpIndices) {
+			if(!areIndicesOK(i1,i2)) continue;
+			for(uint8_t i3: b->tmpIndices) {
+				for(uint8_t i4: b->tmpIndices) {
+					if(!areIndicesOK(i3,i4)) continue;
+					for(uint8_t i5: c->tmpIndices) {
+						for(uint8_t i6: c->tmpIndices) {
+							if(!areIndicesOK(i5,i6)) continue;
 							if(a->pointIndices[i2]==b->pointIndices[i3] && b->pointIndices[i4]==c->pointIndices[i5] && c->pointIndices[i6]==a->pointIndices[i1]) {
-								order={i1,i2,i3,i4,i5,i6};
-								return order;
+								std::array<uint8_t, 6> order={i1,i2,i3,i4,i5,i6};
+								ret.emplace_back(std::move(order));
 							}
 						}
 					}
@@ -47,22 +55,34 @@ std::optional<std::array<uint8_t, 6> > areGregoryIntersecting(bf::BezierSurfaceS
 			}
 		}
 	}
-	return std::nullopt;
+	return ret;
 }
 
 struct FoundGregoryStruct {
 	std::array<bf::BezierSurface0*, 3> surfaces;
 	std::array<bf::BezierSurfaceSegment*, 3> segments;
 	std::array<uint8_t, 6> order;
+
 	bool operator==(const FoundGregoryStruct& other) {
-		//TODO - more than 1 Grégory patch from particular three segments (checking order)
-		for (int i = 0; i < 3; i++)/*surfaces*/ {
-			for(int j=0;j<3;j++) {
-				auto m=(i+j)%3;
-				if(surfaces[j]!=other.surfaces[m] || segments[j]!=other.segments[m]) //different segments are used
-					continue;
-				else
-					return true;
+		if(this==&other) return true;
+		for (int i = 0; i < 6; i++)/*checking movement*/ {
+			bool wasBreak=true;
+			for(int j=0;j<3;j++) {//segment of first struct
+				int movedJ = i<3 ? (i+j)%3 : (i+6-j)%3;
+				if(surfaces[j]!=other.surfaces[movedJ] || segments[j]!=other.segments[movedJ]) {
+					wasBreak=false;
+					break;
+				}
+			}
+			if(wasBreak) {
+				for(int j=0;j<6;j++) {
+					int movedJ = i<3 ? (2*i+j)%6 : (7+2*i-j)%6;
+					if(order[j]!=other.order[movedJ]) {
+						wasBreak=false;
+						break;
+					}
+				}
+				if(wasBreak) return true;
 			}
 		}
 		return false;
@@ -77,12 +97,12 @@ FoundGregoryStruct toFoundStruct(const bf::GregoryPatch& patch) {
 }
 
 bool operator==(const bf::GregoryPatch& patch, const FoundGregoryStruct& other) {
-	return toFoundStruct(patch)==other;
+	FoundGregoryStruct str(toFoundStruct(patch));
+	return str==other;
 }
 bool operator==(const FoundGregoryStruct& other, const bf::GregoryPatch& patch) {
 	return patch==other;
 }
-
 
 std::vector<FoundGregoryStruct> findGregories(const std::vector<bf::BezierSurface0*> surfaces) {
 	if(surfaces.empty()) return {};
@@ -98,17 +118,18 @@ std::vector<FoundGregoryStruct> findGregories(const std::vector<bf::BezierSurfac
 		}
 	}
 	//finding Gregories
-	for(auto& s1: segs) {
-		for(auto& s2: segs) {
-			if(s1==s2) continue;
-			for(auto& s3: segs) {
-				if(s1==s3 || s2==s3) continue;
+	for(int i=0;i<segs.size();i++) {
+		const auto& s1=segs[i];
+		for(int j=i+1;j<segs.size();j++) {
+			const auto& s2=segs[j];
+			for(int k=j+1;j<segs.size();j++) {
+				const auto& s3=segs[j];
 				auto res = areGregoryIntersecting(s1.second,s2.second,s3.second);
-				if(res) {
+				for(auto& r: res) {
 					FoundGregoryStruct str;
 					str.surfaces = {s1.first, s2.first, s3.first};
 					str.segments = {s1.second, s2.second, s3.second};
-					str.order = *res;
+					str.order = std::move(r);
 					foundGregories.emplace_back(std::move(str));
 				}
 			}
@@ -150,7 +171,7 @@ namespace bf {
 			return;
 		else {
 			//choosing first feasible candidate
-			auto& chosenGregory = gregoryCandidates[0];
+			auto& chosenGregory = gregoryCandidates.back();
 			order=std::move(chosenGregory.order);
 			segments=std::move(chosenGregory.segments);
 			surfaces=std::move(chosenGregory.surfaces);
@@ -185,16 +206,28 @@ namespace bf {
 		return false;
 	}
 	void GregoryPatch::draw(const ShaderArray &shaderArray) const {
-		if(!segments[0] || shaderArray.getActiveIndex()!=BasicShader) {
+		if(!segments[0] || (shaderArray.getActiveIndex()!=BasicShader && shaderArray.getActiveIndex()!=GregoryShader)) {
 			return;
 		}
 		if(shaderArray.getActiveIndex()==BasicShader && isDebug) {
 			shaderArray.setColor(255u,0u,0u);
-			Solid::draw(shaderArray);
+			//function assumes set projection and view matrices
+			glBindVertexArray(VAO);
+			shaderArray.getActiveShader().setMat4("model", getModelMatrix(/*relativeTo*/));
+			glDrawElements(GL_LINES, indices.size()-60, GL_UNSIGNED_INT,   // type
+						   reinterpret_cast<void*>(60*sizeof(int))           // element array buffer offset
+			);
 		}
-		/*segments[0]->draw(shaderArray);
-		segments[1]->draw(shaderArray);
-		segments[2]->draw(shaderArray);*/
+		else if(shaderArray.getActiveIndex()==GregoryShader) {
+			glPatchParameteri( GL_PATCH_VERTICES, 20);
+			const auto& shader = shaderArray.getActiveShader();
+			shader.setInt("Segments",samples);
+			shader.setVec2("DivisionBegin",{.0f,.0f});
+			shader.setVec2("DivisionEnd",{1.f,1.f});
+			glBindVertexArray(VAO);
+			glDrawElements(GL_PATCHES, 60, GL_UNSIGNED_INT,   // type
+							   0);           // element array buffer offset)
+		}
 	}
 	GregoryPatch::~GregoryPatch() {
 		for(auto s: surfaces) {
@@ -204,28 +237,133 @@ namespace bf {
 	}
 	void GregoryPatch::ObjectGui() {
 		bf::imgui::checkChanged("Gregory patch name", name);
-		std::string tmp;
-		/*for(int8_t i=14;i>=0;i-=2) {
-			tmp+=(static_cast<char>('0'+(order>>i&3)));
-		}*/
-		ImGui::Text("Order: %s", tmp.c_str());
+		bf::imgui::checkChanged("Samples", samples, 1, 100);
 		ImGui::Checkbox("Debug", &isDebug);
 	}
+	int xDiff, yDiff;
+
+	glm::vec3 bezier2(float t, const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2) {
+		return p0*(1-t)*(1-t)+2.f*p1*t*(1-t)+p2*t*t;
+	}
+
 	void GregoryPatch::recalculate() {
 		vertices.clear();
 		indices.clear();
-		for(int i=0;i<9;i++) {
-			indices.push_back(i);
-			indices.push_back((i+1)%9);
-		}
-		//indices.resize(3, 0u);
+		indices.resize(156);
+		int _i=0;
 		for(int i=0;i<3;i++) {
-			if(!segments[i]) {vertices.clear(); indices.clear(); break;}
-			auto& s = *segments[i];
-			vertices.emplace_back(objectArray[s.pointIndices[order[2*i]]].getPosition());
-			vertices.emplace_back(objectArray[s.pointIndices[lerp(order[2*i],order[2*i+1],0.334f)]].getPosition());
-			vertices.emplace_back(objectArray[s.pointIndices[lerp(order[2*i],order[2*i+1],0.667f)]].getPosition());
+			indices[20*i]=6*i; //0
+			for(int j=1;j<=3; j++) {
+				indices[20*i+j]=6*i+j; //right part (1,2,3)
+				indices[20*i+12-j]=(6*i+18-j)%18; //right part (9,10,11)
+			}
+			for(int j=1;j<=2; j++) {
+				indices[20*i+11+j]=17+4*i+j; //right part (12,13)
+				indices[20*i+20-j]=20+(22-j+4*i)%12; //right part (18,19)
+				//central part
+				indices[20*i+3+j]=29+2*i+j; //4,5
+				indices[20*i+6+j]=30+(6+2*i-j)%6; //7,8
+				indices[20*i+13+j]=35+2*i+j; //14,15
+				indices[20*i+15+j]=42+(6+2*i-j)%6; //17,18
+			}
+			indices[20*i+6]=48; //6
 		}
+		int tmp=60;
+		//debug lines
+		for(int i=0;i<18;i++) {
+			indices[tmp++]=i;
+			indices[tmp++]=(i+1)%18;
+			if(i%3) { //"antennas"
+				indices[tmp++]=i;
+				indices[tmp++]=18+_i;
+				_i++;
+			}
+			else if(i%6) { //"antennas"
+				indices[tmp++]=i;
+				indices[tmp++]=30+2*(i/6);
+			}
+		}
+		for(int i=0;i<6;i++) {//antennas
+			indices[tmp++]=30+i;
+			indices[tmp++]=30+i+6;
+			indices[tmp++]=30+i;
+			indices[tmp++]=30+i+12;
+		}
+		for(int i=0;i<3;i++) {//lines
+			indices[tmp++]=31+i;
+			indices[tmp++]=30+i;
+			indices[tmp++]=31+i;
+			indices[tmp++]=48;
+		}
+		vertices.resize(49);
+		glm::vec3 P[3][6]; //points of external triangle
+		glm::vec3 N[3][4]; //antennas of triangle
+		glm::vec3 Oc[3];
+		glm::vec3 C[6]({}); //2/3 of central triangle
+		glm::vec3 Cen{}; //central point
+		glm::vec3 NC[2][6]({}); //-/+ from C[i] points
+		//external triangle with antennas
+		for(int i=0;i<3;i++) {
+			xDiff = (order[2*i+1]-order[2*i])/3;
+			yDiff = std::abs(4/xDiff) * (1-2*(std::max(order[2*i+1],order[2*i])==15));
+			glm::vec3 T[3], O[2], S[3]; //S-centres of nearest Bézier curve segments, T-of second nearest, O-centres of adjacent T
+			for(int j=0;j<3;j++) {
+				T[j]=lerp(getPointPos(i,j,1),getPointPos(i,j+1,1),0.5f);
+				S[j]=lerp(getPointPos(i,j,0),getPointPos(i,j+1,0),0.5f);
+			}
+			for(int j=0;j<2;j++) {
+				O[j]=lerp(T[j],T[j+1],0.5f);
+			}
+			Oc[i]=lerp(O[0],O[1],0.5f);
+
+			P[i][0]=getPointPos(i,0,0);
+			P[i][1]=S[0];
+			P[i][5]=S[2];
+			P[i][2]=lerp(P[i][1],S[1],0.5f);
+			P[i][4]=lerp(P[i][5],S[1],0.5f);
+			P[i][3]=lerp(P[i][2],P[i][4],0.5f);
+			//further
+			N[i][0]=lerp(P[i][1],T[0],-1.f);
+			N[i][1]=lerp(P[i][2],O[0],-1.f);
+			N[i][2]=lerp(P[i][4],O[1],-1.f);
+			N[i][3]=lerp(P[i][5],T[2],-1.f);
+			//central triangle
+			C[2*i]=lerp(P[i][3],Oc[i],-1.f);
+		}
+
+		//TODO - better central triangle
+		Cen=(C[0]+C[2]+C[4])/3.f;
+		for(int i=0;i<3;i++) {
+			C[2*i+1]=lerp(C[2*i],Cen,0.5f);
+		}
+		for(int i=0;i<3;i++) {
+			//central antennas
+			glm::vec3 g0=P[i][2]-P[i][3];
+			glm::vec3 g2=(Cen-C[(2*i+3)%6]+C[(2*i+5)%6]-Cen)*.5f;
+			glm::vec3 g1=(g0+g2)*.5f;
+			glm::vec3 gp2 = bezier2(2.f/3.f,g0,g1,g2);
+			glm::vec3 gp1 = bezier2(1.f/3.f,g0,g1,g2);
+			NC[0][2*i]=C[2*i]+gp1;
+			NC[0][2*i+1]=C[2*i+1]+gp2;
+			NC[1][2*i]=C[2*i]-gp1;
+			NC[1][2*i+1]=C[2*i+1]-gp2;
+		}
+
+		//set vertices
+		for(int i=0;i<3;i++) {
+			for(int j=0;j<6;j++)
+				vertices[6*i+j]=P[i][j];
+			for(int j=0;j<4;j++)
+				vertices[18+4*i+j]=N[i][j];
+		}
+		for(int i=0;i<6;i++) {
+			vertices[30+i]=C[i];
+			vertices[36+i]=NC[0][i];
+			vertices[42+i]=NC[1][i];
+		}
+		vertices[48]=Cen;
+
+
 		setBuffers();
 		//TODO
 	}
@@ -237,5 +375,12 @@ namespace bf {
 	}
 	const std::array<bf::BezierSurface0 *, 3> &GregoryPatch::getSurfaces() const {
 		return surfaces;
+	}
+	glm::vec3 GregoryPatch::getPointPos(int seg, bool isFurther) {
+		return objectArray[segments[seg%3]->pointIndices[order[2*seg+isFurther]]].getPosition();
+	}
+	glm::vec3 GregoryPatch::getPointPos(int seg, int x, int y) {
+		int b=order[2*seg]+y*yDiff+x*xDiff;
+		return objectArray[segments[seg]->pointIndices[b]].getPosition();
 	}
 }// namespace bf

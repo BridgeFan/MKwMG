@@ -110,6 +110,7 @@ void bf::Vertex::setPosition(const glm::vec3 &p) noexcept {
 void bf::Vertex::setTexturePosition(const glm::vec2 &t) noexcept {
     tX = t.x; tY = t.y;
 }
+bf::Vertex::Vertex() noexcept : Vertex(.0f,.0f,.0f) {}
 
 bf::DummySolid::DummySolid(const std::string &solidName, bool dynamic) : Solid(solidName, dynamic) {}
 

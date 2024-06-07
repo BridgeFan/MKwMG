@@ -98,7 +98,7 @@ namespace bf {
 		bool isMovable(std::size_t index);
         int getAddToIndex() const;
         void setAddToIndex(int addToIndex);
-		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor);
+		bool imGuiCheckChanged(std::size_t index, MultiCursor& multiCursor, const bf::ConfigState& configState);
 		[[nodiscard]] int getActiveIndex() const;
 		void draw(bf::ShaderArray& shaderArray, const bf::ConfigState& configState);
         bool onKeyPressed(bf::event::Key key, bf::event::ModifierKeyBit mods);

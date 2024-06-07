@@ -183,14 +183,29 @@ void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> 
         std::vector<bf::BezierSurfaceSegment> segRow;
         for(unsigned j=0;j<pointIndices[i].size();j++) {
             segRow.emplace_back(isC2);
+			auto& s=segRow.back();
+			s.tmpIndices.reserve(4);
+			bool isLeftFree=false, isRightFree=false, isBottomFree=false, isTopFree=false;
+			if(j==0 && !isWrappedX) isLeftFree=true;
+			if(j==pointIndices[i].size()-1 && !isWrappedX) isRightFree=true;
+			if(i==0 && !isWrappedY) isBottomFree=true;
+			if(i==pointIndices.size()-1 && !isWrappedY) isTopFree=true;
+			if(isLeftFree || isBottomFree)
+				s.tmpIndices.push_back(0);
+			if(isRightFree || isBottomFree)
+				s.tmpIndices.push_back(3);
+			if(isLeftFree || isTopFree)
+				s.tmpIndices.push_back(12);
+			if(isRightFree || isTopFree)
+				s.tmpIndices.push_back(15);
             if(!segmentNames.empty())
-                segRow.back().name = std::move(segmentNames[i][j]);
+                s.name = std::move(segmentNames[i][j]);
             if(!segmentSamples.empty())
-                segRow.back().samples = std::move(segmentSamples[i][j]);
+                s.samples = std::move(segmentSamples[i][j]);
             else
-                segRow.back().samples = samples;
-            segRow.back().pointIndices = pointIndices[i][j];
-            segRow.back().initGL(objectArray);
+                s.samples = samples;
+            s.pointIndices = pointIndices[i][j];
+            s.initGL(objectArray);
         }
         segments.emplace_back(std::move(segRow));
     }

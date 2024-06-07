@@ -97,6 +97,7 @@ void bf::BezierSurfaceSegment::onPointRemove(unsigned int index) {
 
 bf::BezierSurfaceSegment::BezierSurfaceSegment(bf::BezierSurfaceSegment &&solid) noexcept : Solid(std::move(solid)) {
     swapSegments(*this, solid);
+	tmpIndices=std::move(solid.tmpIndices);
     isDynamic=true;
 }
 
@@ -114,6 +115,7 @@ void bf::BezierSurfaceSegment::swapSegments(bf::BezierSurfaceSegment &a, bf::Bez
 bf::BezierSurfaceSegment &bf::BezierSurfaceSegment::operator=(bf::BezierSurfaceSegment && segment) noexcept {
     swapSolids(*this, segment);
     swapSegments(*this, segment);
+	tmpIndices = std::move(segment.tmpIndices);
     segment.VAO=segment.VBO=segment.IBO=UINT_MAX;
     return *this;
 }

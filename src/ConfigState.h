@@ -39,6 +39,7 @@ namespace bf {
 		bool isAltPressed = false;
 		bool isShiftPressed = false;
 		bool isBoxSelect = false;
+		bool arePointsHidden = false;
 		float boxMouseX = 0.f, boxMouseY = 0.f;
 		float mouseX = 0.f;
 		float mouseY = 0.f;
