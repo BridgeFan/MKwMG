@@ -5,6 +5,7 @@ Right mouse button - rotation
 
 Key:
 Ctrl - camera movement
+M - merging points
 X - block/unblock X axis
 Y - block/unblock Y axis
 Z - block/unblock Z axis
