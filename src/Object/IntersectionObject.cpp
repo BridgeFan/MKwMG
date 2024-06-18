@@ -138,6 +138,11 @@ void clampParams(bf::vec4d& x, const bf::Object& o1, const bf::Object& o2) {
 	x={x1.x, x1.y, x2.x,x2.y};
 }
 
+//for numerical methods
+constexpr double epsDist=1e-10;
+constexpr double eps=1e-6;
+constexpr double epsBig=1e-4;
+
 bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos) {
 	double minDist=std::numeric_limits<double>::max();;
 	static std::uniform_real_distribution<> dis(0.,1.);
@@ -150,18 +155,16 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos) {
 		double dist=bf::IntersectionObject::distance(obj,pos,{tp.x,tp.y});
 		if(dist<minDist) {
 			minDist=dist;
-			x=tp;
+			xn=tp;
 		}
 	}
-	xn=-x;
-	constexpr double epsDist=1e-8;
-	constexpr double eps=1e-6;
+	x=-xn;
 	double a=0.1;
 	int N=0;
-	bf::vec2d df;
+	bf::vec2d df(1.);
 	//find point
-	while(N<1000 && a>eps && bf::IntersectionObject::distance(obj,pos,x)>epsDist && glm::dot(df,df)>eps && glm::dot(xn-x,xn-x)>eps*eps) {
-		//TODO - proper stop
+	while(N<1000 && a>eps && bf::IntersectionObject::distance(obj,pos,x)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>epsDist) {
+		//TODO - proper step
 		x=xn;
 		//finding antigradient
 		df=bf::vec4d(.0);
@@ -170,20 +173,21 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos) {
 			double g = pos[i];
 			auto dfu = obj.parameterGradientU(x[0],x[1])[i];
 			auto dfv = obj.parameterGradientV(x[0],x[1])[i];
-			df[0]+=2.f*(f-g)*dfu;
-			df[1]+=2.f*(f-g)*dfv;
+			df[0]+=2.0*(f-g)*dfu;
+			df[1]+=2.0*(f-g)*dfv;
 		}
 		//finding step
 		xn=x-df*a;
 		clampParams(xn, obj);
 		while(bf::IntersectionObject::distance(obj,pos,xn)>bf::IntersectionObject::distance(obj,pos,x) && a>eps) { //too big step
-			a*=.5f;
+			a*=.5;
 			xn=x-df*a;
 			clampParams(xn, obj);
 		}
 		N++;
 	}
 	std::cout << N << " " << x.x << " " << x.y << "\n";
+	std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
 	return x;
 }
 
@@ -195,8 +199,6 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 	//no point chosen
 	bf::vec4d x0;
 	//begin data to algorithm
-	constexpr double epsDist=1e-8;
-	constexpr double eps=1e-6;
 	double a=0.1;
 	int N=0;
 	if(isCursor) { //cursor begin
@@ -232,18 +234,18 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 	indices.emplace_back(vertices.size()-2);
 	indices.emplace_back(vertices.size()-1);
 	//2 - minimizing distance
-	bf::vec4d x=x0;
 	clampParams(x0, *obj1, *o);
-	bf::vec4d xn=-x0;
+	bf::vec4d x=-x0;
+	bf::vec4d xn=x0;
 	std::cout << a << ": " << xn.x << " " << xn.y << " " << xn.z << " " << xn.w << "\n";
 	bf::vec4d df{100000.};
 	N=0;
 	a=0.1;
-	while(N<10000 && a>eps && distance(*obj1,*o,xn)>epsDist && glm::dot(df,df)>eps && glm::dot(xn-x,xn-x)>eps*eps) {
-		//TODO - proper stop
+	while(N<10000 && a>eps && distance(*obj1,*o,xn)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>epsDist) {
+		//TODO - proper step
 		x=xn;
 		//finding antigradient
-		df=glm::vec4(.0f);
+		df=glm::vec4(.0);
 		for(int i=0;i<3;i++) {//x,y,z
 			auto f = obj1->parameterFunction(x[0],x[1])[i];
 			auto g = o->parameterFunction(x[2],x[3])[i];
@@ -251,10 +253,10 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 			auto dfv = obj1->parameterGradientV(x[0],x[1])[i];
 			auto dgw = o->parameterGradientU(x[2],x[3])[i];
 			auto dgt = o->parameterGradientV(x[2],x[3])[i];
-			df[0]+=2.f*(f-g)*dfu;
-			df[1]+=2.f*(f-g)*dfv;
-			df[2]+=-2.f*(f-g)*dgw;
-			df[3]+=-2.f*(f-g)*dgt;
+			df[0]+=2.*(f-g)*dfu;
+			df[1]+=2.*(f-g)*dfv;
+			df[2]+=-2.*(f-g)*dgw;
+			df[3]+=-2.*(f-g)*dgt;
 		}
 		//finding step
 		xn=x-df*a;
@@ -275,7 +277,8 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 	indices.emplace_back(vertices.size()-2);
 	indices.emplace_back(vertices.size()-1);
 	std::cout << N << " " << distance(*obj1, *o, x) << "\n";
-	if(distance(*obj1,*o,x)>eps) {
+	std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
+			if(distance(*obj1,*o,x)>epsBig) {
 		//no intersection
 		toRemove=true;
 		return;
