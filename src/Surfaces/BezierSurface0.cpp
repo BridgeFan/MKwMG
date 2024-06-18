@@ -85,69 +85,71 @@ std::vector<std::vector<bf::pArray>> bf::BezierSurface0::generatePoints(const gl
     return pointIndices;
 }
 
-glm::vec4 basisFunctions(float t) {
-	float t1 = (1.0f - t);
-	float t12 = t1 * t1;
-	glm::vec4 b;
+bf::vec4d basisFunctions(double t) {
+	double t1 = (1.0f - t);
+	double t12 = t1 * t1;
+	bf::vec4d b;
 	// Bernstein polynomials
 	b[0] = t12 * t1;
-	b[1] = 3.0f * t12 * t;
-	b[2] = 3.0f * t1 * t * t;
+	b[1] = 3.0 * t12 * t;
+	b[2] = 3.0 * t1 * t * t;
 	b[3] = t * t * t;
 	return b;
 }
 
-glm::vec4 basisFunctionsD(float t) {
-	float t1 = (1.0f - t);
-	glm::vec4 b;
-	// Bernstein polynomials (derivat
-	b[0] = -3.f * t1 * t1;
-	b[1] = 3.0f * (t-1.f) * (3.f*t-1.f);
-	b[2] = 3.0f * t  * (2.f-3.f*t);
-	b[3] = 3.f * t * t;
+bf::vec4d basisFunctionsD(double t) {
+	double t1 = (1.0 - t);
+	bf::vec4d b;
+	// Bernstein polynomials (derivative)
+	b[0] = -3.0 * t1 * t1;
+	b[1] = 3.0 * (t-1.0) * (3.0*t-1.0);
+	b[2] = 3.0 * t  * (2.0-3.0*t);
+	b[3] = 3.0 * t * t;
 	return b;
 }
 
-glm::vec3 bf::BezierSurface0::parameterFunction(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
+bf::vec3d bf::BezierSurface0::parameterFunction(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
 	// Basis functions for u and v
-	glm::vec4 bu = basisFunctions(param.x);
-	glm::vec4 bv = basisFunctions(param.y);
-	glm::vec3 p;
+	bf::vec4d bu = basisFunctions(u);
+	bf::vec4d bv = basisFunctions(v);
+	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			p += objectArray[segments[iu][iv].pointIndices[4*i+j]].getPosition()*bu[i]*bv[j];
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
+			p += pos2*bu[i]*bv[j];
 		}
 	}
 	return p;
 }
-glm::vec3 bf::BezierSurface0::parameterGradientU(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
+bf::vec3d bf::BezierSurface0::parameterGradientU(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
 	// Basis functions for u and v
-	glm::vec4 bu = basisFunctionsD(param.x);
-	glm::vec4 bv = basisFunctions(param.y);
-	glm::vec3 p;
-	for(int i=0;i<3;i++) {
+	bf::vec4d bu = basisFunctionsD(u);
+	bf::vec4d bv = basisFunctions(v);
+	bf::vec3d p(.0f);
+	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			p += 3.f*objectArray[segments[iu][iv].pointIndices[4*i+j]].getPosition()*bu[i]*bv[j];
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
+			p += pos2*bu[i]*bv[j];
 		}
 	}
+	return p;
 }
-glm::vec3 bf::BezierSurface0::parameterGradientV(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
+bf::vec3d bf::BezierSurface0::parameterGradientV(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
 	// Basis functions for u and v
-	glm::vec4 bu = basisFunctions(param.x);
-	glm::vec4 bv = basisFunctionsD(param.y);
-	glm::vec3 p;
-	for(int i=0;i<3;i++) {
+	bf::vec4d bu = basisFunctions(u);
+	bf::vec4d bv = basisFunctionsD(v);
+	bf::vec3d p(.0f);
+	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			p += 3.f*objectArray[segments[iu][iv].pointIndices[4*i+j]].getPosition()*bu[i]*bv[j];
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
+			p += pos2*bu[i]*bv[j];
 		}
 	}
+	return p;
 }

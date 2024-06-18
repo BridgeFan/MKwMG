@@ -84,69 +84,58 @@ std::vector<std::vector<bf::pArray>> bf::BezierSurface2::generatePoints(const gl
     return pointIndices;
 }
 
+using mat4d = glm::mat<4,4,double,glm::defaultp>;
 
-constexpr glm::mat4 M6 = glm::mat4({1,-3,3,-1},{4,0,-6,3},{1,3,3,-3},{0,0,0,1});
+constexpr mat4d M6 = mat4d({1,-3,3,-1},{4,0,-6,3},{1,3,3,-3},{0,0,0,1});
 
-glm::vec3 multiplyPseudoMatrix(glm::vec4 left, glm::vec3 P[16], glm::vec4 right) {
-	glm::vec3 tmp[4];
+bf::vec3d multiplyPseudoMatrix(bf::vec4d left, bf::vec3d P[16], bf::vec4d right) {
+	bf::vec3d tmp[4];
 	for(int i=0;i<4;i++) {
-		tmp[i]=glm::vec3(0.0f);
+		tmp[i]=bf::vec3d(0.0);
 		for(int j=0;j<4;j++) {
 			tmp[i]+=left[j]*P[4*i+j];
 		}
 	}
-	glm::vec3 ret=glm::vec3(.0f);
+	auto ret=bf::vec3d(0.0);
 	for(int i=0;i<4;i++) {
 		ret+=tmp[i]*right[i];
 	}
 	return ret;
 }
 
-glm::vec3 bf::BezierSurface2::parameterFunction(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
-	float uV = param.x;
-	float vV = param.y;
-	glm::vec4 uvec = {1.f,uV,uV*uV,uV*uV*uV};
-	glm::vec4 vvec = {1.f,vV,vV*vV,vV*vV*vV};
-	glm::vec4 pl = uvec*M6/6.f;
-	glm::vec4 pr = transpose(M6)*vvec/6.f;
-	glm::vec3 P[16];
+bf::vec3d bf::BezierSurface2::parameterFunction(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+	bf::vec4d uvec = {1.,u,u*u,u*u*u};
+	bf::vec4d vvec = {1.,v,v*v,v*v*v};
+	bf::vec4d pl = uvec*M6/6.;
+	bf::vec4d pr = transpose(M6)*vvec/6.;
+	bf::vec3d P[16];
 	for(int i=0;i<16;i++) {
-		P[i]=objectArray[segments[iu][iv].pointIndices[i]].getPosition();
+		P[i]=objectArray[segments[iv][iu].pointIndices[i]].getPosition();
 	}
 	return multiplyPseudoMatrix(pl, P, pr);
 }
-glm::vec3 bf::BezierSurface2::parameterGradientU(float uf, float vf) const {//TODO
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
-	float uV = param.x;
-	float vV = param.y;
-	glm::vec4 uvec = {0.f,1.f,2.f*uV,3.f*uV*uV};
-	glm::vec4 vvec = {1.f,vV,vV*vV,vV*vV*vV};
-	glm::vec4 pl = uvec*M6/6.f;
-	glm::vec4 pr = transpose(M6)*vvec/6.f;
-	glm::vec3 P[16];
+bf::vec3d bf::BezierSurface2::parameterGradientU(double uf, double vf) const {//TODO
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+	bf::vec4d uvec = {0.,1.,2.*u,3.*u*u};
+	bf::vec4d vvec = {1.,v,v*v,v*v*v};
+	bf::vec4d pl = uvec*M6/6.0;
+	bf::vec4d pr = transpose(M6)*vvec/6.0;
+	bf::vec3d P[16];
 	for(int i=0;i<16;i++) {
-		P[i]=objectArray[segments[iu][iv].pointIndices[i]].getPosition();
+		P[i]=objectArray[segments[iv][iu].pointIndices[i]].getPosition();
 	}
 	return multiplyPseudoMatrix(pl, P, pr);
 }
-glm::vec3 bf::BezierSurface2::parameterGradientV(float uf, float vf) const {//TODO
-	glm::vec4 param = clampParam(uf,vf,1.f);
-	int iu=int(param.z);
-	int iv=int(param.w);
-	float uV = param.x;
-	float vV = param.y;
-	glm::vec4 uvec = {1.f,uV,uV*uV,uV*uV*uV};
-	glm::vec4 vvec = {0.f,1.f,2.f*vV,3.f*vV*vV};
-	glm::vec4 pl = uvec*M6/6.f;
-	glm::vec4 pr = transpose(M6)*vvec/6.f;
-	glm::vec3 P[16];
+bf::vec3d bf::BezierSurface2::parameterGradientV(double uf, double vf) const {//TODO
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+	bf::vec4d uvec = {1.,u,u*u,u*u*u};
+	bf::vec4d vvec = {0.,1.,2.*v,3.*v*v};
+	bf::vec4d pl = uvec*M6/6.;
+	bf::vec4d pr = transpose(M6)*vvec/6.;
+	bf::vec3d P[16];
 	for(int i=0;i<16;i++) {
-		P[i]=objectArray[segments[iu][iv].pointIndices[i]].getPosition();
+		P[i]=objectArray[segments[iv][iu].pointIndices[i]].getPosition();
 	}
 	return multiplyPseudoMatrix(pl, P, pr);
 }

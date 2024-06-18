@@ -24,6 +24,7 @@ namespace bf {
 			  float bigR, float smallR, int bigFrag, int smallFrag);
 		explicit Torus(const bf::Transform &t = bf::Transform::Default);
 		explicit Torus(const std::string &torusName);
+		void draw(const ShaderArray &shader) const override;
 		void ObjectGui() override;
         Torus(Torus&)=delete;
         Torus(Torus&& solid) noexcept;
@@ -31,13 +32,13 @@ namespace bf {
         Torus& operator=(bf::Torus&& solid) noexcept;
 		void onMergePoints(int, int) override {}
 		[[nodiscard]] bool isIntersectable() const override {return true;}
-		[[nodiscard]] glm::vec2 getParameterMin() const override {return {0.f,0.f};}
-		[[nodiscard]] glm::vec2 getParameterMax() const override {return {M_2_PI,M_2_PI};}
+		[[nodiscard]] vec2d getParameterMin() const override {return {0.,0.};}
+		[[nodiscard]] vec2d getParameterMax() const override {return {2.*M_PI,2.*M_PI};}
 		[[nodiscard]] bool parameterWrappingU() const override {return true;}
 		[[nodiscard]] bool parameterWrappingV() const override {return true;}
-		[[nodiscard]] glm::vec3 parameterFunction(float u, float v) const override;
-		[[nodiscard]] glm::vec3 parameterGradientU(float u, float v) const override;
-		[[nodiscard]] glm::vec3 parameterGradientV(float u, float v) const override;
+		[[nodiscard]] vec3d parameterFunction(double u, double v) const override;
+		[[nodiscard]] vec3d parameterGradientU(double u, double v) const override;
+		[[nodiscard]] vec3d parameterGradientV(double u, double v) const override;
 	};
 }
 

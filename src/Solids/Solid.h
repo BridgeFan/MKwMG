@@ -31,6 +31,7 @@ namespace bf {
 		void addVertex(const glm::vec3& p);
 		bool isDynamic = false;
         static void swapSolids(bf::Solid& a, bf::Solid& b);
+		[[nodiscard]] virtual std::pair<std::vector<bf::Vertex>,std::vector<unsigned> > createDebugInfo(int n) const;
 	public:
 		virtual ~Solid()=0;
         Solid(const Solid&)=delete;
@@ -42,9 +43,14 @@ namespace bf {
 				sindex),dynamic) { sindex++; }
 		explicit Solid(const std::string &solidName, bool dynamic=false) : Solid(Transform::Default, solidName,dynamic) {}
 		unsigned int VBO = UINT_MAX, VAO = UINT_MAX, IBO = UINT_MAX;
+		unsigned int debugVBO = UINT_MAX, debugVAO = UINT_MAX, debugIBO = UINT_MAX;
+		unsigned int debugN=0;
 		std::vector<Vertex> vertices;
 		std::vector<unsigned> indices;
 		void setBuffers();
+		void drawDebug(const bf::ShaderArray &shader, bool isModelUsed=false) const;
+		void updateDebug(int N=20);
+		void setDebugBuffers(const std::vector<bf::Vertex>& vert, const std::vector<unsigned>& ind, bool areIndicesSet=false);
 	public:
 		void draw(const bf::ShaderArray &shader) const override;
         void anyDraw(const bf::ShaderArray &shader) const;

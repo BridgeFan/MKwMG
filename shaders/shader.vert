@@ -9,9 +9,11 @@ uniform mat4 projection;
 //unique uniforms
 uniform vec3 color;
 uniform mat4 model;
+uniform float pointSize;
 
 void main()
 {
+    gl_PointSize = pointSize;
     gl_Position = projection * view * model * vec4(aPos, 1.0f);
     vertexColor = vec4(color, 1.0);
 }

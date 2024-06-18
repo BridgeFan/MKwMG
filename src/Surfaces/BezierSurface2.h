@@ -19,9 +19,9 @@ namespace bf {
         BezierSurface2(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
         BezierSurface2(ObjectArray &objectArray, const Cursor &c);
         std::vector<std::vector<pArray>> generatePoints(const glm::vec2 &totalSize) override;
-		[[nodiscard]] glm::vec3 parameterFunction(float u, float v) const override;
-		[[nodiscard]] glm::vec3 parameterGradientU(float u, float v) const override;
-		[[nodiscard]] glm::vec3 parameterGradientV(float u, float v) const override;
+		[[nodiscard]] bf::vec3d parameterFunction(double u, double v) const override;
+		[[nodiscard]] bf::vec3d parameterGradientU(double u, double v) const override;
+		[[nodiscard]] bf::vec3d parameterGradientV(double u, double v) const override;
 	};
 }
 

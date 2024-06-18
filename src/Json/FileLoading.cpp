@@ -65,14 +65,15 @@ struct Segment {
 };
 
 std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segments,
-		const glm::vec<2,int>& size, bool wrappedX, bool wrappedY) {
+		const glm::vec<2,int>& size, bool wrappedX, bool wrappedY, bool isC2=false) {
 	std::map<unsigned, std::array<unsigned, 4> > pointCount;
 	//count points
 	for(unsigned i=0;i<segments.size();i++) {
 		const auto& s = segments[i];
 		constexpr std::array indices = {0,3,12,15};
+		constexpr std::array c2Indices = {5,6,9,10};
 		for(unsigned k=0;k<4;k++) {
-			unsigned j = indices[k];
+			unsigned j = isC2 ? c2Indices[k] : indices[k];
 			if(!pointCount.contains(s.pointIndices[j]))
 				pointCount[s.pointIndices[j]] = {UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX};
 			pointCount[s.pointIndices[j]][k] = i;
@@ -104,11 +105,11 @@ std::vector<std::vector<Segment> > recognizeSegments(std::vector<Segment>&& segm
 			retRow.emplace_back(std::move(segments[leftBottomIndex]));
 		}
 		else {
-			unsigned index = pointCount[ret.back()[0].pointIndices[12]][0];
+			unsigned index = pointCount[ret.back()[0].pointIndices[isC2 ? 9 : 12]][0];
 			retRow.emplace_back(std::move(segments[index]));
 		}
 		for(int j=1;j<size.x;j++) {
-			unsigned index = pointCount[retRow.back().pointIndices[3]][0];
+			unsigned index = pointCount[retRow.back().pointIndices[isC2 ? 6 : 3]][0];
 			retRow.emplace_back(std::move(segments[index]));
 		}
 		ret.emplace_back(std::move(retRow));
@@ -152,14 +153,10 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
 	std::vector<std::vector<Segment> > newSegments;
 	if(typeid(T)==typeid(bf::BezierSurface0))
 		newSegments = recognizeSegments(std::move(segments), surface->segs,
-		surface->isWrappedX, surface->isWrappedY);
+		surface->isWrappedX, surface->isWrappedY, false);
 	else {
-		int i=0;
-		for(auto&& s: segments) {
-			if(i%surface->segs.x==0)
-				newSegments.emplace_back();
-			newSegments.back().emplace_back(std::move(s));
-		}
+		newSegments = recognizeSegments(std::move(segments), surface->segs,
+										surface->isWrappedX, surface->isWrappedY, true);
 	}
 	std::vector<std::vector<std::string> > segmentNames(newSegments.size());
 	std::vector<std::vector<glm::vec<2,int> > > segmentSamples(newSegments.size());

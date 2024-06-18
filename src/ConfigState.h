@@ -58,6 +58,7 @@ namespace bf {
 		float rotationSpeed = 20.f;
 		float cameraFOV = 45.f;
 		float pointRadius = 8.f;
+		bool isDebug = false;
 		uint8_t backgroundColorR = 64;
 		uint8_t backgroundColorG = 64;
 		uint8_t backgroundColorB = 51;

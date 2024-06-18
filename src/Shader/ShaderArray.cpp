@@ -126,7 +126,10 @@ glm::vec3 getGray(const glm::vec3& vec) {
     return {f,f,f};
 }
 
+static glm::vec3 color;
+
 void bf::ShaderArray::setColor(const glm::vec3 &vec) const {
+	color=vec;
     glm::vec3 v = lerp(vec,getGray(vec),grayPercentage);
 	switch(stereoscopicState) {
 		case bf::StereoscopicState::None:
@@ -140,6 +143,8 @@ void bf::ShaderArray::setColor(const glm::vec3 &vec) const {
 			break;
 	}
 }
+
+const glm::vec3& bf::ShaderArray::getColor() const {return color;}
 
 void bf::ShaderArray::setStereoscopicState(bf::StereoscopicState state) {
     changeShader(BasicShader);

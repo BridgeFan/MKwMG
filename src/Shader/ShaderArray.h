@@ -73,6 +73,7 @@ namespace bf {
         }
         bool changeShader(int n);
 		void setColor(const glm::vec3& vec) const;
+		const glm::vec3& getColor() const;
         void setColor(uint8_t r, uint8_t g, uint8_t b) const;
 		void setStereoscopicState(StereoscopicState state);
     };

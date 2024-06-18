@@ -35,7 +35,6 @@ bool areIndicesOK(uint8_t a, uint8_t b) {
 std::vector<std::array<uint8_t, 6> > areGregoryIntersecting(bf::BezierSurfaceSegment* a, bf::BezierSurfaceSegment* b, bf::BezierSurfaceSegment* c) {
 	if(!a || !b || !c) return {};
 	std::vector<std::array<uint8_t, 6> > ret;
-	constexpr std::array A=bf::GregoryPatch::tmpArray;
 	for(uint8_t i1: a->tmpIndices) {
 		for(uint8_t i2: a->tmpIndices) {
 			if(!areIndicesOK(i1,i2)) continue;
@@ -118,11 +117,11 @@ std::vector<FoundGregoryStruct> findGregories(const std::vector<bf::BezierSurfac
 		}
 	}
 	//finding Gregories
-	for(int i=0;i<segs.size();i++) {
+	for(unsigned i=0;i<segs.size();i++) {
 		const auto& s1=segs[i];
 		for(int j=i+1;j<segs.size();j++) {
 			const auto& s2=segs[j];
-			for(int k=j+1;j<segs.size();j++) {
+			for(int k=j+1;k<segs.size();k++) {
 				const auto& s3=segs[j];
 				auto res = areGregoryIntersecting(s1.second,s2.second,s3.second);
 				for(auto& r: res) {
@@ -141,7 +140,7 @@ std::vector<FoundGregoryStruct> findGregories(const std::vector<bf::BezierSurfac
 std::vector<FoundGregoryStruct> gregoryCandidates;
 
 namespace bf {
-	void GregoryPatch::onMergePoints(int p1, int p2) {}
+	void GregoryPatch::onMergePoints(int, int) {/*no points used*/}
 	GregoryPatch::GregoryPatch(ObjectArray &oArray) : ObjectArrayListener(oArray) {
 		std::vector<bf::BezierSurface0*> sfs;
 		std::vector<bf::GregoryPatch*> gregories;
@@ -182,7 +181,7 @@ namespace bf {
 			gregoryCandidates.clear();
 		}
 	}
-	void GregoryPatch::onRemoveObject(unsigned int index) {}
+	void GregoryPatch::onRemoveObject(unsigned int) {/*no reaction - dependent objects indestructible*/}
 	void GregoryPatch::onMoveObject(unsigned int index) {
 		if(!objectArray.isCorrect(index))
 			return;

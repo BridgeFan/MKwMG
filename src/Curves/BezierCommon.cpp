@@ -172,7 +172,7 @@ void bf::BezierCommon::ObjectGui() {
 	}
 	ImGui::Spacing();
 	ImGui::TableNextColumn();
-	if (!isRedirected && activeIndex < pointIndices.size() - 1 && activeIndex >= 0) {
+	if (!isRedirected && activeIndex < pointIndices.size() - 1 /*&& activeIndex >= 0*/) {
 		if (ImGui::Button(U8("↓"), bSize)) {
 			std::swap(pointIndices[activeIndex], pointIndices[activeIndex + 1]);
 			bezierOnSwap(activeIndex,activeIndex+1);

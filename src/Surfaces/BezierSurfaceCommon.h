@@ -17,7 +17,7 @@ namespace bf {
     class Cursor;
     using pArray = std::array<unsigned, 16>;
 
-    class BezierSurfaceCommon: public bf::Object, public bf::ObjectArrayListener {
+    class BezierSurfaceCommon: public bf::Solid, public bf::ObjectArrayListener {
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
     protected:
         static int _index;
@@ -25,6 +25,7 @@ namespace bf {
         const bf::Cursor& cursor;
         bool isPolygonVisible=false, isSurfaceVisible=true;
         bool isC2 = false;
+		std::tuple<int, int, double, double> setParameters(double u, double v) const;
     public:
         std::vector<std::vector<bf::BezierSurfaceSegment> > segments;
         virtual ~BezierSurfaceCommon() override;
@@ -49,10 +50,10 @@ namespace bf {
             std::vector<std::vector<pArray> >&& pointIndices);
 		void onMergePoints(int p1, int p2) override;
 		[[nodiscard]] bool isIntersectable() const override {return true;}
-		[[nodiscard]] glm::vec2 getParameterMin() const override {return {0.f,0.f};}
-		[[nodiscard]] glm::vec2 getParameterMax() const override {return {segs.x,segs.y};}
-		[[nodiscard]] virtual bool parameterWrappingU() const {return isWrappedX;}
-		[[nodiscard]] virtual bool parameterWrappingV() const {return isWrappedY;}
+		[[nodiscard]] bf::vec2d getParameterMin() const override {return {0.,0.};}
+		[[nodiscard]] bf::vec2d getParameterMax() const override {return {segs.x,segs.y};}
+		[[nodiscard]] virtual bool parameterWrappingU() const override {return isWrappedX;}
+		[[nodiscard]] virtual bool parameterWrappingV() const override {return isWrappedY;}
 	};
 }
 

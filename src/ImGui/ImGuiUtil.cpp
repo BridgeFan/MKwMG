@@ -150,7 +150,7 @@ mstring pathToMStr(const std::filesystem::path& path) {return path.wstring();}
 #else
 mstring toMStr(const std::string& str) {return str;}
 std::string toStr(const mstring& str) {return str;}
-mstring operator ""_m(const char *a, size_t n) {return {a};}
+mstring operator ""_m(const char *a, size_t) {return {a};}
 mstring pathToMStr(const std::filesystem::path& path) {return path.string();}
 #endif
 

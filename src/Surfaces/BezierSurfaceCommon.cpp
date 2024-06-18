@@ -18,10 +18,12 @@ void bf::BezierSurfaceCommon::recalculateSegments(unsigned int index) {
             s.onPointMove(objectArray, index);
         }
     }
+	updateDebug();
 }
 
 void bf::BezierSurfaceCommon::draw(const bf::ShaderArray& shaderArray) const {
     int index=0;
+	drawDebug(shaderArray);
     if(activeIndex>=0) {
         auto s = static_cast<int>(segments[0].size());
         segments[activeIndex/s][activeIndex%s].segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, true);
@@ -108,7 +110,7 @@ bf::ShaderType bf::BezierSurfaceCommon::getShaderType() const {
     return bf::ShaderType::MultipleShaders;
 }
 
-bf::BezierSurfaceCommon::BezierSurfaceCommon(bf::ObjectArray &objArray, const std::string &objName, const bf::Cursor& c): Object(objName),
+bf::BezierSurfaceCommon::BezierSurfaceCommon(bf::ObjectArray &objArray, const std::string &objName, const bf::Cursor& c): Solid(objName),
                                                                                                                 bf::ObjectArrayListener(objArray), cursor(c), samples(4,4) {
     objectArray.isForcedActive=true;
 }
@@ -211,6 +213,7 @@ void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> 
     }
     segmentNames.clear();
     segmentSamples.clear();
+	updateDebug();
 }
 void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
 	if(objectArray.isCorrect(p2) && objectArray[p2].indestructibilityIndex>0)
@@ -225,5 +228,17 @@ void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
 	}
 	onMoveObject(p1);
 }
-
-
+std::tuple<int, int, double, double> bf::BezierSurfaceCommon::setParameters(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf,1.f);
+	int iu=int(param.z);
+	int iv=int(param.w);
+	if(iu>=segments[0].size()) {
+		iu--;
+		param.x+=1.f;
+	}
+	if(iv>=segments.size()) {
+		iv--;
+		param.y+=1.f;
+	}
+	return {iu,iv,param.x, param.y};
+}

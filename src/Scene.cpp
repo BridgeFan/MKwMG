@@ -46,6 +46,13 @@ void bf::Scene::internalDraw(const ConfigState& configState) {
 }
 
 void bf::Scene::draw(const ConfigState& configState) {
+	//check if objects should be removed
+	for(int i=0;i<objectArray.size();i++) {
+		if(objectArray.isCorrect(i) && objectArray[i].shouldBeRemoved()) {
+			objectArray.remove(i);
+			i--;
+		}
+	}
     //box select update
     static glm::vec2 oldMousePos = {configState.mouseX, configState.mouseY};
     static bool wasBoxSelect = configState.isBoxSelect;

@@ -38,7 +38,9 @@ namespace bf {
 		bool checkChanged(const char *name, glm::vec2 &values, const char* format = nullptr);
 		bool checkChanged(const char *name, glm::vec<2,int> &values);
 		bool checkChanged(const char *name, std::string &value);
+#ifdef WIN32
         bool checkChanged(const char *name, mstring &value);
+#endif
 		bool checkSliderChanged(const char *name, int &value, int min, int max);
 		bool checkSliderChanged(const char *name, float &value, float min, float max);
 		bool checkSelectableChanged(const char *name, int index, bool &selectable);

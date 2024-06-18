@@ -82,11 +82,11 @@ void initPath(std::filesystem::path& path, std::vector<std::filesystem::path>& f
 		}
 	}
     //TODO - check if file can be opened
-    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+    std::sort(files.begin(), files.end(), [](const auto& a, const auto& bb) {
 		int ta = getTypeValue(a);
-		int tb = getTypeValue(b);
-		if(ta!=tb) return getTypeValue(a)<getTypeValue(b);
-		return a<b;
+		int tb = getTypeValue(bb);
+		if(ta!=tb) return getTypeValue(a)<getTypeValue(bb);
+		return a<bb;
     });
     while(!files.empty() && files.back().empty())
         files.pop_back();
@@ -130,8 +130,9 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
     setNextPanelAlignment({155, 220}, {configState.screenWidth, configState.screenHeight}, {1.f,0.f},{0,175});
     ImGui::Begin("Create object",nullptr, ImGuiWindowFlags_NoResize);
 	ImGui::BeginTable("split", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings);
-    if(activeSpecialPanel!=SpecialPanel::None)
-        ImGui::BeginDisabled();
+    if(activeSpecialPanel!=SpecialPanel::None) {
+		ImGui::BeginDisabled();
+	}
 	ImVec2 bSize = ImVec2(-FLT_MIN, 0.0f);
 	ImGui::TableNextColumn();
     if(ImGui::Button("Torus", bSize)) {
@@ -171,10 +172,11 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
 	}
 	ImGui::TableNextColumn();
 	if(ImGui::Button("Intersection", bSize)) {
-		scene.objectArray.add<bf::IntersectionObject>();
+		scene.objectArray.addRef<bf::IntersectionObject>();
 	}
-    if(activeSpecialPanel!=SpecialPanel::None)
-        ImGui::EndDisabled();
+    if(activeSpecialPanel!=SpecialPanel::None) {
+		ImGui::EndDisabled();
+	}
 	ImGui::EndTable();
     ImGui::End();
 }
@@ -192,6 +194,8 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
 	ImGui::SameLine();
 	ImGui::Checkbox("Hide points", &configState.arePointsHidden);
 	ImGui::Checkbox("Stereoscopic", &configState.stereoscopic);
+	ImGui::SameLine();
+	ImGui::Checkbox("Debug", &configState.isDebug);
     if(configState.stereoscopic) {
         ImGui::SliderFloat("Intraocular distance", &configState.IOD, .0f, 1.f);
         bf::imgui::checkSliderChanged("Convergenece", configState.convergence, configState.cameraNear, configState.cameraFar);

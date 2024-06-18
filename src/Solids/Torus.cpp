@@ -6,6 +6,7 @@
 #include "ImGui/ImGuiUtil.h"
 #include <numbers>
 #include "ConfigState.h"
+#include "Shader/ShaderArray.h"
 
 int bf::Torus::index = 1;
 constexpr float PI = std::numbers::pi_v<float>;
@@ -29,6 +30,7 @@ void bf::Torus::updateTorus() {
 			indices.push_back(((i+1)%smallFragments)*bigFragments+j);
 		}
 	}
+	updateDebug();
 	setBuffers();
 }
 
@@ -95,30 +97,37 @@ bf::Torus &bf::Torus::operator=(bf::Torus &&solid) noexcept {
     swapTori(*this, solid);
     return *this;
 }
-glm::vec3 bf::Torus::parameterFunction(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf);
-	float u = param.x;
-	float v = param.y;
-	glm::vec4 vector = {(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
+bf::vec3d bf::Torus::parameterFunction(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
 			(bigRadius+smallRadius*std::cos(u))*std::sin(v),
-			smallRadius*std::sin(u), 1.f};
+			smallRadius*std::sin(u), 0.f};
 	return getModelMatrix()*vector;
 }
-glm::vec3 bf::Torus::parameterGradientU(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf);
-	float u = param.x;
-	float v = param.y;
-	glm::vec4 vector = {(-smallRadius*std::sin(u)) * std::cos(v),
+bf::vec3d bf::Torus::parameterGradientU(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {(-smallRadius*std::sin(u)) * std::cos(v),
 						(-smallRadius*std::sin(u))*std::sin(v),
 						smallRadius*std::cos(u), 0.f};
 	return getModelMatrix()*vector;
 }
-glm::vec3 bf::Torus::parameterGradientV(float uf, float vf) const {
-	glm::vec4 param = clampParam(uf,vf);
-	float u = param.x;
-	float v = param.y;
-	glm::vec4 vector = {-(bigRadius + smallRadius * std::cos(u)) * std::sin(v),
+bf::vec3d bf::Torus::parameterGradientV(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {-(bigRadius + smallRadius * std::cos(u)) * std::sin(v),
 						(bigRadius+smallRadius*std::cos(u))*std::cos(v),
 						0.f, 0.f};
 	return getModelMatrix()*vector;
+}
+void bf::Torus::draw(const bf::ShaderArray &shaderArray) const {
+	drawDebug(shaderArray, true);
+	if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+		return;
+	}
+	anyDraw(shaderArray);
 }

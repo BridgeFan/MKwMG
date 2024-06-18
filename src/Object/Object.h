@@ -8,10 +8,14 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <iosfwd>
 #include "Transform.h"
 
 namespace bf {
+	using vec2d = glm::vec<2, double, glm::defaultp>;
+	using vec3d = glm::vec<3, double, glm::defaultp>;
+	using vec4d = glm::vec<4, double, glm::defaultp>;
     namespace event {
         enum class Key : int;
         enum class MouseButton : int;
@@ -68,14 +72,16 @@ namespace bf {
 		virtual void onMouseMove(const glm::vec2& oldPos, const glm::vec2& newPos);
         [[nodiscard]] virtual bf::ShaderType getShaderType() const = 0;
 		[[nodiscard]] virtual bool isIntersectable() const {return false;}
-		[[nodiscard]] virtual glm::vec2 getParameterMin() const {return {.0f,.0f};}
-		[[nodiscard]] virtual glm::vec2 getParameterMax() const {return {1.f,1.f};}
+		[[nodiscard]] virtual vec2d getParameterMin() const {return {.0,.0};}
+		[[nodiscard]] virtual vec2d getParameterMax() const {return {1.,1.};}
 		[[nodiscard]] virtual bool parameterWrappingU() const {return false;}
 		[[nodiscard]] virtual bool parameterWrappingV() const {return false;}
-		[[nodiscard]] virtual glm::vec3 parameterFunction(float u, float v) const;
-		[[nodiscard]] virtual glm::vec3 parameterGradientU(float u, float v) const;
-		[[nodiscard]] virtual glm::vec3 parameterGradientV(float u, float v) const;
-		[[nodiscard]] glm::vec4 clampParam(float u, float v, float modulo=-1.f) const; //x,y - new parameters, z,w - modulo
+		[[nodiscard]] std::array<bool,2> parameterWrapping() const;
+		[[nodiscard]] virtual vec3d parameterFunction(double u, double v) const;
+		[[nodiscard]] virtual vec3d parameterGradientU(double u, double v) const;
+		[[nodiscard]] virtual vec3d parameterGradientV(double u, double v) const;
+		[[nodiscard]] vec4d clampParam(double u, double v, double modulo=-1.) const; //x,y - new parameters, z,w - modulo
+		[[nodiscard]] virtual bool shouldBeRemoved() const {return false;}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

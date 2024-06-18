@@ -68,8 +68,8 @@ void bf::Object::initData(const bf::ConfigState &cs, const bf::Scene &s) {
     configState = &cs;
     scene = &s;
 }
-glm::vec4 bf::Object::clampParam(float u, float v, float modulo) const {
-	glm::vec4 ret;
+bf::vec4d bf::Object::clampParam(double u, double v, double modulo) const {
+	bf::vec4d ret;
 	if (parameterWrappingU()) {
 		ret.x = std::fmod(u, getParameterMax().x);
 		if(ret.x<0) ret.x += getParameterMax().x;
@@ -82,7 +82,7 @@ glm::vec4 bf::Object::clampParam(float u, float v, float modulo) const {
 	}
 	else
 		ret.y = std::max(std::min(v, getParameterMax().y), getParameterMin().y);
-	if(modulo>.0f) {
+	if(modulo>.0) {
 		ret.z = std::floor(ret.x / modulo);
 		ret.w = std::floor(ret.y / modulo);
 		ret.x = std::fmod(ret.x, modulo);
@@ -90,6 +90,9 @@ glm::vec4 bf::Object::clampParam(float u, float v, float modulo) const {
 	}
 	return ret;
 }
-glm::vec3 bf::Object::parameterFunction(float, float) const {return {0.f,0.f,0.f};}
-glm::vec3 bf::Object::parameterGradientU(float, float) const {return {1.f,0.f,0.f};}
-glm::vec3 bf::Object::parameterGradientV(float, float) const {return {0.f,1.f,0.f};}
+bf::vec3d bf::Object::parameterFunction(double, double) const {return {0.,0.,0.};}
+bf::vec3d bf::Object::parameterGradientU(double, double) const {return {0.,0.,0.};}
+bf::vec3d bf::Object::parameterGradientV(double, double) const {return {0.,0.,0.};}
+std::array<bool, 2> bf::Object::parameterWrapping() const {
+	return {parameterWrappingU(), parameterWrappingV()};
+}
