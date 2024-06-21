@@ -47,7 +47,7 @@ void bf::Scene::internalDraw(const ConfigState& configState) {
 
 void bf::Scene::draw(const ConfigState& configState) {
 	//check if objects should be removed
-	for(int i=0;i<objectArray.size();i++) {
+	for(unsigned i=0u;i<objectArray.size();i++) {
 		if(objectArray.isCorrect(i) && objectArray[i].shouldBeRemoved()) {
 			objectArray.remove(i);
 			i--;
@@ -143,7 +143,6 @@ bf::Scene::Scene(const ConfigState& configState) :
     shaderArray.setGrayPercentage(configState.grayPercentage);
     bf::Point::initObjArrayRef(objectArray);
     bf::Object::initData(configState, *this);
-	bf::IntersectionObject::initObjectArray(objectArray);
     //add framebuffers
     glGenFramebuffers(2, &FBO);
     glGenTextures(2, &texture);

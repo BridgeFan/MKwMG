@@ -232,11 +232,11 @@ std::tuple<int, int, double, double> bf::BezierSurfaceCommon::setParameters(doub
 	bf::vec4d param = clampParam(uf,vf,1.f);
 	int iu=int(param.z);
 	int iv=int(param.w);
-	if(iu>=segments[0].size()) {
+	if(iu>=static_cast<int>(segments[0].size())) {
 		iu--;
 		param.x+=1.f;
 	}
-	if(iv>=segments.size()) {
+	if(iv>=static_cast<int>(segments.size())) {
 		iv--;
 		param.y+=1.f;
 	}

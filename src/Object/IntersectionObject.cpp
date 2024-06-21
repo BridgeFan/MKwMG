@@ -18,46 +18,40 @@
 
 std::random_device rd;
 
-bf::ObjectArray* bf::IntersectionObject::objectArray = nullptr;
 std::pair<bf::Object*, int> bf::IntersectionObject::convertToCurve() {
 	if(!obj1) return {nullptr, 0};
-	unsigned beginIndex = objectArray->size();
-	objectArray->clearSelection();
+	unsigned beginIndex = objectArray.size();
+	objectArray.clearSelection();
 	//generate points
 	for(const auto& p: intersectionPoints) {
 		auto pos = obj1->parameterFunction(p.x,p.y);
 		if(obj2) {
 			pos = (pos + obj2->parameterFunction(p.z,p.w)) * 0.5;
 		}
-		objectArray->add<bf::Point>(pos);
+		objectArray.add<bf::Point>(pos);
 	}
-	auto curve = new bf::BezierCurveInter(*objectArray);
-	for(unsigned i=beginIndex;i<objectArray->size();i++) {
+	auto curve = new bf::BezierCurveInter(objectArray);
+	for(unsigned i=beginIndex;i<objectArray.size();i++) {
 		curve->addPoint(i);
 	}
-	if(isLooped && beginIndex<objectArray->size()) {
-		curve->addPoint(beginIndex);
-	}
+	curve->addPoint(beginIndex);
 	for(unsigned i=0;i<beginIndex;i++) {
-		if(objectArray->getPtr(i)==this)
+		if(objectArray.getPtr(i)==this)
 			return {curve, i};
 	}
 	return {curve, 0};
 }
 
-bf::IntersectionObject::IntersectionObject(bf::ObjectArray& oArray) {
+bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array) : ObjectArrayListener(array) {
 	obj1=obj2=nullptr;
-	if(!objectArray) {
-		initObjectArray(oArray);
-	}
-	for(unsigned i=0;i<objectArray->size();i++) {
-		if(objectArray->isActive(i) && (*objectArray)[i].isIntersectable()) {
+	for(unsigned i=0;i<objectArray.size();i++) {
+		if(objectArray.isActive(i) && objectArray[i].isIntersectable()) {
 			if(!obj1) {
-				obj1 = &(*objectArray)[i];
+				obj1 = &objectArray[i];
 				obj1->indestructibilityIndex++;
 			}
 			else if(!obj2) {
-				obj2 = &(*objectArray)[i];
+				obj2 = &objectArray[i];
 				obj2->indestructibilityIndex++;
 				break;
 			}
@@ -75,7 +69,7 @@ void bf::IntersectionObject::ObjectGui() {
 			ImGui::Text("Selected no intersectable objects");
 			if (ImGui::Button("OK")) {
 				isInitPhase = false;
-				objectArray->isForcedActive = false;
+				objectArray.isForcedActive = false;
 			}
 		}
 		else {
@@ -84,9 +78,9 @@ void bf::IntersectionObject::ObjectGui() {
 			ImGui::Checkbox("Use cursor", &isCursor);
 			bf::imgui::checkChanged("Precision", precision, .001f, 10.f, .001f, .05f);
 			if (ImGui::Button("Confirm")) {
-				findIntersection(isCursor);
+				findIntersection(isCursor, precision);
 				isInitPhase = false;
-				objectArray->isForcedActive = false;
+				objectArray.isForcedActive = false;
 			}
 		}
 	}
@@ -94,8 +88,8 @@ void bf::IntersectionObject::ObjectGui() {
 		if (ImGui::Button("Convert to curve")) {
 			auto curve = convertToCurve();
 			if(!curve.first) return;
-			auto thisObject = std::move(objectArray->objects[curve.second]).first;
-			objectArray->objects[curve.second].first.reset(curve.first);
+			auto thisObject = std::move(objectArray.objects[curve.second]).first;
+			objectArray.objects[curve.second].first.reset(curve.first);
 		}
 	}
 }
@@ -113,8 +107,7 @@ void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 	glBindVertexArray(VAO);
 	shaderArray.getActiveShader().setMat4("model", glm::mat4(1.f));
 	shaderArray.getActiveShader().setFloat("pointSize", 4.f*configState->pointRadius);
-	glDrawElements(GL_POINTS, indices.size(), GL_UNSIGNED_INT,   // type
-				   reinterpret_cast<void*>(0));         // element array buffer offset
+	glDrawArrays(GL_POINTS, 0, GL_UNSIGNED_INT);
 	glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
 				   reinterpret_cast<void*>(0));         // element array buffer offset
 	shaderArray.setColor(color);
@@ -168,13 +161,13 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos) {
 		x=xn;
 		//finding antigradient
 		df=bf::vec4d(.0);
+		auto f = obj.parameterFunction(x[0],x[1]);
+		auto dfu = obj.parameterGradientU(x[0],x[1]);
+		auto dfv = obj.parameterGradientV(x[0],x[1]);
 		for(int i=0;i<3;i++) {//x,y,z
-			auto f = obj.parameterFunction(x[0],x[1])[i];
 			double g = pos[i];
-			auto dfu = obj.parameterGradientU(x[0],x[1])[i];
-			auto dfv = obj.parameterGradientV(x[0],x[1])[i];
-			df[0]+=2.0*(f-g)*dfu;
-			df[1]+=2.0*(f-g)*dfv;
+			df[0]+=2.0*(f[i]-g)*dfu[i];
+			df[1]+=2.0*(f[i]-g)*dfv[i];
 		}
 		//finding step
 		xn=x-df*a;
@@ -186,14 +179,15 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos) {
 		}
 		N++;
 	}
+	x=xn;
 	std::cout << N << " " << x.x << " " << x.y << "\n";
 	std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
 	return x;
 }
 
-void bf::IntersectionObject::findIntersection(bool isCursor) {
-	vertices.clear();
-	indices.clear();
+constexpr double movingAdditionWage = 0.1;
+
+void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	auto* o = obj2 ? obj2 : obj1;
 	auto pos2 = transform.position;
 	//no point chosen
@@ -207,10 +201,6 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 		auto t1 = findBeginningPoint(*obj1, pos2);
 		auto t2 = findBeginningPoint(*o, pos2);
 		x0={t1.x,t1.y,t2.x,t2.y};
-		vertices.emplace_back(obj1->parameterFunction(x0[0],x0[1]));
-		vertices.emplace_back(o->parameterFunction(x0[2],x0[3]));
-		indices.emplace_back(vertices.size()-2);
-		indices.emplace_back(vertices.size()-1);
 		std::cout << bf::IntersectionObject::distance(*obj1, *o, x0) << "\n";
 	}
 	else {
@@ -229,34 +219,31 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 			}
 		}
 	}
-	vertices.emplace_back(obj1->parameterFunction(x0[0],x0[1]));
-	vertices.emplace_back(o->parameterFunction(x0[2],x0[3]));
-	indices.emplace_back(vertices.size()-2);
-	indices.emplace_back(vertices.size()-1);
 	//2 - minimizing distance
 	clampParams(x0, *obj1, *o);
 	bf::vec4d x=-x0;
 	bf::vec4d xn=x0;
-	std::cout << a << ": " << xn.x << " " << xn.y << " " << xn.z << " " << xn.w << "\n";
+	std::cout << a << ": " << xn.x << " " << xn.y << " " << xn.z << " " << xn.w << "\nLooking for first point:\n";
 	bf::vec4d df{100000.};
 	N=0;
 	a=0.1;
-	while(N<10000 && a>eps && distance(*obj1,*o,xn)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>epsDist) {
+	if(o!=obj1)
+	while(N<10000 && a>eps && distance(*obj1,*o,xn)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>eps*eps) {
 		//TODO - proper step
 		x=xn;
 		//finding antigradient
 		df=glm::vec4(.0);
+		auto f = obj1->parameterFunction(x[0],x[1]);
+		auto g = o->parameterFunction(x[2],x[3]);
+		auto dfu = obj1->parameterGradientU(x[0],x[1]);
+		auto dfv = obj1->parameterGradientV(x[0],x[1]);
+		auto dgw = o->parameterGradientU(x[2],x[3]);
+		auto dgt = o->parameterGradientV(x[2],x[3]);
 		for(int i=0;i<3;i++) {//x,y,z
-			auto f = obj1->parameterFunction(x[0],x[1])[i];
-			auto g = o->parameterFunction(x[2],x[3])[i];
-			auto dfu = obj1->parameterGradientU(x[0],x[1])[i];
-			auto dfv = obj1->parameterGradientV(x[0],x[1])[i];
-			auto dgw = o->parameterGradientU(x[2],x[3])[i];
-			auto dgt = o->parameterGradientV(x[2],x[3])[i];
-			df[0]+=2.*(f-g)*dfu;
-			df[1]+=2.*(f-g)*dfv;
-			df[2]+=-2.*(f-g)*dgw;
-			df[3]+=-2.*(f-g)*dgt;
+			df[0]+=2.*(f[i]-g[i])*dfu[i];
+			df[1]+=2.*(f[i]-g[i])*dfv[i];
+			df[2]+=-2.*(f[i]-g[i])*dgw[i];
+			df[3]+=-2.*(f[i]-g[i])*dgt[i];
 		}
 		//finding step
 		xn=x-df*a;
@@ -266,28 +253,105 @@ void bf::IntersectionObject::findIntersection(bool isCursor) {
 			xn=x-df*a;
 			clampParams(xn, *obj1, *o);
 		}
-		vertices.emplace_back(obj1->parameterFunction(x[0],x[1]));
-		vertices.emplace_back(o->parameterFunction(x[2],x[3]));
-		indices.emplace_back(vertices.size()-2);
-		indices.emplace_back(vertices.size()-1);
 		N++;
 	}
-	vertices.emplace_back(obj1->parameterFunction(x[0],x[1]));
-	vertices.emplace_back(o->parameterFunction(x[2],x[3]));
-	indices.emplace_back(vertices.size()-2);
-	indices.emplace_back(vertices.size()-1);
+	std::cout << N << " " << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
+	x=xn;
 	std::cout << N << " " << distance(*obj1, *o, x) << "\n";
-	std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
-			if(distance(*obj1,*o,x)>epsBig) {
-		//no intersection
+	if(distance(*obj1,*o,x)>epsBig) {
+		std::cout << "No intersection found\n";
 		toRemove=true;
 		return;
 	}
+	std::cout << "March\n";
 	intersectionPoints.emplace_back(x);
 	setBuffers();
-	//TODO - go through curves
+	//Go through
+	//TODO - loop
+	constexpr double eps2=1e-5;
+	constexpr double eps2dist=1e-8;
+	int M;
+	bf::vec4d oldX;
+	for(M=0;M<1000;M++) {
+		//simple gradient is enough here
+		auto y=x-intersectionPoints[0];
+		if(M>=3 && glm::dot(y,y)<precision*precision) {
+			break;
+		}
+		N = 0;
+		a=precision*5.0;
+		df=bf::vec4d(1.0);
+		auto P0 = (obj1->parameterFunction(xn[0], xn[1]) + o->parameterFunction(xn[2], xn[3])) * 0.5;
+		auto n1 = glm::cross(obj1->parameterGradientU(xn[0], xn[1]), obj1->parameterGradientV(xn[0], xn[1]));
+		auto n2 = glm::cross(o->parameterGradientU(xn[2], xn[3]), o->parameterGradientV(xn[2], xn[3]));
+		auto t = glm::normalize(glm::cross(n1, n2));
+		auto P = obj1->parameterFunction(xn[0], xn[1]);
+		auto Q = o->parameterFunction(xn[2], xn[3]);
+		bf::vec3d Pn;
+		if(M==0)
+			xn = x + bf::vec4d(std::sqrt(3.0) * precision);
+		else
+			xn = lerp(oldX,xn,2.0);
+		oldX=x;
+		while (N < (M==0 ? 10000 : 1000) && a > eps2 && movDist(P, Q, P0, t, precision) > eps2dist && glm::dot(df, df) > epsDist /*&& glm::dot(xn - x, xn - x) > epsDist*/) {
+			x = xn;
+			//finding antigradient
+			P = obj1->parameterFunction(x[0], x[1]);
+			Q = o->parameterFunction(x[2], x[3]);
+			auto dPu = obj1->parameterGradientU(x[0], x[1]);
+			auto dPv = obj1->parameterGradientV(x[0], x[1]);
+			auto dQw = o->parameterGradientU(x[2], x[3]);
+			auto dQt = o->parameterGradientV(x[2], x[3]);
+			auto dotek = glm::dot(P - P0, t) - precision;
+			df = bf::vec4d(0.0);
+			for (int i = 0; i < 3; i++) {//x,y,z
+				df[0] += 2.0 * (P[i] - Q[i]) * dPu[i] + 2 * dotek * glm::dot(dPu, t)*movingAdditionWage;
+				df[1] += 2.0 * (P[i] - Q[i]) * dPv[i] + 2 * dotek * glm::dot(dPv, t)*movingAdditionWage;
+				df[2] += -2. * (P[i] - Q[i]) * dQw[i];
+				df[3] += -2. * (P[i] - Q[i]) * dQt[i];
+			}
+			//finding step
+			xn = x - df * a;
+			clampParams(xn, *obj1, *o);
+			Pn = obj1->parameterFunction(xn[0], xn[1]);
+			auto Qn = o->parameterFunction(xn[2], xn[3]);
+			while (movDist(Pn, Qn, P0, t, precision) > movDist(P, Q, P0, t, precision) && a > eps2) {//too big step
+				a *= .9;
+				xn = x - df * a;
+				clampParams(xn, *obj1, *o);
+				Pn = obj1->parameterFunction(xn[0], xn[1]);
+				Qn = o->parameterFunction(xn[2], xn[3]);
+			}
+			//finding step - steepest descent
+			/*double l=0.0,r=a,s;
+			for(double dif=a;dif>eps2;dif*=0.5) {
+				s=(l+r)*0.5;
+				xn = x - df * a;
+				clampParams(xn, *obj1, *o);
+				Pn = obj1->parameterFunction(xn[0], xn[1]);
+				auto Qn = o->parameterFunction(xn[2], xn[3]);
 
+			}*/
+			N++;
+		}
+		P = obj1->parameterFunction(xn[0], xn[1]);
+		Q = o->parameterFunction(xn[2], xn[3]);
+		std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
+		x=xn;
+		intersectionPoints.emplace_back(xn);
+	}
+	std::cout << M << "\n";
+	recalculate();
 }
+
+double bf::IntersectionObject::movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d &P0, const bf::vec3d &t, double d) {
+	double ret=0.0;
+	for(int i=0;i<3;i++) {
+		ret+=fastPow(P[i]-Q[i],2)+fastPow(glm::dot(P-P0,t)-d,2)*movingAdditionWage;
+	}
+	return ret;
+}
+
 double bf::IntersectionObject::distance(const bf::Object &o1, const bf::Object &o2, const bf::vec4d& t) {
 	double ret=.0;
 	for(int i=0;i<3;i++) {
@@ -311,4 +375,38 @@ bool bf::IntersectionObject::isMovable() const {
 bool bf::IntersectionObject::isIntersectable() const {
 	return false;
 }
-void bf::IntersectionObject::onMergePoints(int p1, int p2) {}
+void bf::IntersectionObject::onMergePoints(int, int) {}
+void bf::IntersectionObject::onRemoveObject(unsigned int) {//ignore
+}
+void bf::IntersectionObject::onMoveObject(unsigned int index) {
+	if(objectArray.getPtr(index)==obj1 || objectArray.getPtr(index)==obj2) {
+		recalculate();
+	}
+}
+void bf::IntersectionObject::recalculate() {
+	vertices.clear();
+	indices.clear();
+	if(intersectionPoints.empty()) return;
+	vertices.reserve(2*intersectionPoints.size());
+	auto* o=obj2 ? obj2 : obj1;
+	for(unsigned i=0;i<intersectionPoints.size();i++) {
+		const auto& t=intersectionPoints[i];
+		auto p=obj1->parameterFunction(t[0],t[1]);
+		vertices.emplace_back(p.x,p.y,p.z);
+		indices.emplace_back(i);
+		if(i>0)
+			indices.emplace_back(i);
+	}
+	indices.emplace_back(0);
+	unsigned ind=vertices.size();
+	for(unsigned i=0;i<intersectionPoints.size();i++) {
+		const auto& t=intersectionPoints[i];
+		auto p=o->parameterFunction(t[2],t[3]);
+		vertices.emplace_back(p.x,p.y,p.z);
+		indices.emplace_back(i+ind);
+		if(i>0)
+			indices.emplace_back(i+ind);
+	}
+	indices.emplace_back(ind);
+	VAO==UINT_MAX ? setBuffers() : glUpdateVertices();
+}

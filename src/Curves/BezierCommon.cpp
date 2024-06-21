@@ -37,9 +37,9 @@ bool bf::BezierCommon::addPoint(unsigned index) {
 	if(!objectArray.isCorrect(index) || typeid(objectArray[index])!=typeid(bf::Point)) {
 		return false;
 	}
-	else if(std::find(pointIndices.begin(), pointIndices.end(),index)!=pointIndices.end()) {
+	/*else if(std::find(pointIndices.begin(), pointIndices.end(),index)!=pointIndices.end()) {
 		return false;
-	}
+	}*/
 	pointIndices.push_back(index);
 	bezierOnAdd();
 	recalculate();

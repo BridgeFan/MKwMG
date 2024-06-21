@@ -19,12 +19,28 @@ namespace bf {
 	template<typename T>
 	concept arithmetic = std::is_arithmetic<T>::value;
 	template<typename T>
-	concept linear = requires(const T& t1, const T& t2, float u) {
+	concept linearF = requires(const T& t1, const T& t2, float u) {
 		{t1+t2} -> std::convertible_to<T>;
 		{t1-t2} -> std::convertible_to<T>;
 		{t1*u} -> std::convertible_to<T>;
 		{u*t1} -> std::convertible_to<T>;
 	};
+	template<typename T>
+	concept linearD = requires(const T& t1, const T& t2, double u) {
+		{t1+t2} -> std::convertible_to<T>;
+		{t1-t2} -> std::convertible_to<T>;
+		{t1*u} -> std::convertible_to<T>;
+		{u*t1} -> std::convertible_to<T>;
+	};
+	template<typename T>
+	concept linearLD = requires(const T& t1, const T& t2, long double u) {
+		{t1+t2} -> std::convertible_to<T>;
+		{t1-t2} -> std::convertible_to<T>;
+		{t1*u} -> std::convertible_to<T>;
+		{u*t1} -> std::convertible_to<T>;
+	};
+	template<typename T>
+	concept linear = linearF<T> || linearD<T> || linearLD<T>;
 }
 
 std::string readWholeFile(const std::string& path);

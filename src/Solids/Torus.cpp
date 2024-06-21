@@ -103,7 +103,7 @@ bf::vec3d bf::Torus::parameterFunction(double uf, double vf) const {
 	double v = param.y;
 	bf::vec4d vector = {(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
 			(bigRadius+smallRadius*std::cos(u))*std::sin(v),
-			smallRadius*std::sin(u), 0.f};
+			smallRadius*std::sin(u), 1.f};
 	return getModelMatrix()*vector;
 }
 bf::vec3d bf::Torus::parameterGradientU(double uf, double vf) const {
@@ -125,7 +125,7 @@ bf::vec3d bf::Torus::parameterGradientV(double uf, double vf) const {
 	return getModelMatrix()*vector;
 }
 void bf::Torus::draw(const bf::ShaderArray &shaderArray) const {
-	drawDebug(shaderArray, true);
+	drawDebug(shaderArray, false);
 	if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
 		return;
 	}

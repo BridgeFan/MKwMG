@@ -119,9 +119,9 @@ std::vector<FoundGregoryStruct> findGregories(const std::vector<bf::BezierSurfac
 	//finding Gregories
 	for(unsigned i=0;i<segs.size();i++) {
 		const auto& s1=segs[i];
-		for(int j=i+1;j<segs.size();j++) {
+		for(unsigned j=i+1;j<segs.size();j++) {
 			const auto& s2=segs[j];
-			for(int k=j+1;k<segs.size();k++) {
+			for(unsigned k=j+1;k<segs.size();k++) {
 				const auto& s3=segs[j];
 				auto res = areGregoryIntersecting(s1.second,s2.second,s3.second);
 				for(auto& r: res) {

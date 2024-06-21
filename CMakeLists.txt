@@ -19,10 +19,10 @@ include_directories(MKwMG ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${GLFW_INCL
 
 #libraries in repository
 if(NOT WIN32)
-    include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/imgui")
-    include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/imgui/backends")
-    include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/imgui/misc/cpp")
-    link_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib/bin")
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR} "lib/imgui")
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR} "lib/imgui/backends")
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR} "lib/imgui/misc/cpp")
+    link_directories(SYSTEM ${PROJECT_SOURCE_DIR} "lib/bin")
 endif()
 include_directories(MKwMG PRIVATE ${VALIJSON_INCLUDE_DIRS})
 include_directories(MKwMG ${PROJECT_SOURCE_DIR} "lib")
