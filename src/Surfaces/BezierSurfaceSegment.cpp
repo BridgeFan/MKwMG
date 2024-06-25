@@ -39,7 +39,7 @@ void bf::BezierSurfaceSegment::initGL(const bf::ObjectArray &objectArray) {
 }
 
 
-void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen) const {
+void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen, unsigned ax, unsigned ay) const {
     if(indices.empty() || vertices.empty())
         return;
     if(shaderArray.getActiveIndex() == BasicShader && isLineDrawn) {
@@ -56,6 +56,7 @@ void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, b
     }
     else if(shaderArray.getActiveIndex() == (isC2 ? BezierSurfaceShader2 : BezierSurfaceShader0) &&
         isSurfaceDrawn) {
+		shaderArray.setUniform("add", glm::vec2(ax, ay));
         static bool wasChosen=false;
         if(isChosen) {
             shaderArray.setColor(128, 128, 255);

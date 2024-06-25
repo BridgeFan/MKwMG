@@ -116,7 +116,7 @@ bf::vec3d bf::BezierSurface0::parameterFunction(double uf, double vf) const {
 	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*j+i]].getPosition();
 			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
 			p += pos2*bu[i]*bv[j];
 		}
@@ -131,7 +131,7 @@ bf::vec3d bf::BezierSurface0::parameterGradientU(double uf, double vf) const {
 	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*j+i]].getPosition();
 			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
 			p += pos2*bu[i]*bv[j];
 		}
@@ -146,7 +146,7 @@ bf::vec3d bf::BezierSurface0::parameterGradientV(double uf, double vf) const {
 	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
-			auto pos=objectArray[segments[iv][iu].pointIndices[4*i+j]].getPosition();
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*j+i]].getPosition();
 			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
 			p += pos2*bu[i]*bv[j];
 		}

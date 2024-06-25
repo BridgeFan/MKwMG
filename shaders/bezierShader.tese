@@ -24,6 +24,7 @@ vec3 deCasteljau(float t, vec3 pos[4], int N) {
 
 layout( isolines ) in;
 uniform mat4 MVP; // projection * view * model
+out vec2 t;
 void main() {
     // The tessellation u coordinate
     float u = gl_TessCoord.x;
@@ -33,4 +34,6 @@ void main() {
         points[i] = gl_in[i].gl_Position.xyz;
     vec3 p = deCasteljau(lerp(u),points,BezierNum);
     gl_Position = projection * view * vec4(p, 1.0);
+    t.x=u;
+    t.y=0.0;
 }

@@ -160,6 +160,7 @@ bool bf::ObjectArray::setActive(std::size_t index) {
 	if(countActive==1)
 		activeIndex=index;
 	objects[index].second=true;
+	objects[index].first->onSetActive();
     if(!isBoxSelectActive)
         activeBefore[index]=true;
     updateCentre();
@@ -179,6 +180,7 @@ bool bf::ObjectArray::setUnactive(std::size_t index) {
         activeIndex = std::find_if(objects.begin(), objects.end(), isActiveLambda) - objects.begin();
     }
 	objects[index].second=false;
+	objects[index].first->onSetInactive();
     if(!isBoxSelectActive)
         activeBefore[index]=false;
     updateCentre();

@@ -3,17 +3,24 @@
 //
 
 #include "Torus.h"
-#include "ImGui/ImGuiUtil.h"
-#include <numbers>
 #include "ConfigState.h"
+#include "ImGui/ImGuiUtil.h"
 #include "Shader/ShaderArray.h"
+#include <GL/glew.h>
+#include <numbers>
 
 int bf::Torus::index = 1;
 constexpr float PI = std::numbers::pi_v<float>;
 
 void bf::Torus::updateTorus() {
-	//generate vertices and indices
 	vertices.clear();
+	indices.clear();
+	if(vertices.empty()) {
+		vertices.emplace_back();
+	}
+	indices.emplace_back(0u);
+	//generate vertices and indices
+	/*vertices.clear();
 	indices.clear();
 	for(unsigned i=0u;i<static_cast<unsigned>(smallFragments);i++) {
 		float alpha = PI * 2.f * i / smallFragments;
@@ -29,7 +36,7 @@ void bf::Torus::updateTorus() {
 			indices.push_back(i*bigFragments+j);
 			indices.push_back(((i+1)%smallFragments)*bigFragments+j);
 		}
-	}
+	}*/
 	updateDebug();
 	setBuffers();
 }
@@ -126,8 +133,31 @@ bf::vec3d bf::Torus::parameterGradientV(double uf, double vf) const {
 }
 void bf::Torus::draw(const bf::ShaderArray &shaderArray) const {
 	drawDebug(shaderArray, false);
-	if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+	if(shaderArray.getActiveIndex()!=bf::ShaderType::TorusShader) {
 		return;
 	}
-	anyDraw(shaderArray);
+	if(indices.empty() || vertices.empty())
+		return;
+	//function assumes set projection and view matrices
+	glBindVertexArray(VAO);
+	shaderArray.setUniform("textureMode", textureMode);
+	if(textureMode>0 && textureID<1000000) {
+		glBindTexture(GL_TEXTURE_2D, textureID);
+	}
+	const auto& shader = shaderArray.getActiveShader();
+	shader.setMat4("model", getModelMatrix(/*relativeTo*/));
+	shader.setInt("SegmentsX", smallFragments);
+	shader.setInt("SegmentsY", bigFragments);
+	shader.setFloat("R", bigRadius);
+	shader.setFloat("r", smallRadius);
+
+	/*glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
+				   reinterpret_cast<void*>(0)           // element array buffer offset
+	);*/
+	glDrawElements(GL_PATCHES, indices.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
+	shaderArray.setUniform("textureMode", 0);
+	/*if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader) {
+		return;
+	}
+	anyDraw(shaderArray);*/
 }

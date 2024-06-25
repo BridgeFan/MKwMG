@@ -17,7 +17,7 @@ namespace bf {
 		static double distance(const bf::Object& o1, const bf::Object& o2, const bf::vec4d& t);
 		static double movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d& P0, const bf::vec3d& t, double d);
 		bool toRemove=false;
-		void recalculate();
+		void recalculate(bool isTextureToSet=false);
 	public:
 		std::vector<bf::vec4d> intersectionPoints;
 		bool isLooped=false;

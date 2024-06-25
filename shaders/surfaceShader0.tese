@@ -23,6 +23,9 @@ void basisFunctions(out float[4] b, float t) {
 
 layout( quads ) in;
 uniform mat4 MVP; // projection * view * model
+uniform vec2 add;
+uniform vec2 maxek;
+out vec2 t;
 void main() {
 	float u = gl_TessCoord.x;
 	float v = gl_TessCoord.y;
@@ -38,5 +41,7 @@ void main() {
 			p += gl_in[4*i+j].gl_Position.xyz*bu[i]*bv[j];
 		}
 	}
+	t.x=(add.x+u)/maxek.x;
+	t.y=(add.y+v)/maxek.y;
 	gl_Position = projection * view * vec4(p, 1.0);
 }

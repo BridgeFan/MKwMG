@@ -257,8 +257,8 @@ void bf::imgui::listOfObjectsPanel(bf::Scene &scene, bf::ConfigState& configStat
 }
 
 void bf::imgui::modifyObjectPanel(bf::Scene &scene, const bf::ConfigState& configState) {
-    setNextPanelAlignment({300, 305}, {configState.screenWidth, configState.screenHeight}, {1.f,1.f});
-    ImGui::Begin("Modify object panel", nullptr, ImGuiWindowFlags_NoResize);
+    //setNextPanelAlignment({300, 305}, {configState.screenWidth, configState.screenHeight}, {1.f,1.f});
+    ImGui::Begin("Modify object panel", nullptr);
     if(activeSpecialPanel!=SpecialPanel::None)
         ImGui::BeginDisabled();
     if(scene.objectArray.isCorrect(scene.objectArray.getActiveIndex()) && !scene.objectArray.isMultipleActive())

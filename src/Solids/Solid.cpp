@@ -61,10 +61,15 @@ void bf::Solid::anyDraw(const bf::ShaderArray& shaderArray/*, const bf::Transfor
         return;
     //function assumes set projection and view matrices
     glBindVertexArray(VAO);
+	shaderArray.setUniform("textureMode", textureMode);
+	if(textureMode>0 && textureID<1000000) {
+		glBindTexture(GL_TEXTURE_2D, textureID);
+	}
     shaderArray.getActiveShader().setMat4("model", getModelMatrix(/*relativeTo*/));
     glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
                    reinterpret_cast<void*>(0)           // element array buffer offset
     );
+	shaderArray.setUniform("textureMode", 0);
 }
 
 void bf::Solid::ObjectGui() {

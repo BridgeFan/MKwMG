@@ -6,11 +6,12 @@
 #ifndef MG1_ZAD2_OBJECT_H
 #define MG1_ZAD2_OBJECT_H
 
+#include "Transform.h"
+#include <array>
+#include <climits>
+#include <iosfwd>
 #include <string>
 #include <vector>
-#include <array>
-#include <iosfwd>
-#include "Transform.h"
 
 namespace bf {
 	using vec2d = glm::vec<2, double, glm::defaultp>;
@@ -36,7 +37,9 @@ namespace bf {
         static const ConfigState* configState;
         static const Scene* scene;
 	public:
+		int textureID=INT_MAX;
 		std::string name;
+		int textureMode=0;
         unsigned indestructibilityIndex=0u;
         static void initData(const ConfigState& cs, const Scene& s);
 		Object(const bf::Transform &t, const std::string &objName) : transform(t), name(objName) {}
@@ -82,6 +85,8 @@ namespace bf {
 		[[nodiscard]] virtual vec3d parameterGradientV(double u, double v) const;
 		[[nodiscard]] vec4d clampParam(double u, double v, double modulo=-1.) const; //x,y - new parameters, z,w - modulo
 		[[nodiscard]] virtual bool shouldBeRemoved() const {return false;}
+		virtual void onSetActive() {}
+		virtual void onSetInactive() {}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

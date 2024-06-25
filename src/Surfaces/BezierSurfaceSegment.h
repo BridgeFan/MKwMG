@@ -29,7 +29,7 @@ namespace bf {
         void initGL(const bf::ObjectArray &objectArray);
         void onPointMove(const bf::ObjectArray &objectArray, unsigned index);
         void onPointRemove(unsigned index);
-        void segmentDraw(const bf::ShaderArray &shader, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen) const;
+        void segmentDraw(const bf::ShaderArray &shader, bool isLineDrawn, bool isSurfaceDrawn, bool isChosen, unsigned ax, unsigned ay) const;
         BezierSurfaceSegment(Solid &solid)=delete;
         BezierSurfaceSegment(BezierSurfaceSegment &&solid) noexcept;
         explicit BezierSurfaceSegment(bool c2);

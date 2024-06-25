@@ -5,6 +5,7 @@
 #include "Object.h"
 #include "Util.h"
 #include "src/ImGui/ImGuiUtil.h"
+#include <algorithm>
 
 const bf::Scene* bf::Object::scene = nullptr;
 const bf::ConfigState* bf::Object::configState = nullptr;
@@ -75,13 +76,13 @@ bf::vec4d bf::Object::clampParam(double u, double v, double modulo) const {
 		if(ret.x<0) ret.x += getParameterMax().x;
 	}
 	else
-		ret.x = std::max(std::min(u, getParameterMax().x), getParameterMin().x);
+		ret.x = std::clamp(u, getParameterMin().x, getParameterMax().x);
 	if (parameterWrappingV()) {
 		ret.y = std::fmod(v, getParameterMax().y);
 		if(ret.y<0) ret.y += getParameterMax().y;
 	}
 	else
-		ret.y = std::max(std::min(v, getParameterMax().y), getParameterMin().y);
+		ret.y = std::clamp(v, getParameterMin().y, getParameterMax().y);
 	if(modulo>.0) {
 		ret.z = std::floor(ret.x / modulo);
 		ret.w = std::floor(ret.y / modulo);

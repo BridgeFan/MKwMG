@@ -41,6 +41,13 @@ namespace bf {
 	};
 	template<typename T>
 	concept linear = linearF<T> || linearD<T> || linearLD<T>;
+	template<std::size_t N>
+	glm::vec<N,float,glm::defaultp> toFloatVec(const glm::vec<N,double,glm::defaultp>& v) {
+		glm::vec<N,float,glm::defaultp> ret;
+		for(std::size_t i=0u;i<N;i++)
+			ret[i]=static_cast<float>(v[i]);
+		return ret;
+	}
 }
 
 std::string readWholeFile(const std::string& path);

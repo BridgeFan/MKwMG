@@ -34,6 +34,9 @@ vec3 multiplyPseudoMatrix(vec4 left, vec3 P[16], vec4 right) {
 
 layout( quads ) in;
 uniform mat4 MVP; // projection * view * model
+uniform vec2 add;
+uniform vec2 maxek;
+out vec2 t;
 void main() {
 	float u = gl_TessCoord.x;
 	float v = gl_TessCoord.y;
@@ -50,4 +53,6 @@ void main() {
 	vec4 pr = transpose(matrix)*vvec;
 	vec3 p = multiplyPseudoMatrix(pl, P, pr);
 	gl_Position = projection * view * vec4(p, 1.0);
+	t.x=(add.x+u)/maxek.x;
+	t.y=(add.y+v)/maxek.y;
 }

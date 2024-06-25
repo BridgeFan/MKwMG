@@ -3,12 +3,13 @@
 //
 
 #include "BezierSurfaceCommon.h"
-#include "ImGui/imgui_include.h"
-#include "Shader/ShaderArray.h"
 #include "ImGui/ImGuiUtil.h"
+#include "ImGui/imgui_include.h"
 #include "Object/ObjectArray.h"
-#include "src/Gizmos/Cursor.h"
 #include "Object/Point.h"
+#include "Shader/ShaderArray.h"
+#include "src/Gizmos/Cursor.h"
+#include <GL/glew.h>
 
 int bf::BezierSurfaceCommon::_index = 1;
 
@@ -24,17 +25,26 @@ void bf::BezierSurfaceCommon::recalculateSegments(unsigned int index) {
 void bf::BezierSurfaceCommon::draw(const bf::ShaderArray& shaderArray) const {
     int index=0;
 	drawDebug(shaderArray);
+	auto maxek = getParameterMax();
+	shaderArray.setUniform("textureMode", textureMode);
+	if(textureMode>0 && textureID<1000000) {
+		glBindTexture(GL_TEXTURE_2D, textureID);
+	}
+	shaderArray.setUniform("maxek", glm::vec2(maxek.x, maxek.y));
     if(activeIndex>=0) {
         auto s = static_cast<int>(segments[0].size());
-        segments[activeIndex/s][activeIndex%s].segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, true);
+        segments[activeIndex/s][activeIndex%s].segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, true, activeIndex%s, activeIndex/s);
     }
-    for(const auto& sRow: segments) {
-        for(const auto& s: sRow) {
+    for(unsigned i=0u; i<segments.size();i++) {
+		const auto& sRow = segments[i];
+        for(unsigned j=0u;j<sRow.size();j++) {
+			const auto& s = sRow[j];
             if(index!=activeIndex)
-                s.segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, false);
+                s.segmentDraw(shaderArray, isPolygonVisible, isSurfaceVisible, false, j, i);
             index++;
         }
     }
+	shaderArray.setUniform("textureMode", 0);
 }
 
 void bf::BezierSurfaceCommon::ObjectGui() {
@@ -229,7 +239,7 @@ void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
 	onMoveObject(p1);
 }
 std::tuple<int, int, double, double> bf::BezierSurfaceCommon::setParameters(double uf, double vf) const {
-	bf::vec4d param = clampParam(uf,vf,1.f);
+	bf::vec4d param = clampParam(uf,vf,1.0);
 	int iu=int(param.z);
 	int iv=int(param.w);
 	if(iu>=static_cast<int>(segments[0].size())) {
