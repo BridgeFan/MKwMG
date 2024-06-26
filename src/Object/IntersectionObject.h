@@ -14,8 +14,6 @@ namespace bf {
 		bool isInitPhase=true;
 		std::pair<bf::Object*, int> convertToCurve();
 		void findIntersection(bool isCursor, double precision);
-		static double distance(const bf::Object& o1, const bf::Object& o2, const bf::vec4d& t);
-		static double movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d& P0, const bf::vec3d& t, double d);
 		bool toRemove=false;
 		void recalculate(bool isTextureToSet=false);
 	public:
@@ -23,7 +21,6 @@ namespace bf {
 		bool isLooped=false;
 		bf::Object *obj1, *obj2;
 		IntersectionObject(bf::ObjectArray &array);
-		//TODO - GUI,
 		void ObjectGui() override;
 		~IntersectionObject() override;
 		void draw(const ShaderArray &shader) const override;
@@ -36,6 +33,8 @@ namespace bf {
 		void onMergePoints(int p1, int p2) override;
 		void onRemoveObject(unsigned int index) override;
 		void onMoveObject(unsigned int index) override;
+		static double distance(const bf::Object& o1, const bf::Object& o2, const bf::vec4d& t);
+		static double movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d& P0, const bf::vec3d& t, double d);
 	};
 }
 

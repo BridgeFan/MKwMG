@@ -108,11 +108,15 @@ bf::vec4d basisFunctionsD(double t) {
 	return b;
 }
 
-bf::vec3d bf::BezierSurface0::parameterFunction(double uf, double vf) const {
-	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+bf::vec3d bf::BezierSurface0::parameterFunction(double u, double v, int iu, int iv) const {
 	// Basis functions for u and v
 	bf::vec4d bu = basisFunctions(u);
 	bf::vec4d bv = basisFunctions(v);
+	auto M=BezierSurfaceCommon::getParameterMax();
+	int Mx=static_cast<int>(M.x);
+	int My=static_cast<int>(M.y);
+	iu=iu%Mx; if(iu<0) iu+=Mx;
+	iv=iv%Mx; if(iv<0) iv+=My;
 	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
@@ -123,11 +127,15 @@ bf::vec3d bf::BezierSurface0::parameterFunction(double uf, double vf) const {
 	}
 	return p;
 }
-bf::vec3d bf::BezierSurface0::parameterGradientU(double uf, double vf) const {
-	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+bf::vec3d bf::BezierSurface0::parameterGradientU(double u, double v, int iu, int iv) const {
 	// Basis functions for u and v
 	bf::vec4d bu = basisFunctionsD(u);
 	bf::vec4d bv = basisFunctions(v);
+	auto M=BezierSurfaceCommon::getParameterMax();
+	int Mx=static_cast<int>(M.x);
+	int My=static_cast<int>(M.y);
+	iu=iu%Mx; if(iu<0) iu+=Mx;
+	iv=iv%Mx; if(iv<0) iv+=My;
 	bf::vec3d p(.0f);
 	for(int i=0;i<4;i++) {
 		for(int j=0;j<4;j++) {
@@ -135,21 +143,80 @@ bf::vec3d bf::BezierSurface0::parameterGradientU(double uf, double vf) const {
 			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
 			p += pos2*bu[i]*bv[j];
 		}
+	}
+	return p;
+}
+bf::vec3d bf::BezierSurface0::parameterGradientV(double u, double v, int iu, int iv) const {
+	// Basis functions for u and v
+	bf::vec4d bu = basisFunctions(u);
+	bf::vec4d bv = basisFunctionsD(v);
+	auto M=BezierSurfaceCommon::getParameterMax();
+	int Mx=static_cast<int>(M.x);
+	int My=static_cast<int>(M.y);
+	iu=iu%Mx; if(iu<0) iu+=Mx;
+	iv=iv%Mx; if(iv<0) iv+=My;
+	bf::vec3d p(.0f);
+	for(int i=0;i<4;i++) {
+		for(int j=0;j<4;j++) {
+			auto pos=objectArray[segments[iv][iu].pointIndices[4*j+i]].getPosition();
+			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
+			p += pos2*bu[i]*bv[j];
+		}
+	}
+	return p;
+}
+constexpr double EPS=0.0001;
+
+bf::vec3d bf::BezierSurface0::parameterFunction(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+	auto p=parameterFunction(u,v,iu,iv);
+	if((iu>0 && iu<getParameterMax().x) || BezierSurfaceCommon::parameterWrappingU()) { //no extreme
+		if(u<EPS)
+			return lerp(parameterFunction(u+1.0,v,iu-1,iv),p, .5+u/(2.*EPS));
+		if(u>1.0-EPS)
+			return lerp(parameterFunction(u-1.0,v,iu+1,iv),p, .5+(1.0-u)/(2.*EPS));
+	}
+	if((iv>0 && iv<getParameterMax().y) || BezierSurfaceCommon::parameterWrappingV()) { //no extreme
+		if(v<EPS)
+			return lerp(parameterFunction(u,v+1.0,iu,iv-1),p, .5+v/(2.*EPS));
+		if(v>1.0-EPS)
+			return lerp(parameterFunction(u,v-1.0,iu,iv+1),p, .5+(1.0-v)/(2.*EPS));
+	}
+	// Basis functions for u and v
+	return p;
+}
+
+bf::vec3d bf::BezierSurface0::parameterGradientU(double uf, double vf) const {
+	auto&& [iu,iv,u,v]=setParameters(uf,vf);
+	auto p=parameterGradientU(u,v,iu,iv);
+	if((iu>0 && iu<getParameterMax().x) || BezierSurfaceCommon::parameterWrappingU()) { //no extreme
+		if(u<EPS)
+			return lerp(parameterGradientU(u+1.0,v,iu-1,iv),p, .5+u/(2.*EPS));
+		if(u>1.0-EPS)
+			return lerp(parameterGradientU(u-1.0,v,iu+1,iv),p, .5+(1.0-u)/(2.*EPS));
+	}
+	if((iv>0 && iv<getParameterMax().y) || BezierSurfaceCommon::parameterWrappingV()) { //no extreme
+		if(v<EPS)
+			return lerp(parameterGradientU(u,v+1.0,iu,iv-1),p, .5+v/(2.*EPS));
+		if(v>1.0-EPS)
+			return lerp(parameterGradientU(u,v-1.0,iu,iv+1),p, .5+(1.0-v)/(2.*EPS));
 	}
 	return p;
 }
 bf::vec3d bf::BezierSurface0::parameterGradientV(double uf, double vf) const {
 	auto&& [iu,iv,u,v]=setParameters(uf,vf);
-	// Basis functions for u and v
-	bf::vec4d bu = basisFunctions(u);
-	bf::vec4d bv = basisFunctionsD(v);
-	bf::vec3d p(.0f);
-	for(int i=0;i<4;i++) {
-		for(int j=0;j<4;j++) {
-			auto pos=objectArray[segments[iv][iu].pointIndices[4*j+i]].getPosition();
-			bf::vec3d pos2 = {pos.x,pos.y,pos.z};
-			p += pos2*bu[i]*bv[j];
-		}
+	auto p=parameterGradientV(u,v,iu,iv);
+	if((iu>0 && iu<getParameterMax().x) || BezierSurfaceCommon::parameterWrappingU()) { //no extreme
+		if(u<EPS)
+			return lerp(parameterGradientV(u+1.0,v,iu-1,iv),p, .5+u/(2.*EPS));
+		if(u>1.0-EPS)
+			return lerp(parameterGradientV(u-1.0,v,iu+1,iv),p, .5+(1.0-u)/(2.*EPS));
+	}
+	if((iv>0 && iv<getParameterMax().y) || BezierSurfaceCommon::parameterWrappingV()) { //no extreme
+		if(v<EPS)
+			return lerp(parameterGradientV(u,v+1.0,iu,iv-1),p, .5+v/(2.*EPS));
+		if(v>1.0-EPS)
+			return lerp(parameterGradientV(u,v-1.0,iu,iv+1),p, .5+(1.0-v)/(2.*EPS));
 	}
 	return p;
 }

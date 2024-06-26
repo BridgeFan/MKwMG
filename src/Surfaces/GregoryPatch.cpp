@@ -330,7 +330,6 @@ namespace bf {
 			C[2*i]=lerp(P[i][3],Oc[i],-1.f);
 		}
 
-		//TODO - better central triangle
 		Cen=(C[0]+C[2]+C[4])/3.f;
 		for(int i=0;i<3;i++) {
 			C[2*i+1]=lerp(C[2*i],Cen,0.5f);
@@ -361,10 +360,7 @@ namespace bf {
 			vertices[42+i]=NC[1][i];
 		}
 		vertices[48]=Cen;
-
-
 		setBuffers();
-		//TODO
 	}
 	const std::array<bf::BezierSurfaceSegment *, 3> &GregoryPatch::getSegments() const {
 		return segments;

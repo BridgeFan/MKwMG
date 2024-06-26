@@ -15,10 +15,12 @@
 #include <GL/glew.h>
 #include <functional>
 #include <iostream>
+#include <optional>
+#include <queue>
 #include <random>
 
 std::random_device rd;
-constexpr int TN=500;
+constexpr int TN=1000;
 
 std::pair<bf::Object*, int> bf::IntersectionObject::convertToCurve() {
 	if(!obj1) return {nullptr, 0};
@@ -95,19 +97,21 @@ void bf::IntersectionObject::ObjectGui() {
 			objectArray.objects[curve.second].first.reset(curve.first);
 		}
 		static bool isSecondSet=false;
-		if(obj2 && isSecondSet)
-			ImGui::Image((void*)(intptr_t)obj2->textureID, ImVec2(TN, TN));
-		else
-			ImGui::Image((void*)(intptr_t)obj1->textureID, ImVec2(TN, TN));
-		if(obj1 && isLooped && ImGui::Button(obj1->textureMode ? "Unset Object 1 trim" : "Set Object 1 trim")) {
-			obj1->textureMode=(obj1->textureMode+1)%3;
-		}
-		if(obj2 && isLooped && ImGui::Button(obj2->textureMode ? "Unset Object 2 trim" : "Set Object 2 trim")) {
-			obj2->textureMode=(obj2->textureMode+1)%3;
-		}
-		std::string a="Set chosen texture to "+std::to_string(isSecondSet ? 1 : 2);
-		if(obj2 && ImGui::Button(a.c_str())) {
-			isSecondSet=!isSecondSet;
+		if(isLooped) {
+			if (obj2 && isSecondSet)
+				ImGui::Image((void *) (intptr_t) obj2->textureID, ImVec2(250, 250));
+			else
+				ImGui::Image((void *) (intptr_t) obj1->textureID, ImVec2(250, 250));
+			if (obj1 && ImGui::Button(obj1->textureMode ? "Unset Object 1 trim" : "Set Object 1 trim")) {
+				obj1->textureMode = (obj1->textureMode + 1) % 3;
+			}
+			if (obj2 && ImGui::Button(obj2->textureMode ? "Unset Object 2 trim" : "Set Object 2 trim")) {
+				obj2->textureMode = (obj2->textureMode + 1) % 3;
+			}
+			std::string a = "Set chosen texture to " + std::to_string(isSecondSet ? 1 : 2);
+			if (obj2 && ImGui::Button(a.c_str())) {
+				isSecondSet = !isSecondSet;
+			}
 		}
 	}
 }
@@ -138,18 +142,34 @@ bf::ShaderType bf::IntersectionObject::getShaderType() const {
 	return bf::ShaderType::MultipleShaders;
 }
 
-void clampParams(bf::vec2d& x, const bf::Object& obj) {
+void clampParams(bf::vec2d& x, const bf::Object& obj, const bf::vec2d& old) {
 	for(int i=0;i<2;i++) {
-		if(!obj.parameterWrapping()[i]) x[i]=std::clamp(x[i],obj.getParameterMin()[i],obj.getParameterMax()[i]);
-		else x[i]=std::fmod(x[i],obj.getParameterMax()[i]);
+		if(!obj.parameterWrapping()[i]) {
+			if(std::abs(old[i]-x[i])<1e-10) //no old point set
+				x[i]=std::clamp(x[i],obj.getParameterMin()[i],obj.getParameterMax()[i]);
+			else {
+				auto m = obj.getParameterMin()[i];
+				auto M = obj.getParameterMax()[i];
+				if(x[i]<m) {
+					x=lerp(x,old,(x[i]-m)/(x[i]-old[i]));
+				}
+				else if(x[i]>M) {
+					x=lerp(x,old,(M-x[i])/(old[i]-x[i]));
+				}
+			}
+		}
+		else {
+			x[i]=std::fmod(x[i],obj.getParameterMax()[i]);
+		}
 		if(x[i]<0.0) x[i]+=obj.getParameterMax()[i];
 	}
 }
 
-void clampParams(bf::vec4d& x, const bf::Object& o1, const bf::Object& o2) {
+void clampParams(bf::vec4d& x, const bf::Object& o1, const bf::Object& o2, const bf::vec4d& old) {
 	bf::vec2d x1={x.x,x.y},x2={x.z,x.w};
-	clampParams(x1,o1);
-	clampParams(x2,o2);
+	bf::vec2d old1={old.x,old.y},old2={old.z,old.w};
+	clampParams(x1,o1, old1);
+	clampParams(x2,o2, old2);
 	x={x1.x, x1.y, x2.x,x2.y};
 }
 
@@ -182,7 +202,6 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, const 
 	bf::vec2d df(1.);
 	//find point
 	while(N<1000 && a>eps && bf::IntersectionObject::distance(obj,pos,x)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>epsDist) {
-		//TODO - proper step
 		x=xn;
 		//finding antigradient
 		df=bf::vec4d(.0);
@@ -196,11 +215,11 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, const 
 		}
 		//finding step
 		xn=x-df*a;
-		clampParams(xn, obj);
+		clampParams(xn, obj, x);
 		while(bf::IntersectionObject::distance(obj,pos,xn)>bf::IntersectionObject::distance(obj,pos,x) && a>eps) { //too big step
-			a*=.5;
+			a*=.25;
 			xn=x-df*a;
-			clampParams(xn, obj);
+			clampParams(xn, obj, x);
 		}
 		N++;
 	}
@@ -218,51 +237,121 @@ bool isModAlmostOne(double a, double mod, double eps=1e-5) {
 	return b<eps || b-a>-eps;
 }
 
-bool isBezierC0Problem(bf::BezierSurface0 *b, bool isFirst, const bf::vec4d& previous, bf::vec4d& actual) {
-	if(!b) return false;
-	bf::vec2d old, nev;
-	if(isFirst) {
-		old={previous.x,previous.y};
-		nev={actual.x,actual.y};
+bool isOutOfRange(const bf::Object& obj, const bf::vec2d& v) {
+	for(int i=0;i<2;i++) {
+		if (!obj.parameterWrapping()[i]) {
+			if (v[i] > obj.getParameterMax()[i] || v[i] < obj.getParameterMin()[i])
+				return true;
+		}
 	}
-	else {
-		old={previous.z,previous.w};
-		nev={actual.z,actual.w};
+	return false;
+}
+
+bool isOutOfRange(const bf::Object& o1, const bf::Object& o2, const bf::vec4d& v) {
+	bf::vec2d v1 = {v.x,v.y};
+	bf::vec2d v2 = {v.z,v.w};
+	return isOutOfRange(o1,v1) || isOutOfRange(o2, v2);
+}
+
+bool isAbsFmod(double a, double mod, double epsil) {
+	double c=std::fmod(a,mod);
+	if(c<0.0)
+		c+=mod;
+	return c<epsil || mod-c<epsil;
+}
+
+std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* o, const bf::vec4d& x0, double precision, double direction=1.0) {
+	auto xn=x0, x=x0;
+	constexpr double eps2=1e-5;
+	constexpr double eps2dist=1e-7;
+	int M, N;
+	double a;
+	bf::vec4d oldX, df;
+	std::vector<bf::vec4d> intersectionPoints;
+	bool isLooped=false;
+	precision*=direction;
+	for(M=0;M<2000;M++) {
+		using I=bf::IntersectionObject;
+		//simple gradient is enough here
+		auto y=x-x0;
+		if(M>=3 && glm::dot(y,y)<precision*precision) {
+			isLooped=true;
+			break;
+		}
+		N = 0;
+		a=std::abs(precision)*5.0;
+		df=bf::vec4d(1.0);
+		auto P0 = (obj1->parameterFunction(xn[0], xn[1]) + o->parameterFunction(xn[2], xn[3])) * 0.5;
+		auto n1 = glm::cross(obj1->parameterGradientU(xn[0], xn[1]), obj1->parameterGradientV(xn[0], xn[1]));
+		auto n2 = glm::cross(o->parameterGradientU(xn[2], xn[3]), o->parameterGradientV(xn[2], xn[3]));
+		auto t = glm::normalize(glm::cross(n1, n2));
+		auto P = obj1->parameterFunction(xn[0], xn[1]);
+		auto Q = o->parameterFunction(xn[2], xn[3]);
+		bf::vec3d Pn;
+		if(M==0)
+			xn = x + bf::vec4d(std::sqrt(3.0) * precision);
+		else
+			xn = lerp(oldX,xn,2.0);
+		oldX=x;
+		isLooped=false;
+		while (N < 10000 && a > eps2 && I::movDist(P, Q, P0, t, precision) > eps2dist && glm::dot(df, df) > epsDist /*&& glm::dot(xn - x, xn - x) > epsDist*/) {
+			x = xn;
+			//finding antigradient
+			P = obj1->parameterFunction(x[0], x[1]);
+			Q = o->parameterFunction(x[2], x[3]);
+			auto dPu = obj1->parameterGradientU(x[0], x[1]);
+			auto dPv = obj1->parameterGradientV(x[0], x[1]);
+			auto dQw = o->parameterGradientU(x[2], x[3]);
+			auto dQt = o->parameterGradientV(x[2], x[3]);
+			auto dotek = glm::dot(P - P0, t) - precision;
+			df = bf::vec4d(0.0);
+			for (int i = 0; i < 3; i++) {//x,y,z
+				df[0] += 2.0 * (P[i] - Q[i]) * dPu[i] + 2 * dotek * glm::dot(dPu, t)*movingAdditionWage;
+				df[1] += 2.0 * (P[i] - Q[i]) * dPv[i] + 2 * dotek * glm::dot(dPv, t)*movingAdditionWage;
+				df[2] += -2. * (P[i] - Q[i]) * dQw[i];
+				df[3] += -2. * (P[i] - Q[i]) * dQt[i];
+			}
+			//finding step
+			xn = x - df * a;
+			clampParams(xn, *obj1, *o, x);
+			Pn = obj1->parameterFunction(xn[0], xn[1]);
+			auto Qn = o->parameterFunction(xn[2], xn[3]);
+			while ((I::movDist(Pn, Qn, P0, t, precision) > I::movDist(P, Q, P0, t, precision) || isOutOfRange(*obj1,*o,xn)) && a > eps2) {//too big step
+				a *= 0.25;
+				xn = x - df * a;
+				clampParams(xn, *obj1, *o, x);
+				Pn = obj1->parameterFunction(xn[0], xn[1]);
+				Qn = o->parameterFunction(xn[2], xn[3]);
+			}
+			N++;
+		}
+		P = obj1->parameterFunction(xn[0], xn[1]);
+		Q = o->parameterFunction(xn[2], xn[3]);
+		std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
+		if(N>=10000 || std::abs(glm::distance(P,P0)/std::abs(precision)-1.0)>0.5) {
+			isLooped=false;
+			break;
+		}
+		x=xn;
+		intersectionPoints.emplace_back(xn);
 	}
-	bool mod=false;
-	if(isModAlmostOne(nev.x, 1.0)) {
-		nev.x=lerp(old.x,nev.x,1+1e-3);
-		mod=true;
-	}
-	if(isModAlmostOne(nev.y, 1.0)) {
-		nev.y=lerp(old.y,nev.y,1+1e-3);
-		mod=true;
-	}
-	if(!mod) return false;
-	if(isFirst) {
-		actual.x=nev.x;
-		actual.y=nev.y;
-	}
-	else {
-		actual.z=nev.x;
-		actual.w=nev.y;
-	}
-	return true;
+	std::cout << M << "\n";
+	return {intersectionPoints, isLooped};
 }
 
 void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	auto* o = obj2 ? obj2 : obj1;
 	auto pos2 = transform.position;
-	bf::BezierSurface0 *b1=nullptr, *b2=nullptr; //Béziers C0 need to be checked specially because of non-continuous derivatives on linking
+	bool isBezier0_1=false;
+	bool isBezier0_2=false;
+	//Béziers C0 need to be checked specially because of non-continuous derivatives on linking
 	if(typeid(*obj1)==typeid(bf::BezierSurface0))
-		b1=dynamic_cast<bf::BezierSurface0*>(obj1);
+		isBezier0_1=true;
 	if(typeid(*o)==typeid(bf::BezierSurface0))
-		b2=dynamic_cast<bf::BezierSurface0*>(o);
+		isBezier0_2=true;
 	//no point chosen
 	bf::vec4d x0;
 	//begin data to algorithm
-	double a=0.1;
-	int N=0;
 	if(isCursor) { //cursor begin
 		std::cout << pos2.x << " " << pos2.y << " " << pos2.z << "\n";
 		//find beginning point - u,v
@@ -295,16 +384,14 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 		}
 	}
 	//2 - minimizing distance
-	clampParams(x0, *obj1, *o);
+	clampParams(x0, *obj1, *o, x0);
 	bf::vec4d x=-x0;
 	bf::vec4d xn=x0;
-	std::cout << a << ": " << xn.x << " " << xn.y << " " << xn.z << " " << xn.w << "\nLooking for first point:\n";
+	std::cout << xn.x << " " << xn.y << " " << xn.z << " " << xn.w << "\nLooking for first point:\n";
 	bf::vec4d df{100000.};
-	N=0;
-	a=0.1;
-	//TODO - self-intersection
+	int N=0;
+	double a=0.1;
 	while(N<10000 && a>eps && distance(*obj1,*o,xn)>epsDist && glm::dot(df,df)>epsDist && glm::dot(xn-x,xn-x)>eps*eps) {
-		//TODO - proper step
 		x=xn;
 		//finding antigradient
 		df=glm::vec4(.0);
@@ -322,11 +409,11 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 		}
 		//finding step
 		xn=x-df*a;
-		clampParams(xn, *obj1, *o);
-		while(distance(*obj1,*o,xn)>distance(*obj1,*o,x) && a>eps) { //too big step
-			a*=.5f;
+		clampParams(xn, *obj1, *o, x);
+		while((distance(*obj1,*o,xn)>distance(*obj1,*o,x) || isOutOfRange(*obj1,*o,xn)) && a>eps) { //too big step
+			a*=0.25;
 			xn=x-df*a;
-			clampParams(xn, *obj1, *o);
+			clampParams(xn, *obj1, *o, x);
 		}
 		N++;
 	}
@@ -345,88 +432,26 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	}
 	std::cout << "March\n";
 	intersectionPoints.emplace_back(x);
+	//move along (both sides if no loop)
 	setBuffers();
-	//Go through
-	//TODO - loop
-	constexpr double eps2=1e-5;
-	constexpr double eps2dist=1e-7;
-	int M;
-	bf::vec4d oldX;
-	for(M=0;M<2000;M++) {
-		//simple gradient is enough here
-		auto y=x-intersectionPoints[0];
-		if(M>=3 && glm::dot(y,y)<precision*precision) {
-			isLooped=true;
-			break;
-		}
-		N = 0;
-		a=precision*5.0;
-		df=bf::vec4d(1.0);
-		auto P0 = (obj1->parameterFunction(xn[0], xn[1]) + o->parameterFunction(xn[2], xn[3])) * 0.5;
-		auto n1 = glm::cross(obj1->parameterGradientU(xn[0], xn[1]), obj1->parameterGradientV(xn[0], xn[1]));
-		auto n2 = glm::cross(o->parameterGradientU(xn[2], xn[3]), o->parameterGradientV(xn[2], xn[3]));
-		auto t = glm::normalize(glm::cross(n1, n2));
-		auto P = obj1->parameterFunction(xn[0], xn[1]);
-		auto Q = o->parameterFunction(xn[2], xn[3]);
-		bf::vec3d Pn;
-		if(M==0)
-			xn = x + bf::vec4d(std::sqrt(3.0) * precision);
-		else
-			xn = lerp(oldX,xn,2.0);
-		oldX=x;
-		isLooped=false;
-		while (N < 10000 && a > eps2 && movDist(P, Q, P0, t, precision) > eps2dist && glm::dot(df, df) > epsDist /*&& glm::dot(xn - x, xn - x) > epsDist*/) {
-			x = xn;
-			//finding antigradient
-			P = obj1->parameterFunction(x[0], x[1]);
-			Q = o->parameterFunction(x[2], x[3]);
-			auto dPu = obj1->parameterGradientU(x[0], x[1]);
-			auto dPv = obj1->parameterGradientV(x[0], x[1]);
-			auto dQw = o->parameterGradientU(x[2], x[3]);
-			auto dQt = o->parameterGradientV(x[2], x[3]);
-			auto dotek = glm::dot(P - P0, t) - precision;
-			df = bf::vec4d(0.0);
-			for (int i = 0; i < 3; i++) {//x,y,z
-				df[0] += 2.0 * (P[i] - Q[i]) * dPu[i] + 2 * dotek * glm::dot(dPu, t)*movingAdditionWage;
-				df[1] += 2.0 * (P[i] - Q[i]) * dPv[i] + 2 * dotek * glm::dot(dPv, t)*movingAdditionWage;
-				df[2] += -2. * (P[i] - Q[i]) * dQw[i];
-				df[3] += -2. * (P[i] - Q[i]) * dQt[i];
-			}
-			//finding step
-			xn = x - df * a;
-			clampParams(xn, *obj1, *o);
-			Pn = obj1->parameterFunction(xn[0], xn[1]);
-			auto Qn = o->parameterFunction(xn[2], xn[3]);
-			while (movDist(Pn, Qn, P0, t, precision) > movDist(P, Q, P0, t, precision) && a > eps2) {//too big step
-				a *= .9;
-				xn = x - df * a;
-				clampParams(xn, *obj1, *o);
-				Pn = obj1->parameterFunction(xn[0], xn[1]);
-				Qn = o->parameterFunction(xn[2], xn[3]);
-			}
-			//finding step - steepest descent
-			/*double l=0.0,r=a,s;
-			for(double dif=a;dif>eps2;dif*=0.5) {
-				s=(l+r)*0.5;
-				xn = x - df * a;
-				clampParams(xn, *obj1, *o);
-				Pn = obj1->parameterFunction(xn[0], xn[1]);
-				auto Qn = o->parameterFunction(xn[2], xn[3]);
+	auto [pts, loop] = moveAlong(obj1,o,x,precision);
+	if(!loop) {
+		auto [pts2, loop2] = moveAlong(obj1,o,x,precision,-1.0);
+		//try the other side
+		std::vector<bf::vec4d> revPts2(pts2.rbegin(),pts2.rend());
+		revPts2.emplace_back(x);
+		revPts2.insert(revPts2.end(),
+								  std::make_move_iterator(pts.begin()),
+								  std::make_move_iterator(pts.end()));
+		intersectionPoints=std::move(revPts2);
 
-			}*/
-			N++;
-		}
-		P = obj1->parameterFunction(xn[0], xn[1]);
-		Q = o->parameterFunction(xn[2], xn[3]);
-		std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
-		x=xn;
-		intersectionPoints.emplace_back(xn);
-		if(N>=10000 || std::abs(glm::distance(P,P0)/precision-1.0)>0.5) {
-			isLooped=false;
-			break;
-		}
 	}
-	std::cout << M << "\n";
+	else {//ready to insert
+		intersectionPoints.insert(intersectionPoints.end(),
+								  std::make_move_iterator(pts.begin()),
+								  std::make_move_iterator(pts.end()));
+	}
+	isLooped=loop;
 	recalculate(true);
 }
 
@@ -480,7 +505,7 @@ void BresenhamLine(std::vector<uint8_t>& array, int x1, int y1, int x2, int y2)
 {	//kod wzięty z artykułu https://pl.wikipedia.org/wiki/Algorytm_Bresenhama
 	// zmienne pomocnicze
 	int d, dx, dy, ai, bi, xi, yi;
-	int BIG=static_cast<int>(TN*0.9);
+	constexpr int BIG=static_cast<int>(TN*0.8);
 	if(x2-x1>=BIG) {
 		x1+=TN;
 	}
@@ -569,13 +594,31 @@ void BresenhamLine(std::vector<uint8_t>& array, int x1, int y1, int x2, int y2)
 }
 
 void floodFill(std::vector<uint8_t>& array, int i, int j, bool wrapX, bool wrapY) {
-	if(array[i+TN*j]>63u) //already filled
+	if(array[i+TN*j]>63u || i<0 || i>=TN || j<0 || j>=TN) //already filled or out of bounds
 		return;
-	array[i+TN*j]=255u;
+	/*array[i+TN*j]=255u;
 	if(i>0 || wrapX) floodFill(array,(TN+i-1)%TN,j,wrapX,wrapY);
 	if(i<TN-1 || wrapX) floodFill(array,(i+1)%TN,j,wrapX,wrapY);
 	if(j>0 || wrapY) floodFill(array,i,(TN+j-1)%TN,wrapX,wrapY);
-	if(j<TN-1 || wrapY) floodFill(array,i,(j+1)%TN,wrapX,wrapY);
+	if(j<TN-1 || wrapY) floodFill(array,i,(j+1)%TN,wrapX,wrapY);*/
+	std::queue<std::pair<int, int> > Q;
+	Q.emplace(i,j);
+	while(!Q.empty()) {
+		auto [pi,pj] = Q.front();
+		Q.pop();
+		if(array[pi+TN*pj]<63u) {//to fill
+			array[pi+TN*pj]=255u;
+			if(pi>0 || wrapX)
+				Q.emplace((TN+pi-1)%TN,pj);
+			if(pi<TN-1 || wrapX)
+				Q.emplace((pi+1)%TN,pj);
+			if(pj>0 || wrapY)
+				Q.emplace(pi,(TN+pj-1)%TN);
+			if(pj<TN-1 || wrapY)
+				Q.emplace(pi,(pj+1)%TN);
+		}
+	}
+
 }
 
 
@@ -594,14 +637,25 @@ int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2
 		BresenhamLine(val, x1, y1, x2, y2);
 	}
 	p/=v.size();
+	int px=static_cast<int>(p.x);
+	int py=static_cast<int>(p.y);
+	int i=0;
+	while(val[px+TN*py]==127u) {
+		px=(px+1)%TN;
+		i++;
+		if(i==TN) {
+			i=0;
+			py=(py+1)%TN;
+		}
+	}
 	//flood fill
 	floodFill(val, static_cast<int>(p.x), static_cast<int>(p.y), wrapX, wrapY);
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// load and generate the texture
@@ -622,10 +676,11 @@ void bf::IntersectionObject::recalculate(bool isTextureToSet) {
 		auto p=obj1->parameterFunction(t[0],t[1]);
 		vertices.emplace_back(p.x,p.y,p.z);
 		indices.emplace_back(i);
-		if(i>0)
+		if(i>0 && (isLooped || i<intersectionPoints.size()-1))
 			indices.emplace_back(i);
 	}
-	indices.emplace_back(0);
+	if(isLooped)
+		indices.emplace_back(0);
 	unsigned ind=vertices.size();
 	for(unsigned i=0;i<intersectionPoints.size();i++) {
 		const auto& t=intersectionPoints[i];

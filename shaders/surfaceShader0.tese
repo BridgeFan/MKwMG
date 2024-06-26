@@ -41,7 +41,7 @@ void main() {
 			p += gl_in[4*i+j].gl_Position.xyz*bu[i]*bv[j];
 		}
 	}
-	t.x=(add.x+u)/maxek.x;
-	t.y=(add.y+v)/maxek.y;
+	t.x=(add.x+v)/maxek.x;
+	t.y=(add.y+u)/maxek.y;
 	gl_Position = projection * view * vec4(p, 1.0);
 }

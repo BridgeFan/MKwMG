@@ -115,7 +115,7 @@ bf::vec3d bf::BezierSurface2::parameterFunction(double uf, double vf) const {
 	}
 	return multiplyPseudoMatrix(pl, P, pr);
 }
-bf::vec3d bf::BezierSurface2::parameterGradientU(double uf, double vf) const {//TODO
+bf::vec3d bf::BezierSurface2::parameterGradientU(double uf, double vf) const {
 	auto&& [iu,iv,u,v]=setParameters(uf,vf);
 	bf::vec4d uvec = {0.,1.,2.*u,3.*u*u};
 	bf::vec4d vvec = {1.,v,v*v,v*v*v};
@@ -127,7 +127,7 @@ bf::vec3d bf::BezierSurface2::parameterGradientU(double uf, double vf) const {//
 	}
 	return multiplyPseudoMatrix(pl, P, pr);
 }
-bf::vec3d bf::BezierSurface2::parameterGradientV(double uf, double vf) const {//TODO
+bf::vec3d bf::BezierSurface2::parameterGradientV(double uf, double vf) const {
 	auto&& [iu,iv,u,v]=setParameters(uf,vf);
 	bf::vec4d uvec = {1.,u,u*u,u*u*u};
 	bf::vec4d vvec = {0.,1.,2.*v,3.*v*v};

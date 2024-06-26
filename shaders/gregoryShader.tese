@@ -10,7 +10,6 @@ uniform vec2 DivisionEnd;
 vec2 lerp(float t) {
 	return DivisionBegin+t*(DivisionEnd-DivisionBegin);
 }
-//TODO - everything
 
 void basisFunctions(out vec4 b, float t) {
 	float t1 = (1.0 - t);

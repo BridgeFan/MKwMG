@@ -16,6 +16,9 @@ namespace bf {
     class BezierSurface0: public bf::BezierSurfaceCommon {
         friend bool loadFromFile(bf::ObjectArray &objectArray, bf::Camera& camera, const std::string &path);
         static int _index;
+		[[nodiscard]] bf::vec3d parameterFunction(double u, double v, int iu, int iv) const;
+		[[nodiscard]] bf::vec3d parameterGradientU(double u, double v, int iu, int iv) const;
+		[[nodiscard]] bf::vec3d parameterGradientV(double u, double v, int iu, int iv) const;
     public:
         BezierSurface0(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
         BezierSurface0(ObjectArray &objectArray, const Cursor &c);
