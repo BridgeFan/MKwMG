@@ -6,7 +6,6 @@
 #include "imgui_include.h"
 #include <string>
 #include <algorithm>
-#include <format>
 #ifdef WIN32
 #include <locale>
 #include <utility>
@@ -125,7 +124,8 @@ bool bf::imgui::checkSliderChanged(const char* name, float& value, float min, fl
 }
 
 bool bf::imgui::checkSelectableChanged(const char* name, int index, bool& selectable) {
-    bool wasChanged = ImGui::Selectable(std::format("{0}##{1}", name, index).c_str(), selectable);
+    std::string a=std::string(name)+"##"+std::to_string(index);
+    bool wasChanged = ImGui::Selectable(a.c_str(), selectable);
     if(wasChanged)
         selectable = !selectable;
     return wasChanged;

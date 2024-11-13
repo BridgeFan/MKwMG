@@ -6,7 +6,6 @@
 #include "Util.h"
 #include <GL/glew.h>
 #include <iostream>
-#include <format>
 //file based on https://learnopengl.com tutorials for OpenGL
 
 std::string getShaderTypeName(int shaderType) {
@@ -29,7 +28,7 @@ std::string getShaderTypeName(int shaderType) {
 unsigned bf::Shader::compileShaderFromFile(const std::string& path, int shaderType) const {
     std::string code = readWholeFile(path);
     if(code.empty())
-        std::cerr << std::format("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}\n", path);
+        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: "+path+"\n";
     const char* codePtr = code.c_str();
     unsigned index = glCreateShader(shaderType);
     glShaderSource(index, 1, &codePtr, nullptr);
@@ -58,7 +57,7 @@ bf::Shader::Shader(const std::string& vertexPath, const std::string& fragmentPat
 	glDeleteShader(fragment);
 	if(isGeometryShaderUsed)
 		glDeleteShader(geometry);
-    std::cout << std::format("Shader {} {} loaded successfully\n",vertexPath,fragmentPath);
+    std::cout << "Shader " << vertexPath << " " << fragmentPath << " loaded successfully\n";
 }
 void bf::Shader::use() const
 {
@@ -86,7 +85,7 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            std::cerr << std::format("ERROR::SHADER_COMPILATION_ERROR of type: {0}\n{1}",type,infoLog);
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog;
             std::cerr <<  "\n -- --------------------------------------------------- --\n";
 		}
 	}
@@ -96,7 +95,7 @@ void bf::Shader::checkCompileErrors(unsigned int shader, const std::string& type
 		if (!success)
 		{
 			glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
-			std::cerr << std::format("ERROR::PROGRAM_LINKING_ERROR of type: {0}\n{1}",type,infoLog);
+			std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog;
             std::cerr << "\n -- --------------------------------------------------- --\n";
 		}
 	}
@@ -135,7 +134,7 @@ bf::Shader::Shader(const std::string &vertexPath, const std::string &fragmentPat
     glDeleteShader(tessEval);
     if(isGeometryShaderUsed)
         glDeleteShader(geometry);
-    std::cout << std::format("Tessellation Shader {} {} {} {} loaded successfully\n",vertexPath,fragmentPath,tessControlPath,tessEvalPath);
+    std::cout << "Tessellation Shader "+vertexPath+" "+fragmentPath+" "+tessControlPath+" "+tessEvalPath+"loaded successfully\n";
 
 }
 

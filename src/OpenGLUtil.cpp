@@ -1,6 +1,5 @@
 #include "OpenGLUtil.h"
 #include <string>
-#include <format>
 #include <iostream>
 
 void bf::gl::namedRenderbufferStorage(GLuint renderbuffer, GLenum internalformat, GLsizei width, GLsizei height) {
@@ -41,6 +40,6 @@ MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei,
 	case GL_DEBUG_SEVERITY_NOTIFICATION:return; //should not be shown
 	default:							severityStr = "?????";
 	}
-	std::cerr << std::format("GL CALLBACK: id={}, source = {}, type = {}, severity = {}, message = {}\n",
-		id, sourceStr, typeStr, severityStr, message);
+	std::cerr << "GL CALLBACK: id=" << id << ", source = "<<sourceStr << ", type = " << typeStr <<
+        ", severity = " << severityStr << ", messsage = " << message << "\n";
 }

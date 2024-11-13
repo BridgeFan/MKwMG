@@ -19,7 +19,7 @@ std::string toString(const glm::vec4& v) {
 std::string readWholeFile(const std::string& path) {
     std::ifstream t(path);
     if(t.bad()) {
-        std::cerr << std::format("{} not found!\n", path);
+        std::cerr << path+" not found!\n";
         return "";
     }
     std::stringstream buffer;

@@ -9,7 +9,6 @@
 #include "ImGui/imgui_include.h"
 #include "Util.h"
 #include <iostream>
-#include <format>
 #include "Event.h"
 #include "ImGui/ImGuiUtil.h"
 #include "ImGui/ImGuiPanel.h"
@@ -101,12 +100,12 @@ GLFWwindow* initWindow(const bf::ConfigState& configState)
 	{
 		/* Problem: glewInit failed, something is seriously wrong. */
 		std::string str = reinterpret_cast<const char*>(glewGetErrorString(err));
-		std::cerr << std::format("Error: {}\n", str);
+		std::cerr << "Error: "+str+"\n";
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 	std::string str = reinterpret_cast<const char*>(glewGetString(GLEW_VERSION));
-	std::cout <<  std::format("Status: Using GLEW {}\n", str);
+	std::cout <<  "Status: Using GLEW "+str+"\n";
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);

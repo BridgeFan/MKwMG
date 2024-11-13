@@ -20,7 +20,6 @@
 #include "library_include.h"
 #include "src/Gizmos/Cursor.h"
 #include "src/Object/Point.h"
-#include <format>
 #include "Schema.h"
 
 valijson::Schema modelSchema;
@@ -34,7 +33,7 @@ void loadValidator() {
 		schemaStream >> schemaValue;
 	}
 	catch(std::exception &e) {
-		std::cerr << std::format("Failed to load schema document\n{}\n", e.what());
+		std::cerr << "Failed to load schema document " << e.what() << "\n";
 	}
 	// Parse JSON schema content using valijson
 	valijson::SchemaParser parser;
@@ -132,7 +131,7 @@ std::pair<unsigned, T*> loadSurface(Json::Value& bezierValue, bf::ObjectArray& o
 	surface->isWrappedY = bezierValue["parameterWrapped"]["v"].asBool();
 	std::vector<Segment> segments;
 	if(static_cast<int>(cPts.size())!=surface->segs.x*surface->segs.y) {
-		std::cerr << std::format("Bezier surface with index {} has incorrect size!\n", id);
+		std::cerr << "Bezier surface with index " << id << " has incorrect size!\n";
 		return {id, nullptr};
 	}
 	//PHASE 1: prepare points
@@ -220,14 +219,14 @@ bool bf::loadFromStream(bf::ObjectArray &objectArray, bf::Camera& camera, std::i
     valijson::adapters::JsonCppAdapter myTargetAdapter(value);
     valijson::ValidationResults errors;
     if (!validator.validate(modelSchema, myTargetAdapter, &errors)) {
-        std::cerr << std::format("File is not valid model file! Found {} errors.\n", errors.numErrors());
+        std::cerr << "File is not valid model file! Found " << errors.numErrors() << " errors.\n";
         while(errors.numErrors()>0) {
             valijson::ValidationResults::Error error;
             errors.popError(error);
             for(const auto& a: error.context) {
-                std::cout << std::format("{}/",a);
+                std::cout << a+"/";
             }
-            std::cout << std::format("\nDESC: {}\n",error.description);
+            std::cout << "\nDESC: "+error.description+"\n";
         }
         return false;
     }
@@ -258,7 +257,7 @@ bool bf::loadFromStream(bf::ObjectArray &objectArray, bf::Camera& camera, std::i
             emplaceToObjectArray(objectArray.objects,loadSurface<BezierSurface2>(gValue, objectArray));
         }
         else {
-            std::cout << std::format("Unsupported type {}\n", gValue["objectType"].asString());
+            std::cout << "Unsupported type "+gValue["objectType"].asString()+"\n";
         }
     }
     glm::vec3 oldPos=camera.position, oldRot=camera.rotation;
