@@ -87,6 +87,7 @@ namespace bf {
 		[[nodiscard]] virtual bool shouldBeRemoved() const {return false;}
 		virtual void onSetActive() {}
 		virtual void onSetInactive() {}
+		virtual std::pair<glm::vec3, glm::vec3> getObjectRange() const {return {};}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);

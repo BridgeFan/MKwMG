@@ -1,11 +1,14 @@
 //
 // Created by kamil-hp on 27.04.23.
 //
-#include <format>
-#include <iostream>
-#include <filesystem>
-#include <fstream>
+#include "Object/MullingPathCreator.h"
+
+
 #include <algorithm>
+#include <filesystem>
+#include <format>
+#include <fstream>
+#include <iostream>
 #ifdef WIN32
 #include <Windows.h>
 auto& mcout = std::wcout;
@@ -173,6 +176,10 @@ void bf::imgui::createObjectPanel(Scene &scene, const bf::ConfigState& configSta
 	ImGui::TableNextColumn();
 	if(ImGui::Button("Intersection", bSize)) {
 		scene.objectArray.addRef<bf::IntersectionObject>();
+	}
+	ImGui::TableNextColumn();
+	if(ImGui::Button("Mulling path creator", bSize)) {
+		scene.objectArray.addRef<bf::MullingPathCreator>();
 	}
     if(activeSpecialPanel!=SpecialPanel::None) {
 		ImGui::EndDisabled();

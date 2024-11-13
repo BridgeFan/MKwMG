@@ -30,16 +30,16 @@ glm::mat4 bf::Camera::GetViewMatrix() {
 	//update vectors
 	right = rotate({1.0f, 0.0f, 0.0f}, rotation);
 	up = rotate({0.0f, 1.0f, 0.0f}, rotation);
-	front = rotate({0.0f, 0.0f, -1.0f}, rotation);
+	front = rotate({0.0f, 0.0f, 1.0f}, rotation);
 	//return matrix
 	auto m3 = glm::mat3(1.f,0.f,0.f,
 		0.f,1.f,0.f,
-		0.f,0.f,-1.f);
+		0.f,0.f,1.f);
 	glm::mat3 matrix = m3*glm::mat3(bf::getInverseRotateMatrix(rotation));
 	auto ret = glm::mat4{{matrix[0], 0},
 		{matrix[1], 0},
 		{matrix[2], 0},
-		{-matrix * position, 1},
+		{matrix * position, 1},
 	};
 	return ret;
 }
@@ -49,7 +49,7 @@ glm::mat4 bf::Camera::GetInverseViewMatrix(const glm::mat4& view) {
 	//TODO - improve position
 	auto m3 = glm::mat3(1.f,0.f,0.f,
 		0.f,1.f,0.f,
-		0.f,0.f,-1.f);
+		0.f,0.f,1.f);
 	const glm::mat3 invMatrix = glm::mat3(bf::getRotateMatrix(rotation))*m3;
 	auto ret = glm::mat4(invMatrix);
 	ret[3] = tmp[3];

@@ -36,7 +36,8 @@ else()
 endif()
 include_directories(MKwMG ${PROJECT_SOURCE_DIR}/lib ${PROJECT_SOURCE_DIR}/src)
 file(GLOB_RECURSE MKWMG_SRC CONFIGURE_DEPENDS "src/*.h" "src/*.cpp")
-add_executable(MKwMG ${MKWMG_SRC})
+add_executable(MKwMG ${MKWMG_SRC}
+        src/Object/MullingPathCreator.h)
 set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 #set libraries

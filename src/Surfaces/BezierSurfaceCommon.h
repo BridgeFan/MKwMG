@@ -54,6 +54,7 @@ namespace bf {
 		[[nodiscard]] bf::vec2d getParameterMax() const override {return {segs.x,segs.y};}
 		[[nodiscard]] virtual bool parameterWrappingU() const override {return isWrappedX;}
 		[[nodiscard]] virtual bool parameterWrappingV() const override {return isWrappedY;}
+    	std::pair<glm::vec3, glm::vec3> getObjectRange() const override; //[min, max]
 	};
 }
 

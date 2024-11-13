@@ -18,6 +18,7 @@
 #include <optional>
 #include <queue>
 #include <random>
+#include <algorithm>
 
 std::random_device rd;
 constexpr int TN=1000;
@@ -81,6 +82,7 @@ void bf::IntersectionObject::ObjectGui() {
 			static bool isCursor;
 			static float precision=.01f;
 			ImGui::Checkbox("Use cursor", &isCursor);
+			bf::imgui::checkChanged("Cursor position", transform.position);
 			bf::imgui::checkChanged("Precision", precision, .001f, 10.f, .001f, .05f);
 			if (ImGui::Button("Confirm")) {
 				findIntersection(isCursor, precision);
@@ -98,10 +100,14 @@ void bf::IntersectionObject::ObjectGui() {
 		}
 		static bool isSecondSet=false;
 		if(isLooped) {
-			if (obj2 && isSecondSet)
-				ImGui::Image((void *) (intptr_t) obj2->textureID, ImVec2(250, 250));
-			else
-				ImGui::Image((void *) (intptr_t) obj1->textureID, ImVec2(250, 250));
+			void* imPoint;
+			if (obj2 && isSecondSet) {
+				imPoint = reinterpret_cast<void*>(static_cast<intptr_t>(obj2->textureID));
+			}
+			else {
+				imPoint = reinterpret_cast<void*>(static_cast<intptr_t>(obj1->textureID));
+			}
+			ImGui::Image(imPoint, ImVec2(250, 250));
 			if (obj1 && ImGui::Button(obj1->textureMode ? "Unset Object 1 trim" : "Set Object 1 trim")) {
 				obj1->textureMode = (obj1->textureMode + 1) % 3;
 			}
@@ -133,7 +139,8 @@ void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 	glBindVertexArray(VAO);
 	shaderArray.getActiveShader().setMat4("model", glm::mat4(1.f));
 	shaderArray.getActiveShader().setFloat("pointSize", 4.f*configState->pointRadius);
-	glDrawArrays(GL_POINTS, 0, GL_UNSIGNED_INT);
+	glDrawElements(GL_POINTS, indices.size(), GL_UNSIGNED_INT,   // type
+				   reinterpret_cast<void*>(0));
 	glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
 				   reinterpret_cast<void*>(0));         // element array buffer offset
 	shaderArray.setColor(color);
@@ -231,10 +238,10 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, const 
 
 constexpr double movingAdditionWage = 0.1;
 
-bool isModAlmostOne(double a, double mod, double eps=1e-5) {
+bool isModAlmostOne(double a, double mod, double epsAO=1e-5) {
 	double b=fmod(a, mod);
 	if(b<0.0) b+=a;
-	return b<eps || b-a>-eps;
+	return b<epsAO || b-a>-epsAO;
 }
 
 bool isOutOfRange(const bf::Object& obj, const bf::vec2d& v) {
@@ -342,13 +349,6 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	auto* o = obj2 ? obj2 : obj1;
 	auto pos2 = transform.position;
-	bool isBezier0_1=false;
-	bool isBezier0_2=false;
-	//Béziers C0 need to be checked specially because of non-continuous derivatives on linking
-	if(typeid(*obj1)==typeid(bf::BezierSurface0))
-		isBezier0_1=true;
-	if(typeid(*o)==typeid(bf::BezierSurface0))
-		isBezier0_2=true;
 	//no point chosen
 	bf::vec4d x0;
 	//begin data to algorithm
@@ -498,7 +498,7 @@ void bf::IntersectionObject::onMoveObject(unsigned int index) {
 void setPixel(std::vector<uint8_t>& array, int i, int j, uint8_t color) {
 	int xi=(i+TN)%TN;
 	int xj=(j+TN)%TN;
-	array[xi+TN*xj]=127u;
+	array[xi+TN*xj]=color;
 }
 
 void BresenhamLine(std::vector<uint8_t>& array, int x1, int y1, int x2, int y2)
@@ -596,11 +596,6 @@ void BresenhamLine(std::vector<uint8_t>& array, int x1, int y1, int x2, int y2)
 void floodFill(std::vector<uint8_t>& array, int i, int j, bool wrapX, bool wrapY) {
 	if(array[i+TN*j]>63u || i<0 || i>=TN || j<0 || j>=TN) //already filled or out of bounds
 		return;
-	/*array[i+TN*j]=255u;
-	if(i>0 || wrapX) floodFill(array,(TN+i-1)%TN,j,wrapX,wrapY);
-	if(i<TN-1 || wrapX) floodFill(array,(i+1)%TN,j,wrapX,wrapY);
-	if(j>0 || wrapY) floodFill(array,i,(TN+j-1)%TN,wrapX,wrapY);
-	if(j<TN-1 || wrapY) floodFill(array,i,(j+1)%TN,wrapX,wrapY);*/
 	std::queue<std::pair<int, int> > Q;
 	Q.emplace(i,j);
 	while(!Q.empty()) {
@@ -659,7 +654,6 @@ int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// load and generate the texture
-	int width, height, nrChannels;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, TN, TN, 0, GL_RED, GL_UNSIGNED_BYTE, val.data());
 	glGenerateMipmap(GL_TEXTURE_2D);
 	return texture;

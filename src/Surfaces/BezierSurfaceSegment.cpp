@@ -8,10 +8,12 @@
 #include "Object/ObjectArray.h"
 #include "Shader/ShaderArray.h"
 #include <OpenGLUtil.h>
+#include "Object/Object.h"
 
 int bf::BezierSurfaceSegment::_index = 0;
 
 void bf::BezierSurfaceSegment::initGL(const bf::ObjectArray &objectArray) {
+	oArray=&objectArray;
     vertices.clear();
     indices.clear();
     for(auto i: pointIndices) {
@@ -80,7 +82,9 @@ void bf::BezierSurfaceSegment::segmentDraw(const bf::ShaderArray &shaderArray, b
 }
 
 void bf::BezierSurfaceSegment::onPointMove(const bf::ObjectArray &objectArray, unsigned int index) {
-    auto it = std::find(pointIndices.begin(),pointIndices.end(), index);
+	if(!oArray)
+		oArray=&objectArray;
+	auto it = std::find(pointIndices.begin(),pointIndices.end(), index);
     if(it!=pointIndices.end()) {
         unsigned itIndex = it - pointIndices.begin();
         vertices[itIndex]=objectArray[index].getPosition();
@@ -113,10 +117,24 @@ void bf::BezierSurfaceSegment::swapSegments(bf::BezierSurfaceSegment &a, bf::Bez
     std::swap(a.isC2, b.isC2);
 }
 
-bf::BezierSurfaceSegment &bf::BezierSurfaceSegment::operator=(bf::BezierSurfaceSegment && segment) noexcept {
-    swapSolids(*this, segment);
-    swapSegments(*this, segment);
+bf::BezierSurfaceSegment &bf::BezierSurfaceSegment::operator=(bf::BezierSurfaceSegment &&segment) noexcept {
+	swapSolids(*this, segment);
+	swapSegments(*this, segment);
 	tmpIndices = std::move(segment.tmpIndices);
-    segment.VAO=segment.VBO=segment.IBO=UINT_MAX;
-    return *this;
+	segment.VAO = segment.VBO = segment.IBO = UINT_MAX;
+	return *this;
+}
+std::pair<glm::vec3, glm::vec3> bf::BezierSurfaceSegment::getObjectRange() const {
+	if(!oArray)
+		return {glm::vec3(0), glm::vec3(0)};
+	glm::vec3 retMin=(*oArray)[pointIndices[0]].getPosition();
+	glm::vec3 retMax=retMin;
+	for(int i=1;i<16;i++) {
+		glm::vec3 pos=(*oArray)[pointIndices[i]].getPosition();
+		for(int j=0;j<3;j++) {
+			retMin[j]=std::min(pos[j], retMin[j]);
+			retMax[j]=std::max(pos[j], retMax[j]);
+		}
+	}
+	return {retMin, retMax};
 }

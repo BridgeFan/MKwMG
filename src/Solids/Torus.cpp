@@ -123,13 +123,20 @@ bf::vec3d bf::Torus::parameterGradientU(double uf, double vf) const {
 	return getModelMatrix()*vector;
 }
 bf::vec3d bf::Torus::parameterGradientV(double uf, double vf) const {
-	bf::vec4d param = clampParam(uf,vf);
+	bf::vec4d param = clampParam(uf, vf);
 	double u = param.x;
 	double v = param.y;
 	bf::vec4d vector = {-(bigRadius + smallRadius * std::cos(u)) * std::sin(v),
-						(bigRadius+smallRadius*std::cos(u))*std::cos(v),
+						(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
 						0.f, 0.f};
-	return getModelMatrix()*vector;
+	return getModelMatrix() * vector;
+}
+std::pair<glm::vec3, glm::vec3> bf::Torus::getObjectRange() const {
+	//TODO: better
+	auto V = smallRadius + bigRadius;
+	glm::vec3 min = transform.position - glm::vec3(V,V,V);
+	glm::vec3 max = transform.position + glm::vec3(V,V,V);
+	return {min, max};
 }
 void bf::Torus::draw(const bf::ShaderArray &shaderArray) const {
 	drawDebug(shaderArray, false);

@@ -16,6 +16,7 @@ namespace bf {
     struct ShaderArray;
 	class BezierSurfaceCommon;
     class BezierSurfaceSegment: public bf::Solid {
+    	const bf::ObjectArray* oArray;
 		friend class bf::BezierSurfaceCommon;
         friend bool loadFromFile(bf::ObjectArray &objectArray, const std::string &path);
         static int _index;
@@ -41,6 +42,7 @@ namespace bf {
 		bool isTopEmpty() const {return emptyEdges&0x2;}
 		bool isBottomEmpty() const {return emptyEdges&0x1;}
 		bool isInternal() const {return emptyEdges==0x0;}
+    	std::pair<glm::vec3, glm::vec3> getObjectRange() const override;
     };
 }
 

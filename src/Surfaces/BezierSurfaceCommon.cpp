@@ -226,17 +226,33 @@ void bf::BezierSurfaceCommon::initSegments(std::vector<std::vector<std::string> 
 	updateDebug();
 }
 void bf::BezierSurfaceCommon::onMergePoints(int p1, int p2) {
-	if(objectArray.isCorrect(p2) && objectArray[p2].indestructibilityIndex>0)
+	if (objectArray.isCorrect(p2) && objectArray[p2].indestructibilityIndex > 0)
 		objectArray[p2].indestructibilityIndex--;
-	for(auto& sRow: segments) {
-		for(auto& s: sRow) {
-			for(auto& i: s.pointIndices) {
-				if(static_cast<int>(i)==p2)
-					i=p1;
+	for (auto &sRow: segments) {
+		for (auto &s: sRow) {
+			for (auto &i: s.pointIndices) {
+				if (static_cast<int>(i) == p2)
+					i = p1;
 			}
 		}
 	}
 	onMoveObject(p1);
+}
+std::pair<glm::vec3, glm::vec3> bf::BezierSurfaceCommon::getObjectRange() const {
+	if(segments.empty() || segments[0].empty())
+		return {glm::vec3(0), glm::vec3(0)};
+	glm::vec3 min={FLT_MAX, FLT_MAX, FLT_MAX};
+	glm::vec3 max={FLT_MIN, FLT_MIN, FLT_MIN};
+	for(const auto& row: segments) {
+		for(const auto& s: row) {
+			auto&& [lmin, lmax] = s.getObjectRange();
+			for(int i=0;i<2;i++) {
+				min[i]=std::min(min[i],lmin[i]);
+				max[i]=std::max(max[i],lmax[i]);
+			}
+		}
+	}
+	return {min, max};
 }
 std::tuple<int, int, double, double> bf::BezierSurfaceCommon::setParameters(double uf, double vf) const {
 	bf::vec4d param = clampParam(uf,vf,1.0);
