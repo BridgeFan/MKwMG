@@ -5,17 +5,21 @@
 
 #ifndef MG1_ZAD2_UTIL_H
 #define MG1_ZAD2_UTIL_H
-#include <string>
+#include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
-#include <vector>
 #include <memory>
-#include <glm/mat4x4.hpp>
 #include <numbers>
+#include <optional>
+#include <string>
+#include <vector>
 constexpr float PI = std::numbers::pi_v<float>;
 
 struct ImGuiIO;
 namespace bf {
+	using vec2d = glm::vec<2, double, glm::defaultp>;
+	using vec3d = glm::vec<3, double, glm::defaultp>;
+	using vec4d = glm::vec<4, double, glm::defaultp>;
 	template<typename T>
 	concept arithmetic = std::is_arithmetic<T>::value;
 	template<typename T>
@@ -49,6 +53,23 @@ namespace bf {
 		return ret;
 	}
 }
+
+template<std::floating_point T, glm::qualifier Q>
+std::ostream& operator<<(std::ostream& out, const glm::vec<2, T, Q>& v) {
+	out << v.x << " " << v.y;
+	return out;
+}
+template<std::floating_point T, glm::qualifier Q>
+std::ostream& operator<<(std::ostream& out, const glm::vec<3, T, Q>& v) {
+	out << v.x << " " << v.y << " " << v.z;
+	return out;
+}
+template<std::floating_point T, glm::qualifier Q>
+std::ostream& operator<<(std::ostream& out, const glm::vec<4, T, Q>& v) {
+	out << v.x << " " << v.y << " " << v.z << " " << v.a;
+	return out;
+}
+
 
 std::string readWholeFile(const std::string& path);
 
@@ -107,6 +128,24 @@ std::vector<T> tridiagonalMatrixAlgorithm(const std::vector<float>& a, const std
 		x[i]=dk[i]-ck[i]*x[i+1];
 	return x;
 }
+
+struct SegmentIntersectionResult {
+	double u, v;
+	double error;
+};
+
+template<bf::arithmetic T>
+T sign(T a) {
+	if (a==T()) return 0.0;
+	return a>=T() ? T(1) : T(-1);
+}
+
+
+std::optional<SegmentIntersectionResult> segmentIntersection(const bf::vec3d& p1, const bf::vec3d& p2, const bf::vec3d& q1, const bf::vec3d& q2);
+void floodFill(std::vector<uint8_t>& array, int TN, int i, int j, bool wrapX, bool wrapY, uint8_t color1, uint8_t color2=63u);
+void BresenhamLine(std::vector<uint8_t>& array, int width, int x1, int y1, int x2, int y2, uint8_t color);
+void setPixel(std::vector<uint8_t>& array, int width, int i, int j, uint8_t color);
+uint8_t getPixel(const std::vector<uint8_t>& array, int width, int i, int j);
 
 
 bool almostEqual(float a1, float a2, float eps=1e-7);

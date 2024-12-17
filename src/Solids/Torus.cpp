@@ -131,6 +131,34 @@ bf::vec3d bf::Torus::parameterGradientV(double uf, double vf) const {
 						0.f, 0.f};
 	return getModelMatrix() * vector;
 }
+bf::vec3d bf::Torus::parameterHesseUU(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {(-smallRadius*std::cos(u)) * std::cos(v),
+						(-smallRadius*std::cos(u))*std::sin(v),
+						-smallRadius*std::sin(u), 0.f};
+	return getModelMatrix()*vector;
+}
+bf::vec3d bf::Torus::parameterHesseUV(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf,vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {(smallRadius*std::sin(u)) * std::sin(v),
+						(-smallRadius*std::sin(u))*std::cos(v),
+						0.0, 0.f};
+	return getModelMatrix()*vector;
+}
+bf::vec3d bf::Torus::parameterHesseVV(double uf, double vf) const {
+	bf::vec4d param = clampParam(uf, vf);
+	double u = param.x;
+	double v = param.y;
+	bf::vec4d vector = {-(bigRadius + smallRadius * std::cos(u)) * std::cos(v),
+						-(bigRadius + smallRadius * std::cos(u)) * std::sin(v),
+						0.f, 0.f};
+	return getModelMatrix() * vector;
+}
+
 std::pair<glm::vec3, glm::vec3> bf::Torus::getObjectRange() const {
 	//TODO: better
 	auto V = smallRadius + bigRadius;

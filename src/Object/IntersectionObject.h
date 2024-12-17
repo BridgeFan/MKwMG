@@ -16,12 +16,17 @@ namespace bf {
 		void findIntersection(bool isCursor, double precision);
 		bool toRemove=false;
 		void recalculate(bool isTextureToSet=false);
+		void fillHole(const bf::vec4d& a, const bf::vec4d& b);
 	public:
+		bool isShown=true;
 		std::vector<bf::vec4d> intersectionPoints;
 		bool isLooped=false;
 		bf::Object *obj1, *obj2;
 		IntersectionObject(bf::ObjectArray &array);
+		IntersectionObject(bf::ObjectArray &array, bf::Object& o1, bf::Object& o2, const glm::vec3& cursor, float precision=0.01f);
+		IntersectionObject(bf::ObjectArray &array, bf::Object& o1, bf::Object& o2, float precision=0.01f);
 		void ObjectGui() override;
+		void mergeFlatIntersections(bf::IntersectionObject& i2);
 		~IntersectionObject() override;
 		void draw(const ShaderArray &shader) const override;
 		ShaderType getShaderType() const override;
@@ -34,7 +39,7 @@ namespace bf {
 		void onRemoveObject(unsigned int index) override;
 		void onMoveObject(unsigned int index) override;
 		static double distance(const bf::Object& o1, const bf::Object& o2, const bf::vec4d& t);
-		static double movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d& P0, const bf::vec3d& t, double d);
+		static double movDist(const bf::vec3d &P, const bf::vec3d &Q, const bf::vec3d &P0, const bf::vec3d &t, double d);
 	};
 }
 

@@ -9,6 +9,7 @@
 #include "Transform.h"
 #include <array>
 #include <climits>
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -83,14 +84,22 @@ namespace bf {
 		[[nodiscard]] virtual vec3d parameterFunction(double u, double v) const;
 		[[nodiscard]] virtual vec3d parameterGradientU(double u, double v) const;
 		[[nodiscard]] virtual vec3d parameterGradientV(double u, double v) const;
+		[[nodiscard]] virtual vec3d parameterHesseUU(double u, double v) const;
+		[[nodiscard]] virtual vec3d parameterHesseUV(double u, double v) const;
+		[[nodiscard]] vec3d parameterHesseVU(double u, double v) const {return parameterHesseUV(u,v);}
+		[[nodiscard]] virtual vec3d parameterHesseVV(double u, double v) const;
 		[[nodiscard]] vec4d clampParam(double u, double v, double modulo=-1.) const; //x,y - new parameters, z,w - modulo
 		[[nodiscard]] virtual bool shouldBeRemoved() const {return false;}
+		bf::vec3d getNormal(double u, double v) const;
 		virtual void onSetActive() {}
 		virtual void onSetInactive() {}
 		virtual std::pair<glm::vec3, glm::vec3> getObjectRange() const {return {};}
 	};
 
 	glm::vec3 getMiddle(const std::vector<bf::Object> &objects);
+	std::array<double, 8> getApproximationParaboloid(const Object &o, double u, double v,
+		std::function<vec3d(const vec3d&)> const& convert, std::function<vec3d(const vec3d&)> const& dConvert);
+	double calculateParaboloidMove(const std::array<double, 8>& paraboloid, float R);
 }
 
 

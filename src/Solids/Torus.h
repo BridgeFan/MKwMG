@@ -39,6 +39,9 @@ namespace bf {
 		[[nodiscard]] vec3d parameterFunction(double u, double v) const override;
 		[[nodiscard]] vec3d parameterGradientU(double u, double v) const override;
 		[[nodiscard]] vec3d parameterGradientV(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseUU(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseUV(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseVV(double u, double v) const override;
 		std::pair<glm::vec3, glm::vec3> getObjectRange() const override;
 	};
 }

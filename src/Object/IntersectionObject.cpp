@@ -8,79 +8,103 @@
 #include "Gizmos/MultiCursor.h"
 #include "ImGui/ImGuiUtil.h"
 #include "ImGui/imgui_include.h"
+#include "MullingPathCreator.h"
 #include "ObjectArray.h"
 #include "Shader/ShaderArray.h"
 #include "Surfaces/BezierSurface0.h"
 #include "Util.h"
 #include <GL/glew.h>
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <optional>
 #include <queue>
 #include <random>
-#include <algorithm>
 
 std::random_device rd;
 constexpr int TN=1000;
 
-std::pair<bf::Object*, int> bf::IntersectionObject::convertToCurve() {
-	if(!obj1) return {nullptr, 0};
+std::pair<bf::Object *, int> bf::IntersectionObject::convertToCurve() {
+	if (!obj1) return {nullptr, 0};
 	unsigned beginIndex = objectArray.size();
 	objectArray.clearSelection();
 	//generate points
-	for(const auto& p: intersectionPoints) {
-		auto pos = obj1->parameterFunction(p.x,p.y);
-		if(obj2) {
-			pos = (pos + obj2->parameterFunction(p.z,p.w)) * 0.5;
+	for (const auto &p: intersectionPoints) {
+		auto pos = obj1->parameterFunction(p.x, p.y);
+		if (obj2) {
+			pos = (pos + obj2->parameterFunction(p.z, p.w)) * 0.5;
 		}
 		objectArray.add<bf::Point>(pos);
 	}
 	auto curve = new bf::BezierCurveInter(objectArray);
-	for(unsigned i=beginIndex;i<objectArray.size();i++) {
+	for (unsigned i = beginIndex; i < objectArray.size(); i++) {
 		curve->addPoint(i);
 	}
-	if(isLooped)
+	if (isLooped)
 		curve->addPoint(beginIndex);
-	for(unsigned i=0;i<beginIndex;i++) {
-		if(objectArray.getPtr(i)==this)
+	for (unsigned i = 0; i < beginIndex; i++) {
+		if (objectArray.getPtr(i) == this)
 			return {curve, i};
 	}
 	return {curve, 0};
 }
 
 bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array) : ObjectArrayListener(array) {
-	obj1=obj2=nullptr;
-	for(unsigned i=0;i<objectArray.size();i++) {
-		if(objectArray.isActive(i) && objectArray[i].isIntersectable()) {
-			if(!obj1) {
+	obj1 = obj2 = nullptr;
+	for (unsigned i = 0; i < objectArray.size(); i++) {
+		if (objectArray.isActive(i) && objectArray[i].isIntersectable()) {
+			if (!obj1) {
 				obj1 = &objectArray[i];
 				obj1->indestructibilityIndex++;
-			}
-			else if(!obj2) {
+			} else if (!obj2) {
 				obj2 = &objectArray[i];
 				obj2->indestructibilityIndex++;
 				break;
 			}
 		}
 	}
-	isInitPhase=true;
-	if(!obj1) {
-		toRemove=true;
+	isInitPhase = true;
+	if (!obj1) {
+		toRemove = true;
 	}
 }
+
+bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o1, bf::Object &o2, const glm::vec3& cursor, float precision):
+		ObjectArrayListener(array), obj1(&o1) {
+	if(std::addressof(o1)==std::addressof(o2))
+		obj2 = nullptr;
+	else
+		obj2 = &o2;
+	isInitPhase = false;
+	transform.position = cursor;
+	objectArray.isForcedActive = false;
+	findIntersection(true, precision);
+}
+
+bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o1, bf::Object &o2, float precision):
+		ObjectArrayListener(array), obj1(&o1) {
+	if (std::addressof(o1) == std::addressof(o2))
+		obj2 = nullptr;
+	else
+		obj2 = &o2;
+	isInitPhase = false;
+	objectArray.isForcedActive = false;
+	findIntersection(false, precision);
+}
+
+
 void bf::IntersectionObject::ObjectGui() {
 	bf::imgui::checkChanged("Intersection name", name);
-	if(isInitPhase) {
-		if(!obj1) {
+	if (isInitPhase) {
+		if (!obj1) {
 			ImGui::Text("Selected no intersectable objects");
 			if (ImGui::Button("OK")) {
 				isInitPhase = false;
 				objectArray.isForcedActive = false;
 			}
-		}
-		else {
+		} else {
 			static bool isCursor;
-			static float precision=.01f;
+			static float precision = .01f;
 			ImGui::Checkbox("Use cursor", &isCursor);
 			bf::imgui::checkChanged("Cursor position", transform.position);
 			bf::imgui::checkChanged("Precision", precision, .001f, 10.f, .001f, .05f);
@@ -90,22 +114,21 @@ void bf::IntersectionObject::ObjectGui() {
 				objectArray.isForcedActive = false;
 			}
 		}
-	}
-	else {
+	} else {
+		ImGui::Checkbox("Is shown", &isShown);
 		if (ImGui::Button("Convert to curve")) {
 			auto curve = convertToCurve();
-			if(!curve.first) return;
+			if (!curve.first) return;
 			auto thisObject = std::move(objectArray.objects[curve.second]).first;
 			objectArray.objects[curve.second].first.reset(curve.first);
 		}
-		static bool isSecondSet=false;
-		if(isLooped) {
-			void* imPoint;
+		static bool isSecondSet = false;
+		if (isLooped) {
+			void *imPoint;
 			if (obj2 && isSecondSet) {
-				imPoint = reinterpret_cast<void*>(static_cast<intptr_t>(obj2->textureID));
-			}
-			else {
-				imPoint = reinterpret_cast<void*>(static_cast<intptr_t>(obj1->textureID));
+				imPoint = reinterpret_cast<void *>(static_cast<intptr_t>(obj2->textureID));
+			} else {
+				imPoint = reinterpret_cast<void *>(static_cast<intptr_t>(obj1->textureID));
 			}
 			ImGui::Image(imPoint, ImVec2(250, 250));
 			if (obj1 && ImGui::Button(obj1->textureMode ? "Unset Object 1 trim" : "Set Object 1 trim")) {
@@ -121,19 +144,45 @@ void bf::IntersectionObject::ObjectGui() {
 		}
 	}
 }
+
+void bf::IntersectionObject::mergeFlatIntersections(bf::IntersectionObject &i2) {
+	//assumes that o2 will be removed and flat is on obj2
+	glm::vec3 P = vertices.back().getPosition();
+	glm::vec3 A1 = i2.vertices[0].getPosition();
+	glm::vec3 A2 = i2.vertices.back().getPosition();
+	if(glm::dot(P-A1,P-A1)>glm::dot(P-A2,P-A2)) {
+		std::ranges::reverse(i2.intersectionPoints);
+		A1 = i2.vertices.back().getPosition();
+		A2 = i2.vertices[0].getPosition();
+	}
+	if(glm::dot(A1-P,A1-P) > 0.0100) {
+		fillHole(intersectionPoints.back(), i2.intersectionPoints[0]);
+	}
+	intersectionPoints.insert(intersectionPoints.end(), i2.intersectionPoints.begin(), i2.intersectionPoints.end());
+	P = vertices[0].getPosition();
+	if(glm::dot(P-A2,P-A2) > 0.0100) {
+		fillHole(intersectionPoints.back(), intersectionPoints[0]);
+	}
+	isLooped = true;
+	//TODO - uncomment
+	recalculate(/*true*/);
+	setBuffers();
+}
+
 bf::IntersectionObject::~IntersectionObject() {
 	if(obj1 && obj1->indestructibilityIndex>0) {
 		obj1->indestructibilityIndex--;
-		obj1->textureMode=0;
+		//obj1->textureMode=0;
 	}
 	if(obj2 && obj2->indestructibilityIndex>0) {
 		obj2->indestructibilityIndex--;
-		obj2->textureMode=0;
+		//obj2->textureMode=0;
 	}
 }
+
 void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 	//Solid::draw(shaderArray);
-	if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader || indices.empty()) return;
+	if(shaderArray.getActiveIndex()!=bf::ShaderType::BasicShader || indices.empty() || !isShown) return;
 	auto color = shaderArray.getColor();
 	shaderArray.setColor(255,255,0);
 	glBindVertexArray(VAO);
@@ -145,6 +194,7 @@ void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 				   reinterpret_cast<void*>(0));         // element array buffer offset
 	shaderArray.setColor(color);
 }
+
 bf::ShaderType bf::IntersectionObject::getShaderType() const {
 	return bf::ShaderType::MultipleShaders;
 }
@@ -231,8 +281,8 @@ bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, const 
 		N++;
 	}
 	x=xn;
-	std::cout << N << " " << x.x << " " << x.y << "\n";
-	std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
+	std::cout << N /*<< " " << x.x << " " << x.y*/ << "\n";
+	//std::cout << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
 	return x;
 }
 
@@ -281,7 +331,7 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 		using I=bf::IntersectionObject;
 		//simple gradient is enough here
 		auto y=x-x0;
-		if(M>=3 && glm::dot(y,y)<precision*precision) {
+		if(M>=10 && glm::dot(y,y)<precision*precision) {
 			isLooped=true;
 			break;
 		}
@@ -334,7 +384,7 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 		}
 		P = obj1->parameterFunction(xn[0], xn[1]);
 		Q = o->parameterFunction(xn[2], xn[3]);
-		std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
+		//std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
 		if(N>=10000 || std::abs(glm::distance(P,P0)/std::abs(precision)-1.0)>0.5) {
 			isLooped=false;
 			break;
@@ -353,7 +403,7 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	bf::vec4d x0;
 	//begin data to algorithm
 	if(isCursor) { //cursor begin
-		std::cout << pos2.x << " " << pos2.y << " " << pos2.z << "\n";
+		//std::cout << pos2.x << " " << pos2.y << " " << pos2.z << "\n";
 		//find beginning point - u,v
 		auto t1 = findBeginningPoint(*obj1, pos2);
 		bf::vec2d t2;
@@ -362,7 +412,7 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 		else
 			t2 = findBeginningPoint(*o, pos2);
 		x0={t1.x,t1.y,t2.x,t2.y};
-		std::cout << bf::IntersectionObject::distance(*obj1, *o, x0) << "\n";
+		//std::cout << bf::IntersectionObject::distance(*obj1, *o, x0) << "\n";
 	}
 	else {
 		double minDist=std::numeric_limits<double>::max();;
@@ -417,9 +467,9 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 		}
 		N++;
 	}
-	std::cout << N << " " << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x) << "\n";
+	std::cout << N /*<< " " << a << " " << glm::dot(df,df) << " " << glm::dot(xn-x,xn-x)*/ << "\n";
 	x=xn;
-	std::cout << N << " " << distance(*obj1, *o, x) << "\n";
+	//std::cout << N << " " << distance(*obj1, *o, x) << "\n";
 	if(distance(*obj1,*o,x)>epsBig) {
 		std::cout << "No intersection found\n";
 		//TODO - remove
@@ -452,13 +502,15 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 								  std::make_move_iterator(pts.end()));
 	}
 	isLooped=loop;
-	recalculate(true);
+	//TODO: uncomment
+	recalculate(/*true*/);
+	setBuffers();
 }
 
-double bf::IntersectionObject::movDist(const bf::vec3d& P, const bf::vec3d& Q, const bf::vec3d &P0, const bf::vec3d &t, double d) {
-	double ret=0.0;
-	for(int i=0;i<3;i++) {
-		ret+=fastPow(P[i]-Q[i],2)+fastPow(glm::dot(P-P0,t)-d,2)*movingAdditionWage;
+double bf::IntersectionObject::movDist(const bf::vec3d &P, const bf::vec3d &Q, const bf::vec3d &P0, const bf::vec3d &t, double d) {
+	double ret = 0.0;
+	for (int i = 0; i < 3; i++) {
+		ret += fastPow(P[i] - Q[i], 2) + fastPow(glm::dot(P - P0, t) - d, 2) * movingAdditionWage;
 	}
 	return ret;
 }
@@ -495,128 +547,6 @@ void bf::IntersectionObject::onMoveObject(unsigned int index) {
 	}
 }
 
-void setPixel(std::vector<uint8_t>& array, int i, int j, uint8_t color) {
-	int xi=(i+TN)%TN;
-	int xj=(j+TN)%TN;
-	array[xi+TN*xj]=color;
-}
-
-void BresenhamLine(std::vector<uint8_t>& array, int x1, int y1, int x2, int y2)
-{	//kod wzięty z artykułu https://pl.wikipedia.org/wiki/Algorytm_Bresenhama
-	// zmienne pomocnicze
-	int d, dx, dy, ai, bi, xi, yi;
-	constexpr int BIG=static_cast<int>(TN*0.8);
-	if(x2-x1>=BIG) {
-		x1+=TN;
-	}
-	if(x2-x1<=-BIG) {
-		x2+=TN;
-	}
-	if(y2-y1>=BIG) {
-		y1+=TN;
-	}
-	if(y2-y1<=-BIG) {
-		y2+=TN;
-	}
-	int x = x1, y = y1;
-	// ustalenie kierunku rysowania
-	if (x1 < x2)
-	{
-		xi = 1;
-		dx = x2 - x1;
-	}
-	else
-	{
-		xi = -1;
-		dx = x1 - x2;
-	}
-	// ustalenie kierunku rysowania
-	if (y1 < y2)
-	{
-		yi = 1;
-		dy = y2 - y1;
-	}
-	else
-	{
-		yi = -1;
-		dy = y1 - y2;
-	}
-	// pierwszy piksel
-	setPixel(array,x,y,127u);
-	// oś wiodąca OX
-	if (dx > dy)
-	{
-		ai = (dy - dx) * 2;
-		bi = dy * 2;
-		d = bi - dx;
-		// pętla po kolejnych x
-		while (x != x2)
-		{
-			// test współczynnika
-			if (d >= 0)
-			{
-				x += xi;
-				y += yi;
-				d += ai;
-			}
-			else
-			{
-				d += bi;
-				x += xi;
-			}
-			setPixel(array,x,y,127u);
-		}
-	}
-	// oś wiodąca OY
-	else
-	{
-		ai = ( dx - dy ) * 2;
-		bi = dx * 2;
-		d = bi - dy;
-		// pętla po kolejnych y
-		while (y != y2)
-		{
-			// test współczynnika
-			if (d >= 0)
-			{
-				x += xi;
-				y += yi;
-				d += ai;
-			}
-			else
-			{
-				d += bi;
-				y += yi;
-			}
-			setPixel(array,x,y,127u);
-		}
-	}
-}
-
-void floodFill(std::vector<uint8_t>& array, int i, int j, bool wrapX, bool wrapY) {
-	if(array[i+TN*j]>63u || i<0 || i>=TN || j<0 || j>=TN) //already filled or out of bounds
-		return;
-	std::queue<std::pair<int, int> > Q;
-	Q.emplace(i,j);
-	while(!Q.empty()) {
-		auto [pi,pj] = Q.front();
-		Q.pop();
-		if(array[pi+TN*pj]<63u) {//to fill
-			array[pi+TN*pj]=255u;
-			if(pi>0 || wrapX)
-				Q.emplace((TN+pi-1)%TN,pj);
-			if(pi<TN-1 || wrapX)
-				Q.emplace((pi+1)%TN,pj);
-			if(pj>0 || wrapY)
-				Q.emplace(pi,(TN+pj-1)%TN);
-			if(pj<TN-1 || wrapY)
-				Q.emplace(pi,(pj+1)%TN);
-		}
-	}
-
-}
-
-
 int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2d& maks, bool wrapX, bool wrapY) {
 	std::vector<uint8_t> val(TN*TN, 0);
 	glm::vec2 p(0.0f,0.0f);
@@ -629,7 +559,7 @@ int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2
 		int y2 = static_cast<int>((isSecond ? v[j].w : v[j].y)/maks.y*TN);
 		p.x+=x1;
 		p.y+=y1;
-		BresenhamLine(val, x1, y1, x2, y2);
+		BresenhamLine(val, TN, x1, y1, x2, y2, 127u);
 	}
 	p/=v.size();
 	int px=static_cast<int>(p.x);
@@ -644,7 +574,7 @@ int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2
 		}
 	}
 	//flood fill
-	floodFill(val, static_cast<int>(p.x), static_cast<int>(p.y), wrapX, wrapY);
+	floodFill(val, TN, static_cast<int>(p.x), static_cast<int>(p.y), wrapX, wrapY, 255u);
 	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -662,35 +592,71 @@ int drawToTexture(const std::vector<bf::vec4d>& v, bool isSecond, const bf::vec2
 void bf::IntersectionObject::recalculate(bool isTextureToSet) {
 	vertices.clear();
 	indices.clear();
-	if(intersectionPoints.empty()) return;
-	vertices.reserve(2*intersectionPoints.size());
-	auto* o=obj2 ? obj2 : obj1;
-	for(unsigned i=0;i<intersectionPoints.size();i++) {
-		const auto& t=intersectionPoints[i];
-		auto p=obj1->parameterFunction(t[0],t[1]);
-		vertices.emplace_back(p.x,p.y,p.z);
+	if (intersectionPoints.empty()) return;
+	vertices.reserve(2 * intersectionPoints.size());
+	auto *o = obj2 ? obj2 : obj1;
+	for (unsigned i = 0; i < intersectionPoints.size(); i++) {
+		const auto &t = intersectionPoints[i];
+		auto p = obj1->parameterFunction(t[0], t[1]);
+		vertices.emplace_back(p.x, p.y, p.z);
 		indices.emplace_back(i);
-		if(i>0 && (isLooped || i<intersectionPoints.size()-1))
+		if (i > 0 && (isLooped || i < intersectionPoints.size() - 1))
 			indices.emplace_back(i);
 	}
-	if(isLooped)
+	if (isLooped)
 		indices.emplace_back(0);
-	unsigned ind=vertices.size();
-	for(unsigned i=0;i<intersectionPoints.size();i++) {
-		const auto& t=intersectionPoints[i];
-		auto p=o->parameterFunction(t[2],t[3]);
-		vertices.emplace_back(p.x,p.y,p.z);
-		indices.emplace_back(i+ind);
-		if(i>0 && (isLooped || i<intersectionPoints.size()-1))
-			indices.emplace_back(i+ind);
+	unsigned ind = vertices.size();
+	for (unsigned i = 0; i < intersectionPoints.size(); i++) {
+		const auto &t = intersectionPoints[i];
+		auto p = o->parameterFunction(t[2], t[3]);
+		vertices.emplace_back(p.x, p.y, p.z);
+		indices.emplace_back(i + ind);
+		if (i > 0 && (isLooped || i < intersectionPoints.size() - 1))
+			indices.emplace_back(i + ind);
 	}
-	if(isLooped)
+	if (isLooped)
 		indices.emplace_back(ind);
-	VAO==UINT_MAX ? setBuffers() : glUpdateVertices();
-	if(isTextureToSet && isLooped) {
-		if(obj1)
-			obj1->textureID=drawToTexture(intersectionPoints, false, obj1->getParameterMax(),obj1->parameterWrappingU(),obj1->parameterWrappingV());
-		if(obj2)
-			obj2->textureID=drawToTexture(intersectionPoints, true, obj2->getParameterMax(),obj2->parameterWrappingU(),obj2->parameterWrappingV());
+	VAO == UINT_MAX ? setBuffers() : glUpdateVertices();
+	if (isTextureToSet && isLooped) {
+		if (obj1)
+			obj1->textureID = drawToTexture(intersectionPoints, false, obj1->getParameterMax(), obj1->parameterWrappingU(), obj1->parameterWrappingV());
+		if (obj2)
+			obj2->textureID = drawToTexture(intersectionPoints, true, obj2->getParameterMax(), obj2->parameterWrappingU(), obj2->parameterWrappingV());
 	}
+}
+void bf::IntersectionObject::fillHole(const bf::vec4d &a, const bf::vec4d &b) {
+	//there are no toruses to fill
+	auto mullingObject = dynamic_cast<MullingPathCreator*>(obj2);
+	//XYZW - o1.u, o1.v, o2.u, o2.v
+	constexpr int STEPS_PER_UNIT = 3;
+	bf::vec4d act=a;
+	double steps;
+	//TODO
+	if(obj1->parameterWrappingU()) {
+		steps = STEPS_PER_UNIT*std::abs(a.x-b.x);
+		//U const case
+		if((obj1->parameterGradientV(a.x,a.y).z > 0.0) ^ (a.x>b.x)) {
+			act.x -= obj1->getParameterMax().y;
+		}
+	}
+	else {
+		steps = STEPS_PER_UNIT*std::abs(a.y-b.y);
+		//V const case
+		if((obj1->parameterGradientU(a.x,a.y).z > 0.0) ^ (a.y>b.y)) {
+			act.y -= obj1->getParameterMax().x;
+		}
+	}
+	steps = std::ceil(steps);
+	std::cout << a << "\n";
+	for(int i=1;i<steps-0.05;i++) {
+		act.x=lerp(a.x,b.x,static_cast<float>(i)/(steps-1.0));
+		act.y=lerp(a.y,b.y,static_cast<float>(i)/(steps-1.0));
+		auto pos = obj1->parameterFunction(act.x, act.y);
+		auto p=mullingObject->toSurfaceSpace({pos.x, pos.y});
+		act.z = p.x;
+		act.a = p.y;
+		intersectionPoints.push_back(act);
+		std::cout << act << "\n";
+	}
+	std::cout << b << "\n";
 }

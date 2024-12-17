@@ -22,6 +22,9 @@ namespace bf {
 		[[nodiscard]] bf::vec3d parameterFunction(double u, double v) const override;
 		[[nodiscard]] bf::vec3d parameterGradientU(double u, double v) const override;
 		[[nodiscard]] bf::vec3d parameterGradientV(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseUU(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseUV(double u, double v) const override;
+		[[nodiscard]] vec3d parameterHesseVV(double u, double v) const override;
 	};
 }
 
