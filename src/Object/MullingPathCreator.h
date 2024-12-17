@@ -36,7 +36,7 @@ class MullingPathCreator: public bf::Object {
 		std::vector<bf::vec3d> createPathForIntersection(const bf::IntersectionObject& io, double dist, unsigned begin, unsigned end) const;
 		std::vector<bf::vec3d> createFlatBase(uint8_t color) const;
 		bool createPixelMap(unsigned index); //false if pixel map coul not be created
-		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, double normPerc=1.0) const;
+		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move=0, double normPerc=1.0) const;
 		void setDebugTextureIndex(int surface);
 	public:
 		bf::vec2d toSurfaceSpace(const bf::vec2d& pos) {return bf::vec2d(c({pos, 0.0})/150.0)+bf::vec2d(0.5,0.5);}

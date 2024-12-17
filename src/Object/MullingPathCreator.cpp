@@ -337,14 +337,20 @@ namespace bf {
 			}
 			std::cout << "Created pixel maps\n";
 		}
+		std::array myColours = {1u,3u,5u,11u,21u,23u,25u,35u,37u,50u,57u,65u};
 		//TODO: temporary creating paths for every colour
-		for(unsigned i=1;i<usedColours.size();i++) {
+		for(auto i: myColours) {
 			std::vector<bf::vec3d> pts;
 			if (usedColours[i]!=surfaces.size()-1)
-				pts = generateExactPath(usedColours[i],i,8,true, 1.0);
+				pts = generateExactPath(usedColours[i],i,8,false, 0,1.0);
 			else
 				pts = createFlatBase(usedColours[i]);
 			saveToFile(std::string("3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
+			if (usedColours[i]!=surfaces.size()-1)
+				pts = generateExactPath(usedColours[i],i,8,true, 320, 1.0);
+			else
+				pts = createFlatBase(usedColours[i]);
+			saveToFile(std::string("Y-3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
 		}
 		//TODO: find flat base colours
 		//auto pts = createFlatBase(colour);
@@ -430,7 +436,7 @@ namespace bf {
 		}
 	}
 
-	std::vector<bf::vec3d> bf::MullingPathCreator::generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, double normPerc) const {
+	std::vector<bf::vec3d> bf::MullingPathCreator::generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move, double normPerc) const {
 		std::vector<bf::vec3d> points;
 		bool isDown = false;
 		const auto& surface = *surfaces[objIndex];
@@ -442,7 +448,8 @@ namespace bf {
 			bool isNow=false;
 			for (int tj=0;tj<TN;tj++) {
 				int i=ti;
-				int j = ((ti/diff)%2==0) ? tj : TN-tj;
+				int j=(tj+move)%TN;
+				j = ((ti/diff)%2==0) ? j : TN-j;
 				if (isXMove) {
 					std::swap(i,j);
 				}
@@ -477,6 +484,7 @@ namespace bf {
 		//TODO - move between two phases
 		auto ret2 = generateExactPath(index, color, 1, true, 0.0);
 		ret1.insert(ret1.end(),ret2.begin(), ret2.end());
+		return ret1;
 		return ret1;
 	}
 

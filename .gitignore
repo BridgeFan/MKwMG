@@ -24,3 +24,7 @@ MKwMG
 .clang-format
 /lib/fmt-master/*
 *.dll
+*.k0*
+*.k1*
+*.f0*
+*.f1*
