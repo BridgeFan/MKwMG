@@ -11,16 +11,17 @@
 
 #include "ImGui/ImGuiUtil.h"
 #include "ImGui/imgui_include.h"
+#include "EquidistanceSurface.h"
 
 #include <GL/glew.h>
 #include <algorithm>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <ranges>
 
 namespace bf {
 	constexpr double Radius = 8.0;
+    constexpr double flatRadius = 5.0;
 	constexpr double ExactRadius = 4.0;
 	constexpr double step = 0.05;
 	constexpr int RESX = 14, RESY = 50; //10.71mm/3mm of precision
@@ -90,11 +91,11 @@ namespace bf {
 		if (pixelMaps.contains(index) || index>=surfaces.size() || intersections.empty() || flatIntersections.empty())
 			return false;
 		std::vector<uint8_t> ret(TN*TN, 0u);
-		auto indexObj = surfaces[index];
+		auto indexObj = surfaces[index].get();
 		if (!indexObj) return false;
 		bf::vec2d pixelSize = 1.0/static_cast<double>(TN-1)*indexObj->getParameterMax();
 		//surface - additional line to divide hole into two sub-holes
-		if (surfaces[index]==this)
+		if (&surfaces[index]->getObject()==this)
 			BresenhamLine(ret, TN, 302, 139, 302, 209, 254u);
 		//draw lines
 		for(int i=0;i<intersections.size()+flatIntersections.size();i++) {
@@ -134,14 +135,14 @@ namespace bf {
 			for (int j=0;j<TN;j++) {
 				double v = j*pixelSize.y;
 				auto pos = c(indexObj->parameterFunction(u,v));
-				if ((pos.z>=15.05 || surfaces[index]==this) && getPixel(ret,TN,i,j)==0u) {
+				if ((pos.z>=15.05 || &surfaces[index]->getObject()==this) && getPixel(ret,TN,i,j)==0u) {
 					usedColours.emplace_back(index);
 					floodFill(ret,TN,i,j,indexObj->parameterWrappingU(),indexObj->parameterWrappingV(), usedColours.size()-1u);
 				}
 			}
 		}
 		//removing temporary line
-		if (surfaces[index]==this) {
+		if (&surfaces[index]->getObject()==this) {
 			for (int i=139;i<=209;i++) {
 				auto pixel = getPixel(ret,TN,301,i);
 				setPixel(ret,TN,302,i,pixel);
@@ -162,7 +163,7 @@ namespace bf {
 			if (typeid(objectArray[i]) != typeid(bf::MullingPathCreator)) {
 				if(!objectArray[i].isIntersectable())
 					continue;
-				surfaces.emplace_back(objectArray.getPtr(i));
+				surfaces.emplace_back(new bf::EquidistanceSurface(objectArray[i], ExactRadius));
 				std::cout << objectArray[i].name << "\n";
 				objectArray[i].indestructibilityIndex++;
 				auto&& [lmin, lmax] = objectArray[i].getObjectRange();
@@ -177,7 +178,7 @@ namespace bf {
 				shallBeDestroyed=true;
 			}
 		}
-		surfaces.emplace_back(this);
+        surfaces.emplace_back(new bf::EquidistanceSurface(*this, 0.0));
 		scale=140.0/std::max({maxPoint.x-minPoint.x, maxPoint.y-minPoint.y});
 		move = -lerp(minPoint,maxPoint,0.5)*scale; //movement IN MULLING SPACE
 		move.z = 15.0;
@@ -197,13 +198,16 @@ namespace bf {
 				debugDummySolids.emplace_back(std::move(tmpSolid));
 			}
 		}
+        if(!shallBeDestroyed) {
+            bf::EquidistanceSurface::setMullingPathCreator(*this);
+        }
 	}
 
 
 	MullingPathCreator::~MullingPathCreator() {
-		for(auto s: surfaces) {
-			if (s!=this)
-				s->indestructibilityIndex--;
+		for(auto& s: surfaces) {
+			if (&s->getObject()!=this)
+				s->getObject().indestructibilityIndex--;
 		}
 	}
 
@@ -543,8 +547,8 @@ namespace bf {
 	void MullingPathCreator::createApproximateMullingPath() {
 		//find trial points (scaled to mm)
 		std::vector<bf::vec3d> tPoints;
-		for (auto o: surfaces) {
-			if (o==this) continue;
+		for (const auto& o: surfaces) {
+			if (&o->getObject()==this) continue;
 			for (double u = 0.0; u < o->getParameterMax().x - 0.005; u += step) {
 				for (double v = 0.0; v < o->getParameterMax().y - 0.005; v += step) {
 					tPoints.emplace_back(c(o->parameterFunction(u, v)));
@@ -584,8 +588,6 @@ namespace bf {
 		else
 			std::cerr << "Error when trying to save approximate paths\n";
 	}
-
-	constexpr double flatRadius = 5.0;
 
 	bf::vec3d MullingPathCreator::getPositionMovedByNormal(bf::IntersectionObject* obj, const glm::vec4& part) const {
 		double u = part.x;

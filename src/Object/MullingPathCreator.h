@@ -13,6 +13,7 @@
 namespace bf {
 	class IntersectionObject;
 	class Point;
+    class EquidistanceSurface;
 
 class MullingPathCreator: public bf::Object {
 		bool areIntersectionsFound = false, isZUp=true;
@@ -24,13 +25,14 @@ class MullingPathCreator: public bf::Object {
 		std::unique_ptr<bf::DummySolid> debugSolid;
 		std::vector<int> mullingRadius = {16, 10, 8, 1}; //second is flat
 		std::map<unsigned, std::vector<uint8_t> > pixelMaps;
+    std::map<unsigned, std::vector<uint8_t> > flatPixelMaps;
 		std::vector<unsigned> usedColours = {0u}; //0 - not used
 		bf::vec3d c(const bf::vec3d& p) const; //conversion of point from screen space to mulling space
 		bf::vec3d dc(const bf::vec3d& p) const; //conversion of point from mulling space to screen space
 		const std::function<bf::vec3d(const bf::vec3d&)> cFunc = [&](const bf::vec3d& p) {return c(p);};
 		const std::function<bf::vec3d(const bf::vec3d&)> dcFunc = [&](const bf::vec3d& p) {return c(p);};
 		std::vector<bf::DummySolid> debugDummySolids;
-		std::vector<bf::Object*> surfaces;
+		std::vector<std::unique_ptr<bf::EquidistanceSurface> > surfaces;
 		std::vector<bf::IntersectionObject*> intersections, flatIntersections;
 		std::vector<bf::vec3d> createPathForSurface(const bf::Object& o, const std::vector<uint8_t>& colorMap, uint8_t color, double paramDist) const;
 		std::vector<bf::vec3d> createPathForIntersection(const bf::IntersectionObject& io, double dist, unsigned begin, unsigned end) const;
@@ -39,6 +41,7 @@ class MullingPathCreator: public bf::Object {
 		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move=0, double normPerc=1.0) const;
 		void setDebugTextureIndex(int surface);
 	public:
+        double getMPCScale() const {return scale;}
 		bf::vec2d toSurfaceSpace(const bf::vec2d& pos) {return bf::vec2d(c({pos, 0.0})/150.0)+bf::vec2d(0.5,0.5);}
 		bf::ObjectArray& objectArray;
 		MullingPathCreator(bf::ObjectArray& a);
