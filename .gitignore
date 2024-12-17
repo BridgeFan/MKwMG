@@ -22,3 +22,5 @@ MKwMG.pdb
 *.dll
 MKwMG
 .clang-format
+/lib/fmt-master/*
+*.dll

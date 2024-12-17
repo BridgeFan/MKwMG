@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
 #ifdef WIN32
@@ -357,7 +356,7 @@ void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
         auto fileName = pathToMStr(path)+"/"_m+name;
         if(isLoading) {
             mcout << "Chosen file to load: "_m << fileName << "\n"_m;
-            std::ifstream in(fileName);
+            std::ifstream in(fileName.c_str());
             if(in.bad() || !bf::loadFromStream(scene.objectArray, scene.camera, in))
                 activeSpecialPanel = SpecialPanel::FileFailPanel;
             else
@@ -369,7 +368,7 @@ void fileLoadSavePanel(bool isLoading, bf::Scene& scene) {
                 activeSpecialPanel = SpecialPanel::FileSaveMakeSurePanel;
             else  {
                 mcout << "Chosen file to save: "_m << fileName << "\n"_m;
-                std::ofstream out(fileName);
+                std::ofstream out(fileName.c_str());
                 if (out.bad() || !bf::saveToStream(scene.objectArray, scene.camera, out))
                     activeSpecialPanel = SpecialPanel::FileFailPanel;
                 else
@@ -416,12 +415,12 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
     else if(activeSpecialPanel==SpecialPanel::FileSaveMakeSurePanel) {
         setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f,.5f});
         ImGui::Begin("File2", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoCollapse);
-        std::string makeSureText = std::format("Are you sure you want to override file {}?", toStr(name + ".json"_m));
+        std::string makeSureText = "Are you sure you want to override file "+toStr(name + ".json"_m)+"?";
         ImGui::Text("%s", makeSureText.c_str());
         if(ImGui::Button("Yes")) {
             auto fileName = pathToMStr(path)+"/"_m+name+".json"_m;
             mcout << "Chosen file to save: "_m << fileName << "\n"_m;
-            std::ofstream out(fileName);
+            std::ofstream out(fileName.c_str());
             if (out.good() && bf::saveToStream(scene.objectArray, scene.camera, out))
                 activeSpecialPanel = SpecialPanel::None;
             else
@@ -439,7 +438,7 @@ void bf::imgui::cameraInfoPanel(bf::Scene &scene, bf::ConfigState& configState) 
         setNextPanelAlignment({450, 75}, {configState.screenWidth, configState.screenHeight}, {.5f, .5f});
     }
     if(ImGui::BeginPopupModal("File fail", nullptr, ImGuiWindowFlags_NoResize)) {
-        std::string failText = std::format("Failed to {} file {}!", isLoading ? "load" : "save", toStr(name));
+        std::string failText = std::string("Failed to ")+(isLoading ? "load" : "save")+" file "+toStr(name)+"!";
 		ImGui::TextColored({255,0,0,255},"%s", failText.c_str());
         if(ImGui::Button("OK")) {
             ImGui::CloseCurrentPopup();
