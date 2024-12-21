@@ -15,7 +15,8 @@ int bf::BezierSurface0::_index = 1;
 
 
 bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const std::string &objName, const bf::Cursor &c)
-        : BezierSurfaceCommon(oArray, objName, c) {}
+        : BezierSurfaceCommon(oArray, objName, c) {
+}
 
 bf::BezierSurface0::BezierSurface0(bf::ObjectArray &oArray, const bf::Cursor &c) : BezierSurfaceCommon(oArray,
                                                                                                             c) {}
@@ -131,9 +132,9 @@ bf::vec4d basisFunctionsDD(double t) {
 	double t1 = (1.0 - t);
 	bf::vec4d b;
 	// Bernstein polynomials (derivative)
-	b[0] = -6.0 * t1;
-	b[1] = 3.0 * (t-1.0) * (3.0*t-1.0);
-	b[2] = 3.0 * t  * (2.0-3.0*t);
+	b[0] = 6.0 * t1;
+	b[1] = 6.0 * (3.0*t-2.0);
+	b[2] = 6.0 * (1.0-3.0*t);
 	b[3] = 6.0 * t;
 	return b;
 }
@@ -156,8 +157,32 @@ bf::vec3d bf::BezierSurface0::parameterHesseUV(double u, double v, int iu, int i
 	return parameterFunction(u,v,iu,iv, basisFunctionsD, basisFunctionsD);
 }
 bf::vec3d bf::BezierSurface0::parameterHesseVV(double u, double v, int iu, int iv) const {
-	return parameterFunction(u,v,iu,iv, basisFunctions, basisFunctionsDD);
+	return parameterFunction(u, v, iu, iv, basisFunctions, basisFunctionsDD);
 }
+std::vector<double> bf::BezierSurface0::initSingularU() const {
+	bool loop = !parameterWrappingU();
+	std::vector<double> u;
+	u.reserve(getParameterMax().x);
+	for (int i=0+loop;i<getParameterMax().x-loop;i++)
+		u.emplace_back(i);
+	return u;
+}
+std::vector<double> bf::BezierSurface0::initSingularV() const {
+	bool loop = !parameterWrappingV();
+	std::vector<double> v;
+	v.reserve(getParameterMax().y);
+	for (int i = 0 + loop; i <= getParameterMax().y - loop; i++)
+		v.emplace_back(i);
+	return v;
+}
+void bf::BezierSurface0::initSegments(std::vector<std::vector<std::string>> &&segmentNames, std::vector<std::vector<glm::vec<2, int>>> &&segmentSamples, std::vector<std::vector<pArray>> &&pointIndices) {
+	BezierSurfaceCommon::initSegments(std::move(segmentNames), std::move(segmentSamples), std::move(pointIndices));
+	singularUs = initSingularU();
+	singularVs = initSingularV();
+
+}
+const std::vector<double>& bf::BezierSurface0::singularU() const {return singularUs;}
+const std::vector<double>& bf::BezierSurface0::singularV() const {return singularVs;}
 constexpr double EPS=0.0001;
 
 bf::vec3d bf::BezierSurface0::parameterFunction(double ud, double vd) const {

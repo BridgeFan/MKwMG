@@ -70,6 +70,30 @@ std::ostream& operator<<(std::ostream& out, const glm::vec<4, T, Q>& v) {
 	return out;
 }
 
+template<typename T, int N>
+glm::mat<N,N,T> tensorProduct(const glm::vec<N,T>& a, const glm::vec<N,T>& b) {
+	glm::mat<N,N,T> ret(T(0));
+	for (int i=0;i<N;i++) {
+		for (int j=0;j<N;j++) {
+			ret[i][j]=a[i]*b[j];
+		}
+	}
+	return ret;
+}
+template<typename T>
+glm::mat<3,3,T> crossMatrix(const glm::vec<3,T>& a) {
+	glm::mat<3,3,T> ret(T(0));
+	for (int i=0;i<3;i++) {
+		for (int j=0;j<3;j++) {
+			if (i==j) continue;
+			int k=3-i-j;
+			int sign = (((k>i)==(k>j))!=(i>j)) ? 1 : -1;
+			ret[i][j]=a[k]*sign;
+		}
+	}
+	return ret;
+}
+
 
 std::string readWholeFile(const std::string& path);
 
@@ -140,6 +164,13 @@ T sign(T a) {
 	return a>=T() ? T(1) : T(-1);
 }
 
+template<bf::arithmetic T>
+glm::vec<3, T> nlerp(const glm::vec<3,T>& a, const glm::vec<3,T>& b, T t) {
+	T na = glm::length(a);
+	T nb = glm::length(b);
+	return glm::normalize(lerp(a,b,t))*lerp(na,nb,t);
+}
+
 
 std::optional<SegmentIntersectionResult> segmentIntersection(const bf::vec3d& p1, const bf::vec3d& p2, const bf::vec3d& q1, const bf::vec3d& q2);
 void floodFill(std::vector<uint8_t>& array, int TN, int i, int j, bool wrapX, bool wrapY, uint8_t color1, uint8_t color2=63u);
@@ -162,9 +193,12 @@ namespace  bf {
     bool isInBounds(int screenWidth, int screenHeight, const glm::vec3& mousePos);
     float getDeltaTime();
 	float distance(const glm::vec3& a, const glm::vec3& b);
-	float sqrDistance(const glm::vec3& a, const glm::vec3& b);
 	float length(const glm::vec3& a);
 	float sqrLength(const glm::vec3& a);
+	template<int L, typename T>
+	float sqrDistance(const glm::vec<L, T>& a, const glm::vec<L, T>& b) {
+		return glm::dot(a - b, a-b);
+	}
 	float degrees(float a);
 	glm::vec3 degrees(const glm::vec3& v);
 	float radians(float a);

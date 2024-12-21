@@ -51,6 +51,8 @@ namespace bf {
 		virtual void draw(const bf::ShaderArray &shader) const = 0;
 		virtual bool postInit() {return false;}//show if should be removed after initialization
         virtual bool addPoint(unsigned index);
+		virtual const std::vector<double>& singularU() const {return {};}
+		virtual const std::vector<double>& singularV() const {return {};}
 		[[nodiscard]] const glm::vec3 &getPosition() const { return transform.position; }
 		virtual void setPosition(const glm::vec3 &pos) { transform.position = pos; }
 		[[nodiscard]] [[maybe_unused]] const glm::vec3 &getRotation() const { return transform.rotation; }

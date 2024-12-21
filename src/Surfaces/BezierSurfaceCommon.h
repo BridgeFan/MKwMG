@@ -45,7 +45,7 @@ namespace bf {
         void onMoveObject(unsigned int index) override;
         virtual std::vector<std::vector<pArray>> generatePoints(const glm::vec2& totalSize) = 0;
         void recalculateSegments(unsigned int index);
-        void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
+        virtual void initSegments(std::vector<std::vector<std::string> >&& segmentNames,
             std::vector<std::vector<glm::vec<2,int> > >&& segmentSamples,
             std::vector<std::vector<pArray> >&& pointIndices);
 		void onMergePoints(int p1, int p2) override;

@@ -40,9 +40,11 @@ class MullingPathCreator: public bf::Object {
 		bool createPixelMap(unsigned index); //false if pixel map coul not be created
 		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move=0, double normPerc=1.0) const;
 		void setDebugTextureIndex(int surface);
+		void finishToEdge(bf::IntersectionObject &inter, bool is4=false);
+		void saveIntersectionsToFile();
 	public:
         double getMPCScale() const {return scale;}
-		bf::vec2d toSurfaceSpace(const bf::vec2d& pos) {return bf::vec2d(c({pos, 0.0})/150.0)+bf::vec2d(0.5,0.5);}
+		bf::vec2d toSurfaceSpace(const bf::vec2d& pos) const {return bf::vec2d(c({pos, 0.0})/150.0)+bf::vec2d(0.5,0.5);}
 		bf::ObjectArray& objectArray;
 		MullingPathCreator(bf::ObjectArray& a);
 		~MullingPathCreator();

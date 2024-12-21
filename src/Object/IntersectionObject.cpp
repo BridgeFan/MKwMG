@@ -21,7 +21,7 @@
 #include <queue>
 #include <random>
 
-std::random_device rd;
+std::mt19937 rd(0);
 constexpr int TN=1000;
 
 std::pair<bf::Object *, int> bf::IntersectionObject::convertToCurve() {
@@ -69,7 +69,7 @@ bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array) : ObjectArray
 	}
 }
 
-bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o1, bf::Object &o2, const glm::vec3& cursor, float precision):
+bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o1, bf::Object &o2, const glm::vec3& cursor, float precision, bool isImprovedNeeded):
 		ObjectArrayListener(array), obj1(&o1) {
 	if(std::addressof(o1)==std::addressof(o2))
 		obj2 = nullptr;
@@ -78,7 +78,7 @@ bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o
 	isInitPhase = false;
 	transform.position = cursor;
 	objectArray.isForcedActive = false;
-	findIntersection(true, precision);
+	findIntersection(true, precision, isImprovedNeeded);
 }
 
 bf::IntersectionObject::IntersectionObject(bf::ObjectArray &array, bf::Object &o1, bf::Object &o2, float precision):
@@ -124,7 +124,7 @@ void bf::IntersectionObject::ObjectGui() {
 		}
 		static bool isSecondSet = false;
 		if (isLooped) {
-			void *imPoint;
+			/*void *imPoint;
 			if (obj2 && isSecondSet) {
 				imPoint = reinterpret_cast<void *>(static_cast<intptr_t>(obj2->textureID));
 			} else {
@@ -140,7 +140,7 @@ void bf::IntersectionObject::ObjectGui() {
 			std::string a = "Set chosen texture to " + std::to_string(isSecondSet ? 1 : 2);
 			if (obj2 && ImGui::Button(a.c_str())) {
 				isSecondSet = !isSecondSet;
-			}
+			}*/
 		}
 	}
 }
@@ -188,8 +188,12 @@ void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 	glBindVertexArray(VAO);
 	shaderArray.getActiveShader().setMat4("model", glm::mat4(1.f));
 	shaderArray.getActiveShader().setFloat("pointSize", 4.f*configState->pointRadius);
-	glDrawElements(GL_POINTS, indices.size(), GL_UNSIGNED_INT,   // type
-				   reinterpret_cast<void*>(0));
+	glDrawElements(GL_POINTS, indices.size()-1, GL_UNSIGNED_INT,   // type
+	reinterpret_cast<void*>(0));
+	shaderArray.setColor(255,0,0);
+	glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT,   // type
+				   reinterpret_cast<void*>((indices.size()-1)*sizeof(unsigned)));
+	shaderArray.setColor(255,255,0);
 	glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
 				   reinterpret_cast<void*>(0));         // element array buffer offset
 	shaderArray.setColor(color);
@@ -235,12 +239,12 @@ constexpr double epsDist=1e-10;
 constexpr double eps=1e-6;
 constexpr double epsBig=1e-4;
 
-bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, const bf::Object* other=nullptr, const bf::vec2d& t={}) {
+bf::vec2d findBeginningPoint(const bf::Object& obj, const glm::vec3& pos, bool isImproved=false, const bf::Object* other=nullptr, const bf::vec2d& t={}) {
 	double minDist=std::numeric_limits<double>::max();;
 	static std::uniform_real_distribution<> dis(0.,1.);
 	//init
 	bf::vec2d x, xn;
-	for(int i=0;i<500+2500*(other!=nullptr);i++) {
+	for(int i=0;i<500+2500*(other!=nullptr)+10000*isImproved;i++) {
 		bf::vec2d tp;
 		tp.x=lerp(obj.getParameterMin()[0],obj.getParameterMax()[0],dis(rd));
 		tp.y=lerp(obj.getParameterMin()[1],obj.getParameterMax()[1],dis(rd));
@@ -317,7 +321,7 @@ bool isAbsFmod(double a, double mod, double epsil) {
 	return c<epsil || mod-c<epsil;
 }
 
-std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* o, const bf::vec4d& x0, double precision, double direction=1.0) {
+std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* o, const bf::vec4d& x0, double precision, double direction=1.0, bool isImprovedNeeded=false) {
 	auto xn=x0, x=x0;
 	constexpr double eps2=1e-5;
 	constexpr double eps2dist=1e-7;
@@ -328,6 +332,7 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 	bool isLooped=false;
 	precision*=direction;
 	for(M=0;M<2000;M++) {
+	//TODO - add "jumping over" singularities
 		using I=bf::IntersectionObject;
 		//simple gradient is enough here
 		auto y=x-x0;
@@ -373,7 +378,7 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 			clampParams(xn, *obj1, *o, x);
 			Pn = obj1->parameterFunction(xn[0], xn[1]);
 			auto Qn = o->parameterFunction(xn[2], xn[3]);
-			while ((I::movDist(Pn, Qn, P0, t, precision) > I::movDist(P, Q, P0, t, precision) || isOutOfRange(*obj1,*o,xn)) && a > eps2) {//too big step
+			while ((I::movDist(Pn, Qn, P0, t, precision) > I::movDist(P, Q, P0, t, precision)|| isOutOfRange(*obj1,*o,xn)) && a > eps2) {//too big step
 				a *= 0.25;
 				xn = x - df * a;
 				clampParams(xn, *obj1, *o, x);
@@ -386,8 +391,33 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 		Q = o->parameterFunction(xn[2], xn[3]);
 		//std::cout << N << "   \t" << glm::distance(P,P0) << "\t" << glm::dot(P-Q,P-Q) << "\t" << a << "\n";
 		if(N>=10000 || std::abs(glm::distance(P,P0)/std::abs(precision)-1.0)>0.5) {
-			isLooped=false;
-			break;
+			bool shouldContinue = false;
+			/*std::cout << "Stopped\n";
+			std::cout << oldX << " " << xn << "\n";
+			std::cout << glm::distance(P,P0) << "\n";
+			std::cout << N << "\n";
+			auto xmin = glm::min(oldX, xn);
+			auto xmax = glm::max(oldX, xn);
+			for (int i=0;i<4;i++) {
+				const std::vector<double> *singularVector;
+				if (i==0) singularVector = &obj1->singularU();
+				if (i==1) singularVector = &obj1->singularV();
+				if (i==2) singularVector = &o->singularU();
+				if (i==3) singularVector = &o->singularV();
+				if (singularVector)
+				for (auto u: *singularVector) {
+					if (xmin[i]<u && xmax[i]>u) {
+						shouldContinue = true;
+						break;
+					}
+				}
+				if (shouldContinue)
+					break;
+			}*/
+			if (!shouldContinue) {
+				isLooped=false;
+				break;
+			}
 		}
 		x=xn;
 		intersectionPoints.emplace_back(xn);
@@ -396,7 +426,7 @@ std::pair<std::vector<bf::vec4d>, bool> moveAlong(bf::Object* obj1, bf::Object* 
 	return {intersectionPoints, isLooped};
 }
 
-void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
+void bf::IntersectionObject::findIntersection(bool isCursor, double precision, bool isImprovedNeeded) {
 	auto* o = obj2 ? obj2 : obj1;
 	auto pos2 = transform.position;
 	//no point chosen
@@ -405,12 +435,12 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	if(isCursor) { //cursor begin
 		//std::cout << pos2.x << " " << pos2.y << " " << pos2.z << "\n";
 		//find beginning point - u,v
-		auto t1 = findBeginningPoint(*obj1, pos2);
+		auto t1 = findBeginningPoint(*obj1, pos2, isImprovedNeeded);
 		bf::vec2d t2;
 		if(!obj2)
-			t2 = findBeginningPoint(*o, pos2, obj1, t1);
+			t2 = findBeginningPoint(*o, pos2, isImprovedNeeded, obj1, t1);
 		else
-			t2 = findBeginningPoint(*o, pos2);
+			t2 = findBeginningPoint(*o, pos2, isImprovedNeeded);
 		x0={t1.x,t1.y,t2.x,t2.y};
 		//std::cout << bf::IntersectionObject::distance(*obj1, *o, x0) << "\n";
 	}
@@ -484,9 +514,9 @@ void bf::IntersectionObject::findIntersection(bool isCursor, double precision) {
 	intersectionPoints.emplace_back(x);
 	//move along (both sides if no loop)
 	setBuffers();
-	auto [pts, loop] = moveAlong(obj1,o,x,precision);
+	auto [pts, loop] = moveAlong(obj1,o,x,precision, 1.0, isImprovedNeeded);
 	if(!loop) {
-		auto [pts2, loop2] = moveAlong(obj1,o,x,precision,-1.0);
+		auto [pts2, loop2] = moveAlong(obj1,o,x,precision,-1.0, isImprovedNeeded);
 		//try the other side
 		std::vector<bf::vec4d> revPts2(pts2.rbegin(),pts2.rend());
 		revPts2.emplace_back(x);

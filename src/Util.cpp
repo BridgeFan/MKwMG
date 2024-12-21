@@ -114,9 +114,6 @@ float bf::length(const glm::vec3 &a) {
 float bf::distance(const glm::vec3 &a, const glm::vec3 &b) {
 	return length(a-b);
 }
-float bf::sqrDistance(const glm::vec3 &a, const glm::vec3 &b) {
-	return sqrLength(a - b);
-}
 float bf::degrees(float a) {
 	return 180.f/PI*a;
 }

@@ -24,8 +24,17 @@ namespace bf {
     	[[nodiscard]] vec3d parameterHesseUU(double u, double v, int iu, int iv) const;
     	[[nodiscard]] vec3d parameterHesseUV(double u, double v, int iu, int iv) const;
     	[[nodiscard]] vec3d parameterHesseVV(double u, double v, int iu, int iv) const;
-    public:
-        BezierSurface0(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
+    	std::vector<double> singularUs, singularVs;
+    	std::vector<double> initSingularU() const;
+    	std::vector<double> initSingularV() const;
+
+	public:
+		void initSegments(std::vector<std::vector<std::string>> &&segmentNames, std::vector<std::vector<glm::vec<2, int>>> &&segmentSamples, std::vector<std::vector<pArray>> &&pointIndices) override;
+
+
+		const std::vector<double>& singularU() const override;
+		const std::vector<double>& singularV() const override;
+		BezierSurface0(ObjectArray &objectArray, const std::string &objName, const Cursor &c);
         BezierSurface0(ObjectArray &objectArray, const Cursor &c);
         virtual std::vector<std::vector<pArray>> generatePoints(const glm::vec2& totalSize) override;
 		[[nodiscard]] bf::vec3d parameterFunction(double u, double v, int iu, int iv, const std::function<bf::vec4d(double)> &buFunc, const std::function<bf::vec4d(double)> &bvFunc) const;
