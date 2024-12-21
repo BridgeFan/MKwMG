@@ -337,27 +337,45 @@ namespace bf {
 			}
 			std::cout << "Created pixel maps\n";
 		}
-		std::array myColours = {1u,3u,5u,11u,21u,23u,25u,35u,37u,50u,57u,65u};
+		std::array myColours = {1u,3u,5u,11u,21u,23u,25u,35u,37u,53u,60u,68u};
 		//TODO: temporary creating paths for every colour
+		std::vector<bf::vec3d> myPts;
+		myPts.emplace_back(0.0, 0.0, 50.0);
 		for(auto i: myColours) {
 			std::vector<bf::vec3d> pts;
 			if (usedColours[i]!=surfaces.size()-1)
-				pts = generateExactPath(usedColours[i],i,8,false, 0,1.0);
+				pts = generateExactPath(usedColours[i],i,8,true, 320,1.0);
 			else
-				pts = createFlatBase(usedColours[i]);
-			saveToFile(std::string("3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
+				pts = createFlatBase(i);
+			myPts.emplace_back(pts[0].x, pts[0].y, 50.0);
+			myPts.insert(myPts.end(),pts.begin(),pts.end());
+			myPts.emplace_back(pts.back().x, pts.back().y, 50.0);
+			/*saveToFile(std::string("3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
 			if (usedColours[i]!=surfaces.size()-1)
 				pts = generateExactPath(usedColours[i],i,8,true, 320, 1.0);
 			else
-				pts = createFlatBase(usedColours[i]);
-			saveToFile(std::string("Y-3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
+				pts = createFlatBase(usedColours[i]);*/
+			//saveToFile(std::string("Y-3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
 		}
+		myPts.emplace_back(0.0, 0.0, 50.0);
+		saveToFile("3.k08",myPts);
 		//TODO: find flat base colours
 		//auto pts = createFlatBase(colour);
 	}
 
+	std::vector<bf::vec3d> optimizeLinearallyPaths(const std::vector<bf::vec3d> &points) {
+		std::vector ret={points[0]};
+		for (int i=1;i<points.size()-1;i++) {
+			if (bf::sqrDistance(points[i],(points[i-1]+points[i+1])*0.5)>1e-8) {
+				ret.emplace_back(points[i]);
+			}
+		}
+		ret.emplace_back(points.back());
+		return ret;
+	}
 
 	bool MullingPathCreator::saveToFile(const std::string &path, const std::vector<bf::vec3d> &points) {
+		auto pts = optimizeLinearallyPaths(points);
 #ifdef WIN32
 		std::string endl = "\n";
 #else
@@ -369,7 +387,7 @@ namespace bf {
 		file << std::fixed << std::setprecision(3);
 		int line = 3;
 		setlocale(LC_ALL, "en_US.UTF-8");
-		for (const auto &p: points) {
+		for (const auto &p: pts) {
 			file << "N" << line << "G01X" << p.x << "Y" << p.y << "Z" << p.z << endl;
 			line++;
 		}
@@ -480,9 +498,9 @@ namespace bf {
 
 	std::vector<bf::vec3d> MullingPathCreator::createFlatBase(uint8_t color) const {
 		int index = surfaces.size()-1;
-		auto ret1 = generateExactPath(index, color, 1, false, 0.0);
+		auto ret1 = generateExactPath(index, color, 4, false, 0.0);
 		//TODO - move between two phases
-		auto ret2 = generateExactPath(index, color, 1, true, 0.0);
+		auto ret2 = generateExactPath(index, color, 4, true, 0.0);
 		ret1.insert(ret1.end(),ret2.begin(), ret2.end());
 		return ret1;
 		return ret1;
@@ -557,7 +575,7 @@ namespace bf {
 		for (const auto &p: tPoints) {
 			const int pX = static_cast<int>((p.x + 75.0) * RESX / 150.0);
 			const int pY = static_cast<int>((p.y + 75.0) * RESY / 150.0);
-			heightMap[pX][pY] = std::max(heightMap[pX][pY], p.z);
+			heightMap[pX][pY] = std::max(heightMap[pX][pY], p.z+ExactRadius);
 		}
 		for (int i = 0; i < RESX; i++) {
 			for (int j = 0; j < RESY; j++) {
