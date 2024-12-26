@@ -187,12 +187,16 @@ void bf::IntersectionObject::draw(const bf::ShaderArray& shaderArray) const {
 	shaderArray.setColor(255,255,0);
 	glBindVertexArray(VAO);
 	shaderArray.getActiveShader().setMat4("model", glm::mat4(1.f));
-	shaderArray.getActiveShader().setFloat("pointSize", 4.f*configState->pointRadius);
-	glDrawElements(GL_POINTS, indices.size()-1, GL_UNSIGNED_INT,   // type
-	reinterpret_cast<void*>(0));
+	shaderArray.getActiveShader().setFloat("pointSize", 2.f*configState->pointRadius);
+	shaderArray.setColor(0,255,0);
+	glDrawArrays(GL_POINTS, 0, 1);
+	glDrawArrays(GL_POINTS, vertices.size()/2, 1);
 	shaderArray.setColor(255,0,0);
-	glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT,   // type
-				   reinterpret_cast<void*>((indices.size()-1)*sizeof(unsigned)));
+	glDrawArrays(GL_POINTS, vertices.size()/2-1, 1);
+	glDrawArrays(GL_POINTS, vertices.size()-1, 1);
+	shaderArray.setColor(255,255,0);
+	glDrawArrays(GL_POINTS, 1, vertices.size()/2-2);
+	glDrawArrays(GL_POINTS, vertices.size()/2+1, vertices.size()/2-2);
 	shaderArray.setColor(255,255,0);
 	glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT,   // type
 				   reinterpret_cast<void*>(0));         // element array buffer offset

@@ -66,7 +66,7 @@ namespace bf {
 		return ret;
 	}
 
-	std::vector<bf::vec3d> MullingPathCreator::createPathForIntersection(const bf::IntersectionObject& io, double dist, unsigned begin, unsigned end) const {
+	std::vector<bf::vec3d> MullingPathCreator::createPathForIntersection(const bf::IntersectionObject& io, double, unsigned begin, unsigned end) const {
 		//distance from intersection is approximated by normal
 		//TODO: move only on intersection is done
 		std::vector<bf::vec3d> ret;
@@ -92,7 +92,7 @@ namespace bf {
 
 	bool MullingPathCreator::createPixelMap(unsigned index) {
 		//255u - special value for lines
-		if (pixelMaps.contains(index) || index>=surfaces.size() || (intersections.empty() && flatIntersections.empty()))
+		if (pixelMaps.contains(index) || index>=surfaces.size() /*|| (intersections.empty() && flatIntersections.empty())*/)
 			return false;
 		std::vector<uint8_t> ret(TN*TN, 0u);
 		auto indexObj = surfaces[index].get();
@@ -102,18 +102,18 @@ namespace bf {
 		if (&surfaces[index]->getObject()==this)
 			BresenhamLine(ret, TN, 302, 139, 302, 209, 254u);
 		//draw lines
-		for(int i=0;i<intersections.size()+flatIntersections.size();i++) {
+		for(unsigned ii=0;ii<intersections.size()+flatIntersections.size();ii++) {
 			bf::IntersectionObject* io;
-			if (i<intersections.size())
-				io=intersections[i];
+			if (ii<intersections.size())
+				io=intersections[ii];
 			else
-				io=flatIntersections[i-intersections.size()];
+				io=flatIntersections[ii-intersections.size()];
 			if (!io) continue;
 			int i1=0, i2=0;
 			if (indexObj == io->obj1) {
 				i1=0; i2=1;
 			}
-			else if (indexObj == io->obj2) {
+			else if (indexObj == io->obj2 || (&surfaces[index]->getObject()==this && ii>=intersections.size())) {
 				i1=2; i2=3;
 			}
 			if (i2 != 0) {
@@ -206,7 +206,7 @@ namespace bf {
 		if (!shallBeDestroyed) {
 			bf::EquidistanceSurface::setMullingPathCreator(*this);
 			for (auto& o: surfaces) {
-				o->updateScale(ExactRadius);
+				o->updateScale(ExactRadius, true);
 			}
 		}
 	}
@@ -265,13 +265,13 @@ namespace bf {
 		if (ImGui::Button("Find intersections")) {
 			findIntersections();
 			//create pixel maps for every
-			/*if (pixelMaps.empty()) {
+			if (pixelMaps.empty()) {
 				for(unsigned i=0;i<surfaces.size();i++) {
 					createPixelMap(i);
 				}
 				std::cout << "Created pixel maps\n";
 			}
-			setDebugTextureIndex(0);*/
+			setDebugTextureIndex(0);
 			//TODO - uncomment
 			areIntersectionsFound = true;
 		}
@@ -297,12 +297,12 @@ namespace bf {
 				index=(index+1u)%(surfaces.size());
 				setDebugTextureIndex(index);
 			}
-			ImGui::Text("Object %d", index+1);
+			ImGui::Text("Object %u", index+1);
 			{
 				ImGuiIO& io = ImGui::GetIO();
 				ImVec2 mousePos = ImGui::GetCursorScreenPos();
 				if (!point) {
-					point.reset(new bf::Point());
+					point = std::make_unique<bf::Point>();
 				}
 				ImGui::Image(reinterpret_cast<void *>(static_cast<intptr_t>(textureIndex)), ImVec2(TN, TN));
 				if (ImGui::IsItemHovered() && ImGui::BeginTooltip()) {
@@ -325,7 +325,6 @@ namespace bf {
 	void bf::MullingPathCreator::setDebugTextureIndex(int surface) {
 		std::vector<uint32_t> val(TN*TN, 0);
 		if (textureIndex==UINT_MAX) {
-			unsigned int texture;
 			glGenTextures(1, &textureIndex);
 			glBindTexture(GL_TEXTURE_2D, textureIndex);
 			// set the texture wrapping/filtering options (on the currently bound texture object)
@@ -335,7 +334,7 @@ namespace bf {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		}
 		std::array<uint32_t, 64> colours;
-		for (int i=0;i<colours.size();i++) {
+		for (unsigned i=0;i<colours.size();i++) {
 			uint8_t r = 85*(i%4);
 			uint8_t g = 85*((i/4)%4);
 			uint8_t b = 85*(i/16);
@@ -355,26 +354,44 @@ namespace bf {
 	}
 
 	void MullingPathCreator::createExactMullingPath() {
+		if (pixelMaps.empty()) {
+			for(unsigned i=0;i<surfaces.size();i++) {
+				createPixelMap(i);
+			}
+			std::cout << "Created pixel maps\n";
+		}
+		std::array myColours = {1u, 3u, 5u, 15u, 26u, 28u, 32u, 42u, 57u, 61u, 68u};
 		//TODO: temporary creating paths for every colour
-		for(unsigned i=0;i<usedColours.size();i++) {
+		std::vector<bf::vec3d> myPts;
+		myPts.emplace_back(0.0, 0.0, 50.0);
+		for(auto i: myColours) {
 			std::vector<bf::vec3d> pts;
 			if (usedColours[i]!=surfaces.size()-1)
-				pts = generateExactPath(usedColours[i],i,8,false, 0,0.0);
+				pts = generateExactPath(usedColours[i],i,4,true, 320,1.0);
 			else
-				pts = createFlatBase(usedColours[i]);
-			saveToFile(std::string("3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
-			if (usedColours[i]!=surfaces.size()-1)
-				pts = generateExactPath(usedColours[i],i,8,true, 320, 0.0);
-			else
-				pts = createFlatBase(usedColours[i]);
-			saveToFile(std::string("Y-3_")+(i<10 ? "0" : "")+std::to_string(i)+".k08",pts);
+				pts = createFlatBase(i);
+			myPts.emplace_back(pts[0].x, pts[0].y, 50.0);
+			myPts.insert(myPts.end(),pts.begin(),pts.end());
+			myPts.emplace_back(pts.back().x, pts.back().y, 50.0);
 		}
-		//TODO: find flat base colours
-		//auto pts = createFlatBase(colour);
+		myPts.emplace_back(0.0, 0.0, 50.0);
+		saveToFile("3.k08",myPts);
+	}
+
+	std::vector<bf::vec3d> optimizeLinearallyPaths(const std::vector<bf::vec3d> &points) {
+		std::vector ret={points[0]};
+		for (int i=1;i<points.size()-1;i++) {
+			if (bf::sqrDistance(points[i],(points[i-1]+points[i+1])*0.5)>1e-8) {
+				ret.emplace_back(points[i]);
+			}
+		}
+		ret.emplace_back(points.back());
+		return ret;
 	}
 
 
 	bool MullingPathCreator::saveToFile(const std::string &path, const std::vector<bf::vec3d> &points) {
+		auto pts = optimizeLinearallyPaths(points);
 #ifdef WIN32
 		std::string endl = "\n";
 #else
@@ -386,7 +403,7 @@ namespace bf {
 		file << std::fixed << std::setprecision(3);
 		int line = 3;
 		setlocale(LC_ALL, "en_US.UTF-8");
-		for (const auto &p: points) {
+		for (const auto &p: pts) {
 			file << "N" << line << "G01X" << p.x << "Y" << p.y << "Z" << p.z << endl;
 			line++;
 		}
@@ -406,8 +423,101 @@ namespace bf {
 		return glm::dot(p1-p2,p1-p2);
 	}
 
-	void fillIntersections(bf::IntersectionObject* intObj, const bf::vec4d& nextBegin, bool isFifth = false) {
+	void fillIntersections(bf::IntersectionObject* intObj, const bf::vec4d& nextBegin, bool isFifth = false, bool shouldBeImproved=true, bool morePrecise=false, bool isLinear=false) {
 		auto& pts = intObj->intersectionPoints;
+		//pre-processing
+		if (shouldBeImproved) {
+			for (int i=0;i<4;i++) {
+				const auto& obj = i<2 ? *intObj->obj1 : *intObj->obj2;
+				if(obj.parameterWrapping()[i%2]) {
+					const double b = nextBegin[i];
+					auto& p = pts.back()[i];
+					const double M = obj.getParameterMax()[i%2];
+					if (p>b && (M<2.*(p-b))) {
+						p -= M;
+					}
+					else if (p<b && (M<2.*(b-p))) {
+						p += M;
+					}
+				}
+			}
+		}
+		else {
+			//TODO: for improving special intersection
+			int bigDiffIndex=0;
+			for (int i=1;i<4;i++) {
+				if (std::abs(pts[0][bigDiffIndex]-pts.back()[bigDiffIndex])<std::abs(pts[0][i]-pts.back()[i]))
+					bigDiffIndex=i;
+			}
+		}
+		if (morePrecise) {
+			/*double distance = glm::length(nextBegin-pts.back());
+			while (distance > 0.05) {
+				std::cout << distance << "\n";
+				auto target = glm::normalize(nextBegin-pts.back());
+				double alpha3 = std::atan2(target.y, target.x);
+				double alpha2 = std::atan2(target.z,glm::length(glm::vec2(target)));
+				double alpha1 = std::atan2(target.a,glm::length(glm::vec3(target)));
+				double c1 = std::cos(alpha1);
+				double c2 = std::cos(alpha2);
+				double c3 = std::cos(alpha3);
+				double s1 = std::sin(alpha1);
+				double s2 = std::sin(alpha2);
+				double s3 = std::sin(alpha3);
+				auto centre = pts.back();
+				bf::vec3d l = {std::floor(alpha1/M_PI_2)*M_PI_2,
+					std::floor(alpha2/M_PI_2)*M_PI_2,
+					std::floor(alpha3/M_PI_2)*M_PI_2};
+				bf::vec3d r = l + bf::vec3d(M_PI_2,M_PI_2,M_PI_2);
+				while (sqrDistance(l,r)>1e-6) {
+					glm::vec<3, unsigned> indices={1,1,1};
+					glm::vec<3, unsigned> minIndices={1,1,1};
+					double minDist = DBL_MAX;
+					//find minimal point
+					for (indices[0]=1;indices[0]<4;indices[0]++) {
+						for (indices[1]=1;indices[1]<4;indices[1]++) {
+							for (indices[2]=1;indices[2]<4;indices[2]++) {
+								bf::vec3d c, s;
+								for (int i=0;i<3;i++) {
+									c[i]=std::cos(lerp(l[i],r[i],indices[i]*0.25));
+									s[i]=std::sin(lerp(l[i],r[i],indices[i]*0.25));
+								}
+								auto v = centre+0.05*bf::vec4d(c[0]*c[1]*c[2],c[0]*c[1]*s[2],c[0]*s[1],s[0]);
+								auto candDist = getIntersectiondistance(*intObj, v);
+								if (candDist < minDist) {
+									minIndices=indices;
+								}
+							}
+						}
+					}
+					for (int i=0;i<3;i++) {
+						switch (minIndices[i]) {
+							case 1:
+								r[i]=(l[i]+r[i])*0.5;
+							break;
+							case 2:
+								r[i]=(l[i]+r[i])*0.75;
+								l[i]=(l[i]+r[i])*0.25;
+							break;
+							case 3:
+								l[i]=(l[i]+r[i])*0.5;
+							default:
+							break;
+						}
+					}
+				}
+				bf::vec3d c, s;
+				for (int i=0;i<3;i++) {
+					c[i]=std::cos(lerp(l[i],r[i],0.5));
+					s[i]=std::sin(lerp(l[i],r[i],0.5));
+				}
+				auto v = centre+0.05*bf::vec4d(c[0]*c[1]*c[2],c[0]*c[1]*s[2],c[0]*s[1],s[0]);
+				pts.emplace_back(v);
+			}
+			return;*/
+		}
+
+		//OLDER VERSION
 		double distance = glm::length(nextBegin-pts.back());
 		while (distance > 0.05) {
 			std::cout << distance << " ";
@@ -418,15 +528,17 @@ namespace bf {
 			auto centre = pts.back() + t*direction;
 			bf::vec4d minVec(centre);
 			double minDist = getIntersectiondistance(*intObj, minVec);
-			for (int i=-40;i<=40;i++) {
-				auto dx = i*0.025;
-				for (int j=-40;j<=40;j++) {
-					auto dy = j*0.025;
-					auto point = centre + bf::vec4d(dx,dx,dy,dy)*perpendicular;
-					auto candidateDist = getIntersectiondistance(*intObj, point);
-					if (candidateDist<minDist) {
-						minDist = candidateDist;
-						minVec = point;
+			if (!isLinear) {
+				for (int i=-40;i<=40;i++) {
+					auto dx = i*0.025;
+					for (int j=-40;j<=40;j++) {
+						auto dy = j*0.025;
+						auto point = centre + bf::vec4d(dx,dx,dy,dy)*perpendicular;
+						auto candidateDist = getIntersectiondistance(*intObj, point);
+						if (candidateDist<minDist) {
+							minDist = candidateDist;
+							minVec = point;
+						}
 					}
 				}
 			}
@@ -474,9 +586,24 @@ namespace bf {
 	void bf::MullingPathCreator::finishToEdge(bf::IntersectionObject &inter, bool is4) {
 		const double refZ = (15.0 - move.z) / scale;
 		if (is4) {
+			if (inter.intersectionPoints.back().y > inter.intersectionPoints[0].y)
+				std::reverse(inter.intersectionPoints.begin(),inter.intersectionPoints.end());
 			auto vec = inter.intersectionPoints.back();
 			//std::cout << vec <<  "\t" << inter.obj1->parameterFunction(vec.x, vec.y) << "\n";
 			auto pt = findU(inter, this, vec.x - 0.99, vec.y, refZ);
+			//circular extension
+			auto pt0 = inter.obj2->parameterFunction(vec.z, vec.a);
+			auto pt1 = inter.obj2->parameterFunction(pt.z, pt.a);
+			double alpha0 = std::atan2(pt0.y,pt0.x);
+			double alpha1 = std::atan2(pt1.y,pt1.x);
+			std::cout << alpha0 << " " << alpha1 << "\n";
+			for (double alpha=alpha0; alpha<alpha1; alpha+=0.01) {
+				static const double radius = ExactRadius / scale;
+				bf::vec3d tmpPoint = {radius*std::cos(alpha),radius*std::sin(alpha), 0.0};
+				auto surf = toSurfaceSpace(tmpPoint);
+				inter.intersectionPoints.emplace_back(vec.x, vec.y, surf.x, surf.y);
+			}
+
 			inter.intersectionPoints.emplace_back(pt);
 			//std::cout << pt << "\t" << inter.obj1->parameterFunction(pt.x, pt.y) << "\n";
 			for (double i=pt.y; i<1.0; i+=0.01) {
@@ -555,23 +682,12 @@ namespace bf {
 	}
 
 	void MullingPathCreator::findIntersections() {
-		constexpr std::array intersectionData = {
-			IntersectionData(0, 1,-0.326, 9.022, -1.167),
-			IntersectionData(0, 1, 0.254,11.692, -1.511),
-			IntersectionData(0, 1,-0.292,-2.483, -0.323),
-			IntersectionData(1, 2, 1.195, 2.431,  0.140),
-			IntersectionData(1, 2, 3.630, 2.579,  0.507),
-			IntersectionData(0, 2,-1.970, 2.097, -0.334),
-			IntersectionData(0, 3, 0.000, 0.000, 0.000), //satisfactionary even though not looped
-			IntersectionData(1, 3, 1.543, 1.531,  0.190),
-			IntersectionData(3, 4,-0.882, 2.087,  0.740)
-			};
 		constexpr std::array specialintersectionData1 = { //WRONG - TODO: TO IMPROVE
 			IntersectionData(0, 1, 1.433, -4.001, -0.500),
 			IntersectionData(0, 1, 1.260,-3.958,  -1.000),
 			IntersectionData(0, 1, 0.355,-3.876,  -1.000),
 			IntersectionData(0, 1, 0.500,-4.300,  0.000),
-			IntersectionData(0, 1, 1.020, -4.210, 1.000)
+			IntersectionData(0, 1, 1.020, -4.210, 1.000),
 			};
 		constexpr std::array flatIntersectionData = {
 			IntersectionData(0, 5, -4.2, 0.0, 0),
@@ -582,8 +698,18 @@ namespace bf {
 			IntersectionData(2, 5, 0.0, 4.0, 0),
 			IntersectionData(3, 5, 4.0, 0.0, 0),
 			IntersectionData(3, 5, 0.0, 0.0, 0),
-			IntersectionData(4, 5, 0.5, 1.0, 0),
-			IntersectionData(4, 5,-0.5, 1.0, 0) //TODO: fill the break - WRONG
+			IntersectionData(4, 5, -0.5, 1.0, 0),
+			};
+		constexpr std::array intersectionData = {
+			IntersectionData(0, 1,-0.292,-2.483, -0.323),
+			IntersectionData(0, 1,-0.326, 9.022, -1.167),
+			IntersectionData(0, 1, 0.254,11.692, -1.511),
+			IntersectionData(1, 2, 1.195, 2.431,  0.140),
+			IntersectionData(1, 2, 3.630, 2.579,  0.507),
+			IntersectionData(0, 2,-1.970, 2.097, -0.334),
+			IntersectionData(0, 3, 0.000, 0.000, 0.000), //satisfactionary even though not looped
+			IntersectionData(1, 3, 1.543, 1.531,  0.190),
+			IntersectionData(3, 4,-0.882, 2.087,  0.740)
 			};
 		int k=1;
 		constexpr int N = intersectionData.size()+flatIntersectionData.size()+specialintersectionData1.size();
@@ -603,14 +729,14 @@ namespace bf {
 				if (interObj==nullptr)
 					interObj = intObj;
 				else {
-					fillIntersections(interObj, newPts[0]);
+					fillIntersections(interObj, newPts[0], false, false, true);
 					interObj->intersectionPoints.insert(interObj->intersectionPoints.end(), newPts.begin(), newPts.end());
 					delete intObj;
 				}
 				std::cout << interObj->intersectionPoints.size() << "\n";
 			}
 			//TODO - temporary
-			fillIntersections(interObj, interObj->intersectionPoints[0]);
+			fillIntersections(interObj, interObj->intersectionPoints[0], false, false, true);
 			interObj->recalculate();
 			interObj->setBuffers();
 			intersections.push_back(interObj);
@@ -638,7 +764,6 @@ namespace bf {
 			isSecond=!isSecond;
 			std::cout << k++ << "/" << N << "\n\n";
 		}
-
 		for(auto&& [i1, i2, cx, cy, cz]: intersectionData) {
 			//set true for needed examples
 			auto* intObj = new bf::IntersectionObject(objectArray, *surfaces[i1], *surfaces[i2], {cx, cy, cz},0.01, true);
@@ -680,9 +805,17 @@ namespace bf {
 					std::reverse(pts.begin(),pts.end());
 					addPointToC0Equidistant(intObj, myPoint2);
 				}
-				else if (i1 != 0 || i2 != 3) { //except [0,3]
+				else if (i2 != 3) { //except [0,3]
 					//TODO - repair
-					fillIntersections(intObj, pts[0]);
+					if (getIntersectiondistance(*intObj,intObj->intersectionPoints.back())>0.01) {
+						intObj->intersectionPoints.pop_back();
+					}
+					if (getIntersectiondistance(*intObj,intObj->intersectionPoints[0])>0.01) {
+						intObj->intersectionPoints.erase(intObj->intersectionPoints.begin());
+					}
+					std::cout << "Pre-fill size " << pts.size() << "\n";
+					bool isZero = cx==intersectionData[0].cx && cy==intersectionData[0].cy && cz==intersectionData[0].cz;
+					fillIntersections(intObj, pts[0], false, true, false, !isZero);
 					intObj->isLooped=true;
 				}
 				std::cout << "Not looped\n";
@@ -740,9 +873,9 @@ namespace bf {
 
 	std::vector<bf::vec3d> MullingPathCreator::createFlatBase(uint8_t color) const {
 		int index = surfaces.size()-1;
-		auto ret1 = generateExactPath(index, color, 1, false, 0.0);
+		auto ret1 = generateExactPath(index, color, 4, false, 0.0);
 		//TODO - move between two phases
-		auto ret2 = generateExactPath(index, color, 1, true, 0.0);
+		auto ret2 = generateExactPath(index, color, 4, true, 0.0);
 		ret1.insert(ret1.end(),ret2.begin(), ret2.end());
 		return ret1;
 	}
