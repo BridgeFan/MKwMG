@@ -690,30 +690,30 @@ namespace bf {
 			IntersectionData(0, 1, 1.020, -4.210, 1.000),
 			};
 		constexpr std::array flatIntersectionData = {
-			IntersectionData(0, 5, -4.2, 0.0, 0),
+			/*IntersectionData(0, 5, -4.2, 0.0, 0),
 			IntersectionData(0, 5,0.0, 0.0, 0),
 			IntersectionData(1, 5, 4.0, 0.0, 0),
 			IntersectionData(1, 5, 0.0, 0.0, 0),
 			IntersectionData(2, 5,0.0, 2.0, 0),
 			IntersectionData(2, 5, 0.0, 4.0, 0),
 			IntersectionData(3, 5, 4.0, 0.0, 0),
-			IntersectionData(3, 5, 0.0, 0.0, 0),
+			IntersectionData(3, 5, 0.0, 0.0, 0),*/
 			IntersectionData(4, 5, -0.5, 1.0, 0),
 			};
 		constexpr std::array intersectionData = {
-			IntersectionData(0, 1,-0.292,-2.483, -0.323),
+			/*IntersectionData(0, 1,-0.292,-2.483, -0.323),
 			IntersectionData(0, 1,-0.326, 9.022, -1.167),
 			IntersectionData(0, 1, 0.254,11.692, -1.511),
 			IntersectionData(1, 2, 1.195, 2.431,  0.140),
 			IntersectionData(1, 2, 3.630, 2.579,  0.507),
 			IntersectionData(0, 2,-1.970, 2.097, -0.334),
 			IntersectionData(0, 3, 0.000, 0.000, 0.000), //satisfactionary even though not looped
-			IntersectionData(1, 3, 1.543, 1.531,  0.190),
+			IntersectionData(1, 3, 1.543, 1.531,  0.190),*/
 			IntersectionData(3, 4,-0.882, 2.087,  0.740)
 			};
 		int k=1;
 		constexpr int N = intersectionData.size()+flatIntersectionData.size()+specialintersectionData1.size();
-		{
+		/*{
 			bf::IntersectionObject* interObj = nullptr;
 			int kk=0;
 			for(auto&& [i1, i2, cx, cy, cz]: specialintersectionData1) {
@@ -741,7 +741,7 @@ namespace bf {
 			interObj->setBuffers();
 			intersections.push_back(interObj);
 			objectArray.add(interObj);
-		}
+		}*/
 
 		//TODO - temporary
 		bool isSecond=false;
