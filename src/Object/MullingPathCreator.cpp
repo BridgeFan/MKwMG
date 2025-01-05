@@ -101,6 +101,9 @@ namespace bf {
 		//surface - additional line to divide hole into two sub-holes
 		if (&surfaces[index]->getObject()==this)
 			BresenhamLine(ret, TN, 302, 139, 302, 209, 254u);
+		else if (index==3) {
+			BresenhamLine(ret, TN, 316, 223, 325,223, 254u);
+		}
 		//draw lines
 		for(unsigned ii=0;ii<intersections.size()+flatIntersections.size();ii++) {
 			bf::IntersectionObject* io;
@@ -139,7 +142,7 @@ namespace bf {
 			for (int j=0;j<TN;j++) {
 				double v = j*pixelSize.y;
 				auto pos = c(indexObj->parameterFunction(u,v));
-				if ((pos.z>=15.05 || &surfaces[index]->getObject()==this) && getPixel(ret,TN,i,j)==0u) {
+				if ((pos.z>=15.05 + (index==3 ? 0.45 : 0.00) || &surfaces[index]->getObject()==this) && getPixel(ret,TN,i,j)==0u) {
 					usedColours.emplace_back(index);
 					floodFill(ret,TN,i,j,indexObj->parameterWrappingU(),indexObj->parameterWrappingV(), usedColours.size()-1u);
 				}
@@ -272,7 +275,6 @@ namespace bf {
 				std::cout << "Created pixel maps\n";
 			}
 			setDebugTextureIndex(0);
-			//TODO - uncomment
 			areIntersectionsFound = true;
 		}
 		if (wereFound)
@@ -337,7 +339,7 @@ namespace bf {
 		for (unsigned i=0;i<colours.size();i++) {
 			uint8_t r = 85*(i%4);
 			uint8_t g = 85*((i/4)%4);
-			uint8_t b = 85*(i/16);
+			uint8_t b = 85*((i/16)%4);
 			colours[i]=(r<<24)+(g<<16)+(b<<8)+0xff;
 		}
 		glBindTexture(GL_TEXTURE_2D, textureIndex);
@@ -360,14 +362,17 @@ namespace bf {
 			}
 			std::cout << "Created pixel maps\n";
 		}
-		std::array myColours = {1u, 3u, 5u, 15u, 26u, 28u, 32u, 42u, 57u, 61u, 68u};
-		//TODO: temporary creating paths for every colour
+		//TODO: change to older
+		//std::array myColours = {1u};
+		std::array myColours = {2u, 7u, 4u, 14u, 24u, 30u, 29u, 38u, 42u, 46u, 61u, 72u, 65u};
 		std::vector<bf::vec3d> myPts;
 		myPts.emplace_back(0.0, 0.0, 50.0);
 		for(auto i: myColours) {
 			std::vector<bf::vec3d> pts;
-			if (usedColours[i]!=surfaces.size()-1)
-				pts = generateExactPath(usedColours[i],i,4,true, 320,1.0);
+			if (usedColours[i]==4)
+				pts = generateExactPath(usedColours[i],i,16,false, 0, 0.0, usedColours[i]==4);
+			else if (usedColours[i]!=surfaces.size()-1)
+				pts = generateExactPath(usedColours[i],i,4,true, 320,0.0);
 			else
 				pts = createFlatBase(i);
 			myPts.emplace_back(pts[0].x, pts[0].y, 50.0);
@@ -425,6 +430,7 @@ namespace bf {
 
 	void fillIntersections(bf::IntersectionObject* intObj, const bf::vec4d& nextBegin, bool isFifth = false, bool shouldBeImproved=true, bool morePrecise=false, bool isLinear=false) {
 		auto& pts = intObj->intersectionPoints;
+		const bf::vec4d nextBeginCopy = nextBegin;
 		//pre-processing
 		if (shouldBeImproved) {
 			for (int i=0;i<4;i++) {
@@ -450,6 +456,21 @@ namespace bf {
 					bigDiffIndex=i;
 			}
 		}
+		if (/*isLinear*/true) {
+			const bf::vec4d back = pts.back();
+			std::cout << "LERP filling" << back << "\n";
+			std::cout << nextBeginCopy << "\n";
+			double distance = glm::length(nextBeginCopy-back);
+			int parts = std::ceil(distance/0.05);
+			for (int i=0;i<parts;i++) {
+				double t = static_cast<double>(i)/parts;
+				auto point = lerp(back, nextBeginCopy, t);
+				pts.emplace_back(point);
+				std::cout << t << " " << point << "\n";
+			}
+			return;
+		}
+
 		if (morePrecise) {
 			/*double distance = glm::length(nextBegin-pts.back());
 			while (distance > 0.05) {
@@ -682,38 +703,34 @@ namespace bf {
 	}
 
 	void MullingPathCreator::findIntersections() {
-		constexpr std::array specialintersectionData1 = { //WRONG - TODO: TO IMPROVE
-			IntersectionData(0, 1, 1.433, -4.001, -0.500),
-			IntersectionData(0, 1, 1.260,-3.958,  -1.000),
-			IntersectionData(0, 1, 0.355,-3.876,  -1.000),
-			IntersectionData(0, 1, 0.500,-4.300,  0.000),
-			IntersectionData(0, 1, 1.020, -4.210, 1.000),
+		constexpr std::array specialintersectionData1 = {
+			IntersectionData(2, 3, -2.000, 2.500,  0.000),
 			};
 		constexpr std::array flatIntersectionData = {
-			/*IntersectionData(0, 5, -4.2, 0.0, 0),
+			IntersectionData(0, 5, -4.2, 0.0, 0),
 			IntersectionData(0, 5,0.0, 0.0, 0),
 			IntersectionData(1, 5, 4.0, 0.0, 0),
 			IntersectionData(1, 5, 0.0, 0.0, 0),
 			IntersectionData(2, 5,0.0, 2.0, 0),
 			IntersectionData(2, 5, 0.0, 4.0, 0),
 			IntersectionData(3, 5, 4.0, 0.0, 0),
-			IntersectionData(3, 5, 0.0, 0.0, 0),*/
+			IntersectionData(3, 5, 0.0, 0.0, 0),
 			IntersectionData(4, 5, -0.5, 1.0, 0),
 			};
 		constexpr std::array intersectionData = {
-			/*IntersectionData(0, 1,-0.292,-2.483, -0.323),
+			IntersectionData(0, 1,-0.292,-2.483, -0.323),
 			IntersectionData(0, 1,-0.326, 9.022, -1.167),
 			IntersectionData(0, 1, 0.254,11.692, -1.511),
 			IntersectionData(1, 2, 1.195, 2.431,  0.140),
 			IntersectionData(1, 2, 3.630, 2.579,  0.507),
 			IntersectionData(0, 2,-1.970, 2.097, -0.334),
 			IntersectionData(0, 3, 0.000, 0.000, 0.000), //satisfactionary even though not looped
-			IntersectionData(1, 3, 1.543, 1.531,  0.190),*/
+			IntersectionData(1, 3, 1.543, 1.531,  0.190),
 			IntersectionData(3, 4,-0.882, 2.087,  0.740)
 			};
 		int k=1;
 		constexpr int N = intersectionData.size()+flatIntersectionData.size()+specialintersectionData1.size();
-		/*{
+		{
 			bf::IntersectionObject* interObj = nullptr;
 			int kk=0;
 			for(auto&& [i1, i2, cx, cy, cz]: specialintersectionData1) {
@@ -729,19 +746,20 @@ namespace bf {
 				if (interObj==nullptr)
 					interObj = intObj;
 				else {
-					fillIntersections(interObj, newPts[0], false, false, true);
+					fillIntersections(interObj, newPts[0], false, false, false, true);
 					interObj->intersectionPoints.insert(interObj->intersectionPoints.end(), newPts.begin(), newPts.end());
 					delete intObj;
 				}
 				std::cout << interObj->intersectionPoints.size() << "\n";
 			}
 			//TODO - temporary
-			fillIntersections(interObj, interObj->intersectionPoints[0], false, false, true);
+			fillIntersections(interObj, interObj->intersectionPoints[0], false, false, false, true);
+			interObj->isLooped = true;
 			interObj->recalculate();
 			interObj->setBuffers();
 			intersections.push_back(interObj);
 			objectArray.add(interObj);
-		}*/
+		}
 
 		//TODO - temporary
 		bool isSecond=false;
@@ -771,7 +789,6 @@ namespace bf {
 			if (intObj && !intObj->isLooped && intObj->intersectionPoints.size()>=3) { //finishing the loop
 				//TODO - to remove
 				if (i2==4) {
-					auto& pts = intObj->intersectionPoints;
 					const auto torusCentre = surfaces[3]->getObject().getPosition();
 					const auto radius = (surfaces[3]->torus->bigRadius-surfaces[3]->torus->smallRadius-ExactRadius/scale);
 					bf::vec4d myPoint1={INFINITY,INFINITY,INFINITY,INFINITY};
@@ -804,8 +821,9 @@ namespace bf {
 					addPointToC0Equidistant(intObj, myPoint1);
 					std::reverse(pts.begin(),pts.end());
 					addPointToC0Equidistant(intObj, myPoint2);
+					intObj->isLooped=false;
 				}
-				else if (i2 != 3) { //except [0,3]
+				else if (i2 != 3 || i1 == 2) { //except [0,3]
 					//TODO - repair
 					if (getIntersectiondistance(*intObj,intObj->intersectionPoints.back())>0.01) {
 						intObj->intersectionPoints.pop_back();
@@ -829,27 +847,57 @@ namespace bf {
 		}
 	}
 
-	std::vector<bf::vec3d> bf::MullingPathCreator::generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move, double normPerc) const {
+	void fillEndWhen4(std::vector<bf::vec3d>& pts, const bf::MullingPathCreator* tis, const bf::vec3d& newPos) {
+		const bf::vec3d oldPos = pts.back();
+		static const bf::vec3d centre = tis->c({0.0,0.0,0.1});
+		double diffX = oldPos.x-centre.x;
+		double radius = std::sqrt(ExactRadius*ExactRadius-diffX*diffX);
+		for (int i=0;i<=20;i++) {
+			const double alpha = i*PI*0.025;
+			bf::vec3d tmp = centre+bf::vec3d(oldPos.x-centre.x, -radius*std::sin(alpha), radius*std::cos(alpha));
+			tmp.z = std::min(tmp.z,oldPos.z);
+			pts.emplace_back(tmp);
+		}
+		diffX = newPos.x-centre.x;
+		radius = std::sqrt(ExactRadius*ExactRadius-diffX*diffX);
+		for (int i=20;i>=0;i--) {
+			const double alpha = i*PI*0.025;
+			bf::vec3d tmp = centre+bf::vec3d(newPos.x-centre.x, -radius*std::sin(alpha), radius*std::cos(alpha));
+			tmp.z = std::min(tmp.z,newPos.z);
+			pts.emplace_back(tmp);
+		}
+	}
+
+	bool isGoodColor(uint8_t pixel, uint8_t color) {
+		return pixel==color || (color==2 && pixel==7) || (color==38 && pixel==39);
+	}
+
+	std::vector<bf::vec3d> bf::MullingPathCreator::generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move, double normPerc, bool is4) const {
+		constexpr int drawnCounterPrecision = 5;
 		std::vector<bf::vec3d> points;
 		bool isDown = false;
 		const auto& surface = *surfaces[objIndex];
 		const auto& pixelMap = pixelMaps.at(objIndex);
-		bf::vec3d prevPos;
-		bf::vec3d pos;
+		bf::vec3d prevPos, pos;
 		for (int ti=0;ti<TN;ti+=diff) {
 			bool isIncluded=false;
 			bool isNow=false;
-			for (int tj=0;tj<TN;tj++) {
+			int drawnCounter = 0;
+			bf::vec3d lastPoint;
+			for (int tj=0;tj<(is4 ? 550 : TN);tj++) {
 				int i=ti;
 				int j=(tj+move)%TN;
-				j = ((ti/diff)%2==0) ? j : TN-j;
+				j = ((ti/diff)%2==0) ? j : (is4 ? 550 : TN)-j;
+				j += is4 ? 10 : 0;
 				if (isXMove) {
 					std::swap(i,j);
 				}
 				double id = i*surfaces[objIndex]->getParameterMax().x/(TN-1);
 				double jd = j*surfaces[objIndex]->getParameterMax().y/(TN-1);
-				if (getPixel(pixelMap,TN, i,j)==color) {
+				auto pixel = getPixel(pixelMap,TN, i,j);
+				if (isGoodColor(pixel, color)) {
 					pos = c(surface.parameterFunction(id,jd));
+					pos.z = std::max(15.0, pos.z);
 					if (normPerc>0.001) {
 						auto n = glm::normalize(surface.getNormal(id,jd));
 						pos -= (normPerc*ExactRadius)*n;
@@ -858,12 +906,24 @@ namespace bf {
 						points.emplace_back(prevPos.x,  prevPos.y, 50.0);
 						points.emplace_back(pos.x, pos.y, 50.0);
 					}
-					points.emplace_back(pos);
+					lastPoint = pos;
+					if (drawnCounter%drawnCounterPrecision==0)
+						points.emplace_back(pos);
+					drawnCounter++;
 					isIncluded=true; isNow=true;
 				}
-				else if (isIncluded && isNow) {
+				else if (isIncluded && pixel!=255u) {
+					if (drawnCounter!=0) {
+						points.emplace_back(lastPoint);
+						drawnCounter=0;
+					}
 					isNow=false;
 					prevPos = pos;
+				}
+				if (is4 && j==11 && isDown && isIncluded) {
+					double nid = (i+diff)*surfaces[objIndex]->getParameterMax().x/(TN-1);
+					auto newPos = c(surface.parameterFunction(nid,jd));
+					fillEndWhen4(points, this, newPos);
 				}
 			}
 			isDown = !isDown;
@@ -873,9 +933,9 @@ namespace bf {
 
 	std::vector<bf::vec3d> MullingPathCreator::createFlatBase(uint8_t color) const {
 		int index = surfaces.size()-1;
-		auto ret1 = generateExactPath(index, color, 4, false, 0.0);
+		auto ret1 = generateExactPath(index, color, 4, false, 0, 0.0);
 		//TODO - move between two phases
-		auto ret2 = generateExactPath(index, color, 4, true, 0.0);
+		auto ret2 = generateExactPath(index, color, 4, true, 0, 0.0);
 		ret1.insert(ret1.end(),ret2.begin(), ret2.end());
 		return ret1;
 	}

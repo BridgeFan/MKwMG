@@ -28,6 +28,17 @@ std::string readWholeFile(const std::string& path) {
     return buffer.str();
 }
 
+template<typename T, int N>
+std::ostream& operator<<(std::ostream& out, const glm::vec<N, T>& v) {
+	out << v.x << " " << v.y;
+	if (N>=3)
+		out << " " << v.z;
+	if (N>=4)
+		out << " " << v.a;
+	return out;
+
+}
+
 bool isnan(const glm::vec3 &v) {
     return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z);
 }

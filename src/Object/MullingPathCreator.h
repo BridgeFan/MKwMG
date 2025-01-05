@@ -27,8 +27,6 @@ class MullingPathCreator: public bf::Object {
 		std::map<unsigned, std::vector<uint8_t> > pixelMaps;
     std::map<unsigned, std::vector<uint8_t> > flatPixelMaps;
 		std::vector<unsigned> usedColours = {0u}; //0 - not used
-		bf::vec3d c(const bf::vec3d& p) const; //conversion of point from screen space to mulling space
-		bf::vec3d dc(const bf::vec3d& p) const; //conversion of point from mulling space to screen space
 		const std::function<bf::vec3d(const bf::vec3d&)> cFunc = [&](const bf::vec3d& p) {return c(p);};
 		const std::function<bf::vec3d(const bf::vec3d&)> dcFunc = [&](const bf::vec3d& p) {return c(p);};
 		std::vector<bf::DummySolid> debugDummySolids;
@@ -38,11 +36,13 @@ class MullingPathCreator: public bf::Object {
 		std::vector<bf::vec3d> createPathForIntersection(const bf::IntersectionObject& io, double dist, unsigned begin, unsigned end) const;
 		std::vector<bf::vec3d> createFlatBase(uint8_t color) const;
 		bool createPixelMap(unsigned index); //false if pixel map coul not be created
-		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move=0, double normPerc=1.0) const;
+		std::vector<bf::vec3d> generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move=0, double normPerc=1.0, bool is4=false) const;
 		void setDebugTextureIndex(int surface);
 		void finishToEdge(bf::IntersectionObject &inter, bool is4=false);
 		void saveIntersectionsToFile();
 	public:
+		bf::vec3d c(const bf::vec3d& p) const; //conversion of point from screen space to mulling space
+		bf::vec3d dc(const bf::vec3d& p) const; //conversion of point from mulling space to screen space
         double getMPCScale() const {return scale;}
 		bf::vec2d toSurfaceSpace(const bf::vec2d& pos) const {return bf::vec2d(c({pos, 0.0})/150.0)+bf::vec2d(0.5,0.5);}
 		bf::ObjectArray& objectArray;
