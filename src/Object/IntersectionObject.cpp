@@ -12,6 +12,7 @@
 #include "ObjectArray.h"
 #include "Shader/ShaderArray.h"
 #include "Surfaces/BezierSurface0.h"
+#include "MullingPathCreator.h"
 #include "Util.h"
 #include <GL/glew.h>
 #include <algorithm>
@@ -145,8 +146,50 @@ void bf::IntersectionObject::ObjectGui() {
 	}
 }
 
-void bf::IntersectionObject::mergeFlatIntersections(bf::IntersectionObject &i2) {
+void bf::IntersectionObject::mergeFlatIntersections(bf::IntersectionObject &i2, const bf::MullingPathCreator& creator, int index) {
 	//assumes that o2 will be removed and flat is on obj2
+	if (index==0) {
+		int lastIndex=0;
+		for (int i=0;i<intersectionPoints.size();i++) {
+			const auto& p = intersectionPoints[i];
+			if (p.y < 2.0) {
+				intersectionPoints.erase(intersectionPoints.begin()+i);
+				i--;
+			}
+		}
+		for (int i=0;i<i2.intersectionPoints.size();i++) {
+			const auto& p = i2.intersectionPoints[i];
+			if (p.y < 1.0) {
+				i2.intersectionPoints.erase(i2.intersectionPoints.begin()+i);
+				i--;
+			}
+		}
+	}
+	double scale = 1.0/creator.getMullingScale();
+	bf::vec4d b1, e1;
+	for (auto& p: intersectionPoints) {
+		if (&p==&intersectionPoints.back())
+			e1=p;
+		else if (&p==&intersectionPoints[0])
+			b1=p;
+		bf::vec3d position = obj1->parameterFunction(p.x,p.y);
+		bf::vec3d n = {bf::MullingPathCreator::flatRadius*glm::normalize(bf::vec2d(obj1->getNormal(p.x,p.y))), 0.0};
+		bf::vec2d vec = creator.toSurfaceSpace(position-scale*n);
+		p.z = vec.x;
+		p.a = vec.y;
+	}
+	bf::vec4d b2,e2;
+	for (auto& p: i2.intersectionPoints) {
+		if (&p==&i2.intersectionPoints.back())
+			e2=p;
+		else if (&p==&i2.intersectionPoints[0])
+			b2=p;
+		bf::vec3d position = i2.obj1->parameterFunction(p.x,p.y);
+		bf::vec3d n = {bf::MullingPathCreator::flatRadius*glm::normalize(bf::vec2d(i2.obj1->getNormal(p.x,p.y))), 0.0};
+		bf::vec2d vec = creator.toSurfaceSpace(position-scale*n);
+		p.z = vec.x;
+		p.a = vec.y;
+	}
 	glm::vec3 P = vertices.back().getPosition();
 	glm::vec3 A1 = i2.vertices[0].getPosition();
 	glm::vec3 A2 = i2.vertices.back().getPosition();
@@ -155,13 +198,13 @@ void bf::IntersectionObject::mergeFlatIntersections(bf::IntersectionObject &i2) 
 		A1 = i2.vertices.back().getPosition();
 		A2 = i2.vertices[0].getPosition();
 	}
-	if(glm::dot(A1-P,A1-P) > 0.0100) {
-		fillHole(intersectionPoints.back(), i2.intersectionPoints[0]);
+	if(index!=0 && glm::dot(A1-P,A1-P) > 0.0100) {
+		fillHole(e1, b2, creator, i2.intersectionPoints[0], false^(index==0));
 	}
 	intersectionPoints.insert(intersectionPoints.end(), i2.intersectionPoints.begin(), i2.intersectionPoints.end());
 	P = vertices[0].getPosition();
 	if(glm::dot(P-A2,P-A2) > 0.0100) {
-		fillHole(intersectionPoints.back(), intersectionPoints[0]);
+		fillHole(e2, b1, creator, intersectionPoints[0], true^(index==0));
 	}
 	isLooped = true;
 	//TODO - uncomment
@@ -624,9 +667,19 @@ void bf::IntersectionObject::recalculate(bool isTextureToSet) {
 			obj2->textureID = drawToTexture(intersectionPoints, true, obj2->getParameterMax(), obj2->parameterWrappingU(), obj2->parameterWrappingV());
 	}
 }
-void bf::IntersectionObject::fillHole(const bf::vec4d &a, const bf::vec4d &b) {
+void bf::IntersectionObject::fillHole(const bf::vec4d &a, const bf::vec4d &b, const bf::MullingPathCreator& creator, const bf::vec4d& P2, bool isSecond) {
 	//there are no toruses to fill
 	auto mullingObject = dynamic_cast<MullingPathCreator*>(obj2);
+	int ANGLE_DIVISION = 20;
+	const bf::vec4d ba = intersectionPoints.back();
+	for (int i=0;i<20;i++) {
+		const double alpha = static_cast<double>(i) * M_PI / ANGLE_DIVISION * 0.5;
+		const double c = std::cos(alpha);
+		const double s = std::sin(alpha);
+		const double bz = a.z-ba.z;
+		const double bw = a.a-ba.a;
+		intersectionPoints.emplace_back(ba.x, ba.y, a.z-bz*c+bw*s, a.w-bw*c-bz*s);
+	}
 	//XYZW - o1.u, o1.v, o2.u, o2.v
 	constexpr int STEPS_PER_UNIT = 3;
 	bf::vec4d act=a;
@@ -647,16 +700,29 @@ void bf::IntersectionObject::fillHole(const bf::vec4d &a, const bf::vec4d &b) {
 		}
 	}
 	steps = std::ceil(steps);
-	std::cout << a << "\n";
+	const double scale = 1.0/creator.getMullingScale();
 	for(int i=1;i<steps-0.05;i++) {
 		act.x=lerp(a.x,b.x,static_cast<float>(i)/(steps-1.0));
 		act.y=lerp(a.y,b.y,static_cast<float>(i)/(steps-1.0));
-		auto pos = obj1->parameterFunction(act.x, act.y);
-		auto p=mullingObject->toSurfaceSpace({pos.x, pos.y});
+		bf::vec3d position = obj1->parameterFunction(act.x,act.y);
+		bf::vec3d n = {bf::MullingPathCreator::flatRadius*glm::normalize(bf::vec2d(obj1->parameterGradientV(act.x,act.y))), 0.0};
+		if (!isSecond) n=-n;
+		bf::vec2d p = creator.toSurfaceSpace(position-scale*n);
 		act.z = p.x;
 		act.a = p.y;
 		intersectionPoints.push_back(act);
-		std::cout << act << "\n";
 	}
-	std::cout << b << "\n";
+	const double P2x = P2.x;
+	const double P2y = P2.y;
+	const double P2z = P2.z;
+	const double P2a = P2.a;
+	for (int i=0;i<20;i++) {
+		const double alpha = static_cast<double>(20-i) * M_PI / ANGLE_DIVISION * 0.5;
+		const double c = std::cos(alpha);
+		const double s = std::sin(alpha);
+		const double bz = b.z-P2z;
+		const double bw = b.a-P2a;
+		const bf::vec4d p(P2x, P2y, b.z-bz*c-bw*s, b.w-bw*c+bz*s);
+		intersectionPoints.emplace_back(p);
+	}
 }

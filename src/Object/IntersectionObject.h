@@ -10,13 +10,14 @@
 
 namespace bf {
 	class MultiCursor;
+	class MullingPathCreator;
 	class IntersectionObject: public bf::Solid, public bf::ObjectArrayListener {
 		bool isInitPhase=true;
 		std::pair<bf::Object*, int> convertToCurve();
 		void findIntersection(bool isCursor, double precision);
 		bool toRemove=false;
 		void recalculate(bool isTextureToSet=false);
-		void fillHole(const bf::vec4d& a, const bf::vec4d& b);
+		void fillHole(const bf::vec4d& a, const bf::vec4d& b, const bf::MullingPathCreator& creator, const bf::vec4d& P2, bool isSecond);
 	public:
 		bool isShown=true;
 		std::vector<bf::vec4d> intersectionPoints;
@@ -26,7 +27,7 @@ namespace bf {
 		IntersectionObject(bf::ObjectArray &array, bf::Object& o1, bf::Object& o2, const glm::vec3& cursor, float precision=0.01f);
 		IntersectionObject(bf::ObjectArray &array, bf::Object& o1, bf::Object& o2, float precision=0.01f);
 		void ObjectGui() override;
-		void mergeFlatIntersections(bf::IntersectionObject& i2);
+		void mergeFlatIntersections(bf::IntersectionObject& i2, const bf::MullingPathCreator& creator, int index);
 		~IntersectionObject() override;
 		void draw(const ShaderArray &shader) const override;
 		ShaderType getShaderType() const override;

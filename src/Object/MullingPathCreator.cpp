@@ -87,7 +87,7 @@ namespace bf {
 
 	bool MullingPathCreator::createPixelMap(unsigned index) {
 		//255u - special value for lines
-		if (pixelMaps.contains(index) || index>=surfaces.size() || intersections.empty() || flatIntersections.empty())
+		if (pixelMaps.contains(index) || index>=surfaces.size() || (intersections.empty() && flatIntersections.empty()))
 			return false;
 		std::vector<uint8_t> ret(TN*TN, 0u);
 		auto indexObj = surfaces[index];
@@ -256,10 +256,10 @@ namespace bf {
 		if (ImGui::Button("2. Flat-end mulling path")) {
 			createFlatMullingPath();
 		}
-		if (ImGui::Button("3. Exact mulling path")) {
+		/*if (ImGui::Button("3. Exact mulling path")) {
 			createExactMullingPath();
 			setDebugTextureIndex(0);
-		}
+		}*/
 		if (ImGui::Button("4. Author signature")) {
 		}
 		if (!areIntersectionsFound)
@@ -402,7 +402,7 @@ namespace bf {
 	};
 
 	void MullingPathCreator::findIntersections() {
-		constexpr std::array intersectionData = {
+		/*constexpr std::array intersectionData = {
 			IntersectionData(0, 1,-0.326, 9.022, -1.167),
 			IntersectionData(0, 1, 0.254,11.692, -1.511),
 			IntersectionData(0, 1,-0.292,-2.483, -0.323),
@@ -414,45 +414,43 @@ namespace bf {
 			IntersectionData(1, 3, 1.543, 1.531,  0.190),
 			IntersectionData(2, 3,-0.219, 2.033,  0.454),
 			IntersectionData(3, 4,-0.882, 2.087,  0.740)
-			};
+			};*/
 		constexpr std::array flatIntersectionData = {
-			IntersectionData(0, 5, -4.2, 0.0, 0),
-			IntersectionData(0, 5,0.0, 0.0, 0),
-			IntersectionData(1, 5, 4.0, 0.0, 0),
-			IntersectionData(1, 5, 0.0, 0.0, 0),
-			IntersectionData(2, 5,-5.0, 2.0, 0),
-			IntersectionData(2, 5, 0.0, 4.0, 0),
-			IntersectionData(3, 5, 4.0, 0.0, 0),
-			IntersectionData(3, 5, 0.0, 0.0, 0),
-			IntersectionData(4, 5, 0.5, 1.0, 0),
-			IntersectionData(4, 5,-0.5, 1.0, 0)
-			};
-		int k=1;
-		constexpr int N = intersectionData.size()+flatIntersectionData.size();
-		for(auto&& [i1, i2, cx, cy, cz]: intersectionData) {
+				IntersectionData(0, 5, -4.2, 0.0, 0),
+				IntersectionData(0, 5, 0.0, 0.0, 0),
+				IntersectionData(1, 5, 4.0, 0.0, 0),
+				IntersectionData(1, 5, 0.0, 0.0, 0),
+				IntersectionData(2, 5, -5.0, 2.0, 0),
+				IntersectionData(2, 5, 0.0, 4.0, 0)/*,
+				IntersectionData(3, 5, 4.0, 0.0, 0),
+				IntersectionData(3, 5, 0.0, 0.0, 0),
+				IntersectionData(4, 5, 0.5, 1.0, 0),
+				IntersectionData(4, 5, -0.5, 1.0, 0)*/};
+		int k = 1;
+		constexpr int N = /*intersectionData.size()+*/ flatIntersectionData.size();
+		/*for(auto&& [i1, i2, cx, cy, cz]: intersectionData) {
 			auto* intObj = new bf::IntersectionObject(objectArray, *surfaces[i1], *surfaces[i2], {cx, cy, cz});
 			intObj->isShown = false;
 			intersections.push_back(intObj);
 			objectArray.add(intObj);
 			std::cout << k++ << "/" << N << "\n";
-		}
-		bool isSecond=false;
-		for(auto&& [i1, i2, cx, cy, cz]: flatIntersectionData) {
-			auto* intObj = new bf::IntersectionObject(objectArray, *surfaces[i1], *this, {cx, cy, cz});
-			intObj->isShown = false;
-			if(isSecond && (!surfaces[i1]->parameterWrappingU() || !surfaces[i1]->parameterWrappingV())) {
+		}*/
+		bool isSecond = false;
+		for (auto &&[i1, i2, cx, cy, cz]: flatIntersectionData) {
+			auto *intObj = new bf::IntersectionObject(objectArray, *surfaces[i1], *this, {cx, cy, cz});
+			if (isSecond && (!surfaces[i1]->parameterWrappingU() || !surfaces[i1]->parameterWrappingV())) {
 				std::cout << "Removing " << k << "\n";
-				flatIntersections.back()->mergeFlatIntersections(*intObj);
+				flatIntersections.back()->mergeFlatIntersections(*intObj, *this, flatIntersections.size()-1);
 				delete intObj;
-			}
-			else {
+			} else {
 				flatIntersections.push_back(intObj);
 				objectArray.add(intObj);
 			}
-			isSecond=!isSecond;
+			isSecond = !isSecond;
 			std::cout << k++ << "/" << N << "\n\n";
 		}
 	}
+	double MullingPathCreator::getMullingScale() const { return scale; }
 
 	std::vector<bf::vec3d> bf::MullingPathCreator::generateExactPath(unsigned objIndex, uint8_t color, int diff, bool isXMove, int move, double normPerc) const {
 		std::vector<bf::vec3d> points;
@@ -603,15 +601,14 @@ namespace bf {
 			std::cerr << "Error when trying to save approximate paths\n";
 	}
 
-	constexpr double flatRadius = 5.0;
-
 	bf::vec3d MullingPathCreator::getPositionMovedByNormal(bf::IntersectionObject* obj, const glm::vec4& part) const {
-		double u = part.x;
+		/*double u = part.x;
 		double v = part.y;
 		const auto* o = obj->obj1;
 		auto n = glm::normalize(bf::vec2d(o->getNormal(u,v)));
 		bf::vec3d normal = bf::vec3d(n, 0.0)*flatRadius;
-		return c(o->parameterFunction(u,v))-normal;
+		return c(o->parameterFunction(u,v))-normal;*/
+		return c(obj->obj2->parameterFunction(part.z,part.a));
 	}
 	struct IntersectionPathIntersection {
 		static const std::vector<std::vector<bf::vec3d> >* paths;
@@ -665,6 +662,9 @@ namespace bf {
 				}
 			}
 		}
+		for (const auto& r: ret) {
+			std::cout << r.i1 << " " << r.i2 << " " << r.obj1 << " " << r.obj2 << " " << r.t1 << " " << r.t2 << "\n";
+		}
 		return ret;
 	}
 
@@ -689,7 +689,6 @@ namespace bf {
 		std::cout << "Intersections of flat intersections found\n";
 		std::map<unsigned, std::vector<IntersectionPathIntersection> > intersectionMap;
 		for(auto& p: pathIntersections) {
-
 			if(intersectionMap.contains(p.obj1))
 				intersectionMap[p.obj1].push_back(p);
 			else
